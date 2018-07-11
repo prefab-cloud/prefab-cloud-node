@@ -1,0 +1,26 @@
+{
+  "name": "prefab-cloud",
+  "version": "0.0.1",
+  "description": "Prefab Cloud Node.js client",
+  "main": "./src/prefab-cloud-node/prefab_cloud_client.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.270.1",
+    "google-protobuf": "^3.0.0",
+    "grpc": "^1.0.0",
+    "js-yaml": "^3.12.0",
+    "murmurhash3": "^0.4.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "npm install chai && npm install -g mocha && mocha ./test/prefab-cloud-node-test/_all.js"
+  },
+  "keywords": [
+    "prefab"
+  ],
+  "author": "Denis Rozhkov <denis@rozhkoff.com>",
+  "license": "MIT",
+  "repository": "github:prefab-cloud/prefab-cloud-nodejs"
+}
