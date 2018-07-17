@@ -20,7 +20,7 @@
   "keywords": [
     "prefab"
   ],
-  "author": "Denis Rozhkov <denis@rozhkoff.com>",
+  "author": "Jeff Dwyer <jdwyer@prefab.cloud>",
   "license": "MIT",
   "repository": "github:prefab-cloud/prefab-cloud-nodejs"
 }
