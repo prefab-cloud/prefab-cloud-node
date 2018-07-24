@@ -12,7 +12,7 @@ module.exports = class FeatureFlag {
 	}
 
 	isOn(lookupKey, attributes) {
-		var cfgValue = this.prefabCloudClient.config.getValue(this.name);
+		var cfgValue = this.prefabCloudClient.config.getConfigValue(this.name);
 
 		if (cfgValue == null) {
 			return false;

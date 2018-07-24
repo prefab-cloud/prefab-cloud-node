@@ -10,6 +10,10 @@ class ConfigValueTest {
 		this.value = value;
 	}
 
+	getTypeCase() {
+		return proto.prefab.ConfigValue.TypeCase.STRING;
+	}
+
 	getString() {
 		return this.value;
 	}
@@ -35,9 +39,10 @@ class ConfigDeltaTest {
 	}
 }
 
-class ClientTest extends PrefabCloudClient {
+class ClientTest {
 	constructor(namespace) {
-		super("1|1", namespace);
+		this.namespace = namespace || "";
+		this.config = new Config(this);
 		this.config.fromDeltas(configDeltas());
 	}
 }
@@ -59,37 +64,37 @@ describe('Config resolve test',
 		it('empty namespace',
 			() => {
 				var client = new ClientTest();
-				assert.equal("value_none", client.config.getValue("key").getString());
+				assert.equal("value_none", client.config.getValue("key"));
 		});
 
 		it('projectA',
 			() => {
 				var client = new ClientTest("projectA");
-				assert.equal("valueA", client.config.getValue("key").getString());
+				assert.equal("valueA", client.config.getValue("key"));
 		});
 
 		it('projectB',
 			() => {
 				var client = new ClientTest("projectB");
-				assert.equal("valueB", client.config.getValue("key").getString());
+				assert.equal("valueB", client.config.getValue("key"));
 		});
 
 		it('projectB.subprojectX',
 			() => {
 				var client = new ClientTest("projectB.subprojectX");
-				assert.equal("projectB.subprojectX", client.config.getValue("key").getString());
+				assert.equal("projectB.subprojectX", client.config.getValue("key"));
 		});
 
 		it('projectB.subprojectX:subsubQ',
 			() => {
 				var client = new ClientTest("projectB.subprojectX:subsubQ");
-				assert.equal("projectB.subprojectX", client.config.getValue("key").getString());
+				assert.equal("projectB.subprojectX", client.config.getValue("key"));
 		});
 
 		it('projectC',
 			() => {
 				var client = new ClientTest("projectC");
-				assert.equal("value_none", client.config.getValue("key").getString());
+				assert.equal("value_none", client.config.getValue("key"));
 		});
 });
 
@@ -99,10 +104,10 @@ describe('Config load test',
 			(done) => {
 				var client = new ClientTest();
 				client.config.fromPath("test", () => {
-					assert.equal(123, client.config.getValue("sample_int").getInt());
-					assert.equal("OneTwoThree", client.config.getValue("sample").getString());
-					assert.equal(true, client.config.getValue("sample_bool").getBool());
-					assert.equal(12.12, client.config.getValue("sample_double").getDouble());
+					assert.equal(123, client.config.getValue("sample_int"));
+					assert.equal("OneTwoThree", client.config.getValue("sample"));
+					assert.equal(true, client.config.getValue("sample_bool"));
+					assert.equal(12.12, client.config.getValue("sample_double"));
 
 					done();
 				});
@@ -135,15 +140,15 @@ describe('Config load test',
 
 					client.config.fromDeltas([new ConfigDeltaTest("sample_int", Config.ConfigValue(1), 1)]);
 					assert.equal(1, client.config.highwaterMarkDeltaId);
-					assert.equal(1, client.config.getValue("sample_int").getInt());
+					assert.equal(1, client.config.getValue("sample_int"));
 
 					client.config.fromDeltas([new ConfigDeltaTest("sample_int", Config.ConfigValue(4), 4)]);
 					assert.equal(4, client.config.highwaterMarkDeltaId);
-					assert.equal(4, client.config.getValue("sample_int").getInt());
+					assert.equal(4, client.config.getValue("sample_int"));
 
 					client.config.fromDeltas([new ConfigDeltaTest("sample_int", Config.ConfigValue(2), 2)]);
 					assert.equal(4, client.config.highwaterMarkDeltaId);
-					assert.equal(4, client.config.getValue("sample_int").getInt());
+					assert.equal(4, client.config.getValue("sample_int"));
 
 					done();
 				});
@@ -153,10 +158,10 @@ describe('Config load test',
 			(done) => {
 				var client = new ClientTest();
 				client.config.fromPath("test", () => {
-					assert.equal(123, client.config.getValue("sample_int").getInt());
+					assert.equal(123, client.config.getValue("sample_int"));
 
 					client.config.fromDeltas([new ConfigDeltaTest("sample_int", Config.ConfigValue(456))]);
-					assert.equal(456, client.config.getValue("sample_int").getInt());
+					assert.equal(456, client.config.getValue("sample_int"));
 
 					done();
 				});
@@ -166,10 +171,10 @@ describe('Config load test',
 			(done) => {
 				var client = new ClientTest();
 				client.config.fromPath("test", () => {
-					assert.equal(123, client.config.getValue("sample_int").getInt());
+					assert.equal(123, client.config.getValue("sample_int"));
 
 					client.config.fromDeltas([new ConfigDeltaTest("sample_int", Config.ConfigValue(456))]);
-					assert.equal(456, client.config.getValue("sample_int").getInt());
+					assert.equal(456, client.config.getValue("sample_int"));
 
 					done();
 				});

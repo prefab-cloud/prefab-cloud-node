@@ -8,29 +8,6 @@ var prefabGrpc = require('./gRPC/prefab_grpc_pb');
 var Checkpoint = require('./checkpoint');
 
 
-function ConfigValue(value) {
-	var result = new proto.prefab.ConfigValue();
-
-	var type = typeof value;
-
-	if (type == 'number') {
-		if (Number.isInteger(value)) {
-			result.setInt(value);
-		}
-		else {
-			result.setDouble(value);
-		}
-	}
-	else if (type == 'string') {
-		result.setString(value);
-	}
-	else if (type == 'boolean') {
-		result.setBool(value);
-	}
-
-	return result;
-}
-
 function ConfigDelta(id, key, value, namespace) {
 	var result = new proto.prefab.ConfigDelta();
 
@@ -71,6 +48,32 @@ function UpsertRequest(accountId, configDelta, previousKey) {
 	return result;
 }
 
+function configValueToValue(configValue) {
+	var typeCase = configValue.getTypeCase();
+
+	switch (typeCase) {
+		case proto.prefab.ConfigValue.TypeCase.INT:
+			return configValue.getInt();
+
+		case proto.prefab.ConfigValue.TypeCase.STRING:
+			return configValue.getString();
+
+		case proto.prefab.ConfigValue.TypeCase.BYTES:
+			return configValue.getBytes();
+
+		case proto.prefab.ConfigValue.TypeCase.DOUBLE:
+			return configValue.getDouble();
+
+		case proto.prefab.ConfigValue.TypeCase.BOOL:
+			return configValue.getBool();
+
+		case proto.prefab.ConfigValue.TypeCase.FEATURE_FLAG:
+			return configValue.getFeatureFlag();
+	}
+
+	return null;
+}
+
 
 module.exports = class Config {
 	constructor(prefabCloudClient) {
@@ -101,10 +104,21 @@ module.exports = class Config {
 		}
 	}
 
-	getValue(key) {
+	getConfigValue(key) {
 		var result = this.values[key];
 
 		return (result != null ? result.value : null);
+	}
+
+	getValue(key) {
+		var result = null;
+		var value = this.getConfigValue(key);
+
+		if (value != null) {
+			result = configValueToValue(value);
+		}
+
+		return result;
 	}
 
 	setValue(key, value, deltaId) {
@@ -164,7 +178,7 @@ module.exports = class Config {
 		var doc = yaml.safeLoad(fs.readFileSync(filename));
 
 		for (var property in doc) {
-			this.setValue(property, ConfigValue(doc[property]));
+			this.setValue(property, Config.ConfigValue(doc[property]));
 		}
 	}
 
