@@ -6,6 +6,7 @@ Prefab Cloud Node.js client
 const PrefabCloudClient = require('prefab-cloud')
 
 var client = new PrefabCloudClient("api-key");
+client.config.getValue("A");
 client.getFeatureFlag("ff").isOn();
 client.rateLimit.acquire(["some.group"], 1);
 ```

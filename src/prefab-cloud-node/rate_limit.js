@@ -69,15 +69,15 @@ module.exports = class RateLimit {
 			this.prefabCloudClient.stats.increment("prefab.ratelimit.error", {tags : ["type:limit"]});
 			var passed = false;
 
-			switch ((onErrorMode || this.prefabCloudClient.onErrorMode.LogAndPass)) {
-				case this.prefabCloudClient.onErrorMode.LogAndPass:
+			switch ((onErrorMode || PrefabCloudClient.onErrorMode.LogAndPass)) {
+				case PrefabCloudClient.onErrorMode.LogAndPass:
 					passed = true;
 
-				case this.prefabCloudClient.onErrorMode.LogAndHit:
+				case PrefabCloudClient.onErrorMode.LogAndHit:
 					this.prefabCloudClient.logger.warn(`ratelimit for ${groups} error: ${e.message}`);
 					return LimitResponse(passed, 0);
 
-				case this.prefabCloudClient.onErrorMode.Throw:
+				case PrefabCloudClient.onErrorMode.Throw:
 					throw e;
 			}
 		}
