@@ -25,7 +25,7 @@ module.exports = class PrefabCloudClient {
 
 		var callCredentials = grpc.credentials.createFromMetadataGenerator((params, callback) => {
 			var metadata = new grpc.Metadata();
-			metadata.set('auth', this.apiKey);
+			metadata.set('auth', this.apiKey["value"]);
 			callback(null, metadata);
 		});
 
