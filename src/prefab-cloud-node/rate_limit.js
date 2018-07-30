@@ -42,7 +42,9 @@ module.exports = class RateLimit {
     }
 
     pass(group) {
-        return this.acquire([group], 1, false).then(function(response){ return response.getPassed()});
+        return this.acquire([group], 1, false).then(function (response) {
+            return response.getPassed()
+        });
     }
 
     async acquire(groups, amount, allowPartialResponse, onErrorMode) {
@@ -91,15 +93,11 @@ module.exports = class RateLimit {
     makeReq(request) {
         return new Promise((resolve, reject) => {
             this.prefabCloudClient.rateLimitServiceClient.limitCheck(request, (error, response) => {
-            if(error) {
-                reject(error);
-            }
-            resolve(response);
-    })
-        ;
-    })
-        ;
+                if (error) {
+                    reject(error);
+                }
+                resolve(response);
+            });
+        });
     }
-
-
 }

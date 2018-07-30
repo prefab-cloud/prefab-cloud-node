@@ -1,7 +1,7 @@
 module.exports = class Stats {
-	constructor() {
-	}
+    constructor() {
+    }
 
-	increment(key) {
-	}
+    increment(key) {
+    }
 }

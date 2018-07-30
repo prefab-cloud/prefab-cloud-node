@@ -1,11 +1,11 @@
 module.exports = class Cache {
-	constructor() {
-	}
+    constructor() {
+    }
 
-	read(key) {
-		return null;
-	}
+    read(key) {
+        return null;
+    }
 
-	write(name, value, opts) {
-	}
+    write(name, value, opts) {
+    }
 }
