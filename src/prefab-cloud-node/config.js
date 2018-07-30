@@ -91,7 +91,7 @@ module.exports = class Config {
 
 			var res = prefabCloudClient.configServiceClient.getConfig(req);
 			res.on('data', (delta) => {
-				fromDeltas(delta.getDeltasList());
+				this.fromDeltas(delta.getDeltasList());
 			});
 		}
 
