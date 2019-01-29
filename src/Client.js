@@ -100,8 +100,10 @@ module.exports = class Client {
         .join(':');
 
     if (delta.value) {
+
+
       const val = {
-        value: delta.value[delta.value.type],
+        value: delta.value.type === "int" ? parseInt(delta.value[delta.value.type]) : delta.value[delta.value.type],
         id: delta.id,
         source,
       };

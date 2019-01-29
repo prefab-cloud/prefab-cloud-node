@@ -1,6 +1,6 @@
 {
   "name": "prefab-cloud",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Prefab Cloud Node.js client",
   "main": "src/Prefab.js",
   "directories": {

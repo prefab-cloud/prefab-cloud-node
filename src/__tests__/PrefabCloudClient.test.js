@@ -27,7 +27,14 @@ class mockConfigService {
           key: 'value.to.override',
           value: {
             type: 'string',
-            value: 'old',
+            string: 'old',
+          },
+        },
+        {
+          key: 'intkey',
+          value: {
+            type: 'int',
+            int: "40", //grpc returns strings for ints
           },
         },
         {
@@ -35,7 +42,7 @@ class mockConfigService {
           key: 'value.to.override.with.namespace',
           value: {
             type: 'string',
-            value: 'old',
+            string: 'old',
           },
         },
       ],
@@ -69,7 +76,7 @@ mockConfigService.service = {
           key: 'value.to.override',
           value: {
             type: 'string',
-            value: 'old',
+            string: 'old',
           },
         },
         {
@@ -77,7 +84,7 @@ mockConfigService.service = {
           key: 'value.to.override.with.namespace',
           value: {
             type: 'string',
-            value: 'old',
+            string: 'old',
           },
         },
       ],
@@ -173,6 +180,10 @@ describe('Prefab', () => {
 
   test('loads from API', () => {
     expect(client.get('testKey')).toEqual('apiValue');
+  });
+
+  test('loads int from API', () => {
+    expect(client.get('intkey')).toEqual(40);
   });
 
   test('updates from GRPC', () => {

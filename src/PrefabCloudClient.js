@@ -38,7 +38,7 @@ class PrefabCloudClient {
 
     this.s3Object = this.apiKey.apiKeyStr.replace("|", "/");
     this.protocol = grpc.loadPackageDefinition(packageDefinition).prefab;
-    let grpcHost = process.env.PREFAB_API_URL || 'api.staging-prefab.cloud:443';
+    let grpcHost = process.env.PREFAB_API_URL || 'api.prefab.cloud:443';
 
 
     var channelCredentials = grpc.credentials.createSsl();
