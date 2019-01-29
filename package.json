@@ -1,21 +1,31 @@
 {
   "name": "prefab-cloud",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "Prefab Cloud Node.js client",
-  "main": "./src/prefab-cloud-node/prefab_cloud_client.js",
+  "main": "src/Prefab.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "aws-sdk": "^2.270.1",
-    "google-protobuf": "^3.0.0",
-    "grpc": "^1.0.0",
+    "@grpc/proto-loader": "^0.3.0",
+    "aws-sdk": "^2.343.0",
+    "glob": "^7.1.3",
+    "grpc": "^1.18.0",
     "js-yaml": "^3.12.0",
-    "murmurhash3": "^0.4.1"
+    "lodash": "^4.17.11",
+    "murmurhash3": "^0.4.2",
+    "simple-node-logger": "^0.93.40"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.7.0",
+    "eslint-plugin-jest": "^21.26.0",
+    "jest": "^23.6.0"
+  },
   "scripts": {
-    "test": "npm install chai && npm install -g mocha && mocha ./test/prefab-cloud-node-test/_all.js"
+    "test": "jest",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix"
   },
   "keywords": [
     "prefab"

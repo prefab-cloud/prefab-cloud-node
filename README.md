@@ -1,16 +1,41 @@
 # prefab-cloud-nodejs
-Prefab Cloud Node.js client
+PrefabCloudClient Cloud Node.js client
 
 ## Sample usage:
 ```javascript
 const PrefabCloudClient = require('prefab-cloud')
 
-var client = new PrefabCloudClient();  // Defaults to ENV[PREFAB_API_KEY]
-client.config.getValue("A");
-client.getFeatureFlag("ff").isOn();
-client.rateLimit.acquire(["some.group"], 1);
+var prefab = new PrefabCloudClient();  // Defaults to ENV[PREFAB_API_KEY] 
+var prefab = new PrefabCloudClient({{apiKey: "1|EXAMPLE"});  
 
-client.rateLimit.pass("hundred").then(function(passed){
-    console.log("passed"+passed);
+
+prefab.start((_, _client) => {
+      client = _client;
+    });
+
+prefab.get("A")
+
+prefab.featureFlagIsOn("MyFF"); 
+prefab.featureFlagIsOn("MyFF", "user123"); 
+prefab.featureFlagIsOn("MyFF", "user345", ["betaGroup"]); 
+
+prefab.limitCheck("hundred").then(function(passed) {
+  console.log("passed")
 });
+
 ```
+
+
+
+
+
+## Development
+
+
+### Get latest protos
+```
+git update --init proto
+git co proto
+git checkout master
+```
+
