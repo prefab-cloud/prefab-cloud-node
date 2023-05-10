@@ -1,0 +1,817 @@
+{
+  "nested": {
+    "prefab": {
+      "options": {
+        "java_package": "cloud.prefab.domain",
+        "java_outer_classname": "Prefab"
+      },
+      "nested": {
+        "ConfigServicePointer": {
+          "fields": {
+            "projectId": {
+              "type": "int64",
+              "id": 1
+            },
+            "startAtId": {
+              "type": "int64",
+              "id": 2
+            },
+            "projectEnvId": {
+              "type": "int64",
+              "id": 3
+            }
+          }
+        },
+        "ConfigValue": {
+          "oneofs": {
+            "type": {
+              "oneof": [
+                "int",
+                "string",
+                "bytes",
+                "double",
+                "bool",
+                "weightedValues",
+                "limitDefinition",
+                "logLevel",
+                "stringList"
+              ]
+            }
+          },
+          "fields": {
+            "int": {
+              "type": "int64",
+              "id": 1
+            },
+            "string": {
+              "type": "string",
+              "id": 2
+            },
+            "bytes": {
+              "type": "bytes",
+              "id": 3
+            },
+            "double": {
+              "type": "double",
+              "id": 4
+            },
+            "bool": {
+              "type": "bool",
+              "id": 5
+            },
+            "weightedValues": {
+              "type": "WeightedValues",
+              "id": 6
+            },
+            "limitDefinition": {
+              "type": "LimitDefinition",
+              "id": 7
+            },
+            "logLevel": {
+              "type": "LogLevel",
+              "id": 9
+            },
+            "stringList": {
+              "type": "StringList",
+              "id": 10
+            }
+          }
+        },
+        "StringList": {
+          "fields": {
+            "values": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 1
+            }
+          }
+        },
+        "WeightedValue": {
+          "fields": {
+            "weight": {
+              "type": "int32",
+              "id": 1
+            },
+            "value": {
+              "type": "ConfigValue",
+              "id": 2
+            }
+          }
+        },
+        "WeightedValues": {
+          "oneofs": {
+            "_hashByPropertyName": {
+              "oneof": [
+                "hashByPropertyName"
+              ]
+            }
+          },
+          "fields": {
+            "weightedValues": {
+              "rule": "repeated",
+              "type": "WeightedValue",
+              "id": 1
+            },
+            "hashByPropertyName": {
+              "type": "string",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "Configs": {
+          "fields": {
+            "configs": {
+              "rule": "repeated",
+              "type": "Config",
+              "id": 1
+            },
+            "configServicePointer": {
+              "type": "ConfigServicePointer",
+              "id": 2
+            }
+          }
+        },
+        "ConfigType": {
+          "values": {
+            "NOT_SET_CONFIG_TYPE": 0,
+            "CONFIG": 1,
+            "FEATURE_FLAG": 2,
+            "LOG_LEVEL": 3,
+            "SEGMENT": 4,
+            "LIMIT_DEFINITION": 5
+          }
+        },
+        "Config": {
+          "oneofs": {
+            "_draftId": {
+              "oneof": [
+                "draftId"
+              ]
+            }
+          },
+          "fields": {
+            "id": {
+              "type": "int64",
+              "id": 1
+            },
+            "projectId": {
+              "type": "int64",
+              "id": 2
+            },
+            "key": {
+              "type": "string",
+              "id": 3
+            },
+            "changedBy": {
+              "type": "ChangedBy",
+              "id": 4
+            },
+            "rows": {
+              "rule": "repeated",
+              "type": "ConfigRow",
+              "id": 5
+            },
+            "allowableValues": {
+              "rule": "repeated",
+              "type": "ConfigValue",
+              "id": 6
+            },
+            "configType": {
+              "type": "ConfigType",
+              "id": 7
+            },
+            "draftId": {
+              "type": "int64",
+              "id": 8,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "ChangedBy": {
+          "fields": {
+            "userId": {
+              "type": "int64",
+              "id": 1
+            },
+            "email": {
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "ConfigRow": {
+          "oneofs": {
+            "_projectEnvId": {
+              "oneof": [
+                "projectEnvId"
+              ]
+            }
+          },
+          "fields": {
+            "projectEnvId": {
+              "type": "int64",
+              "id": 1,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "values": {
+              "rule": "repeated",
+              "type": "ConditionalValue",
+              "id": 2
+            },
+            "properties": {
+              "keyType": "string",
+              "type": "ConfigValue",
+              "id": 3
+            }
+          }
+        },
+        "ConditionalValue": {
+          "fields": {
+            "criteria": {
+              "rule": "repeated",
+              "type": "Criterion",
+              "id": 1
+            },
+            "value": {
+              "type": "ConfigValue",
+              "id": 2
+            }
+          }
+        },
+        "LogLevel": {
+          "values": {
+            "NOT_SET_LOG_LEVEL": 0,
+            "TRACE": 1,
+            "DEBUG": 2,
+            "INFO": 3,
+            "WARN": 5,
+            "ERROR": 6,
+            "FATAL": 9
+          }
+        },
+        "Criterion": {
+          "fields": {
+            "propertyName": {
+              "type": "string",
+              "id": 1
+            },
+            "operator": {
+              "type": "CriterionOperator",
+              "id": 2
+            },
+            "valueToMatch": {
+              "type": "ConfigValue",
+              "id": 3
+            }
+          },
+          "nested": {
+            "CriterionOperator": {
+              "values": {
+                "NOT_SET": 0,
+                "LOOKUP_KEY_IN": 1,
+                "LOOKUP_KEY_NOT_IN": 2,
+                "IN_SEG": 3,
+                "NOT_IN_SEG": 4,
+                "ALWAYS_TRUE": 5,
+                "PROP_IS_ONE_OF": 6,
+                "PROP_IS_NOT_ONE_OF": 7,
+                "PROP_ENDS_WITH_ONE_OF": 8,
+                "PROP_DOES_NOT_END_WITH_ONE_OF": 9,
+                "HIERARCHICAL_MATCH": 10
+              }
+            }
+          }
+        },
+        "Loggers": {
+          "oneofs": {
+            "_namespace": {
+              "oneof": [
+                "namespace"
+              ]
+            }
+          },
+          "fields": {
+            "loggers": {
+              "rule": "repeated",
+              "type": "Logger",
+              "id": 1
+            },
+            "startAt": {
+              "type": "int64",
+              "id": 2
+            },
+            "endAt": {
+              "type": "int64",
+              "id": 3
+            },
+            "instanceHash": {
+              "type": "string",
+              "id": 4
+            },
+            "namespace": {
+              "type": "string",
+              "id": 5,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "Logger": {
+          "oneofs": {
+            "_traces": {
+              "oneof": [
+                "traces"
+              ]
+            },
+            "_debugs": {
+              "oneof": [
+                "debugs"
+              ]
+            },
+            "_infos": {
+              "oneof": [
+                "infos"
+              ]
+            },
+            "_warns": {
+              "oneof": [
+                "warns"
+              ]
+            },
+            "_errors": {
+              "oneof": [
+                "errors"
+              ]
+            },
+            "_fatals": {
+              "oneof": [
+                "fatals"
+              ]
+            }
+          },
+          "fields": {
+            "loggerName": {
+              "type": "string",
+              "id": 1
+            },
+            "traces": {
+              "type": "int64",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "debugs": {
+              "type": "int64",
+              "id": 3,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "infos": {
+              "type": "int64",
+              "id": 4,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "warns": {
+              "type": "int64",
+              "id": 5,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "errors": {
+              "type": "int64",
+              "id": 6,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "fatals": {
+              "type": "int64",
+              "id": 7,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "LoggerReportResponse": {
+          "fields": {}
+        },
+        "LimitResponse": {
+          "fields": {
+            "passed": {
+              "type": "bool",
+              "id": 1
+            },
+            "expiresAt": {
+              "type": "int64",
+              "id": 2
+            },
+            "enforcedGroup": {
+              "type": "string",
+              "id": 3
+            },
+            "currentBucket": {
+              "type": "int64",
+              "id": 4
+            },
+            "policyGroup": {
+              "type": "string",
+              "id": 5
+            },
+            "policyName": {
+              "type": "LimitPolicyNames",
+              "id": 6
+            },
+            "policyLimit": {
+              "type": "int32",
+              "id": 7
+            },
+            "amount": {
+              "type": "int64",
+              "id": 8
+            },
+            "limitResetAt": {
+              "type": "int64",
+              "id": 9
+            },
+            "safetyLevel": {
+              "type": "LimitDefinition.SafetyLevel",
+              "id": 10
+            }
+          },
+          "nested": {
+            "LimitPolicyNames": {
+              "values": {
+                "NOT_SET": 0,
+                "SECONDLY_ROLLING": 1,
+                "MINUTELY_ROLLING": 3,
+                "HOURLY_ROLLING": 5,
+                "DAILY_ROLLING": 7,
+                "MONTHLY_ROLLING": 8,
+                "INFINITE": 9,
+                "YEARLY_ROLLING": 10
+              }
+            }
+          }
+        },
+        "LimitRequest": {
+          "fields": {
+            "accountId": {
+              "type": "int64",
+              "id": 1
+            },
+            "acquireAmount": {
+              "type": "int32",
+              "id": 2
+            },
+            "groups": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 3
+            },
+            "limitCombiner": {
+              "type": "LimitCombiner",
+              "id": 4
+            },
+            "allowPartialResponse": {
+              "type": "bool",
+              "id": 5
+            },
+            "safetyLevel": {
+              "type": "LimitDefinition.SafetyLevel",
+              "id": 6
+            }
+          },
+          "nested": {
+            "LimitCombiner": {
+              "values": {
+                "NOT_SET": 0,
+                "MINIMUM": 1,
+                "MAXIMUM": 2
+              }
+            }
+          }
+        },
+        "ContextSet": {
+          "fields": {
+            "contexts": {
+              "rule": "repeated",
+              "type": "Context",
+              "id": 1
+            }
+          }
+        },
+        "Context": {
+          "oneofs": {
+            "_type": {
+              "oneof": [
+                "type"
+              ]
+            }
+          },
+          "fields": {
+            "type": {
+              "type": "string",
+              "id": 1,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "values": {
+              "keyType": "string",
+              "type": "ConfigValue",
+              "id": 2
+            }
+          }
+        },
+        "Identity": {
+          "oneofs": {
+            "_lookup": {
+              "oneof": [
+                "lookup"
+              ]
+            }
+          },
+          "fields": {
+            "lookup": {
+              "type": "string",
+              "id": 1,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "attributes": {
+              "keyType": "string",
+              "type": "string",
+              "id": 2
+            }
+          }
+        },
+        "ClientConfigValue": {
+          "oneofs": {
+            "_int": {
+              "oneof": [
+                "int"
+              ]
+            },
+            "_string": {
+              "oneof": [
+                "string"
+              ]
+            },
+            "_double": {
+              "oneof": [
+                "double"
+              ]
+            },
+            "_bool": {
+              "oneof": [
+                "bool"
+              ]
+            }
+          },
+          "fields": {
+            "int": {
+              "type": "int64",
+              "id": 1,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "string": {
+              "type": "string",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "double": {
+              "type": "double",
+              "id": 3,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "bool": {
+              "type": "bool",
+              "id": 4,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "ConfigEvaluations": {
+          "fields": {
+            "values": {
+              "keyType": "string",
+              "type": "ClientConfigValue",
+              "id": 1
+            }
+          }
+        },
+        "LimitDefinition": {
+          "fields": {
+            "policyName": {
+              "type": "LimitResponse.LimitPolicyNames",
+              "id": 2
+            },
+            "limit": {
+              "type": "int32",
+              "id": 3
+            },
+            "burst": {
+              "type": "int32",
+              "id": 4
+            },
+            "accountId": {
+              "type": "int64",
+              "id": 5
+            },
+            "lastModified": {
+              "type": "int64",
+              "id": 6
+            },
+            "returnable": {
+              "type": "bool",
+              "id": 7
+            },
+            "safetyLevel": {
+              "type": "SafetyLevel",
+              "id": 8
+            }
+          },
+          "nested": {
+            "SafetyLevel": {
+              "values": {
+                "NOT_SET": 0,
+                "L4_BEST_EFFORT": 4,
+                "L5_BOMBPROOF": 5
+              }
+            }
+          }
+        },
+        "LimitDefinitions": {
+          "fields": {
+            "definitions": {
+              "rule": "repeated",
+              "type": "LimitDefinition",
+              "id": 1
+            }
+          }
+        },
+        "OnFailure": {
+          "values": {
+            "NOT_SET": 0,
+            "LOG_AND_PASS": 1,
+            "LOG_AND_FAIL": 2,
+            "THROW": 3
+          }
+        },
+        "BufferedRequest": {
+          "fields": {
+            "accountId": {
+              "type": "int64",
+              "id": 1
+            },
+            "method": {
+              "type": "string",
+              "id": 2
+            },
+            "uri": {
+              "type": "string",
+              "id": 3
+            },
+            "body": {
+              "type": "string",
+              "id": 4
+            },
+            "limitGroups": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 5
+            },
+            "contentType": {
+              "type": "string",
+              "id": 6
+            },
+            "fifo": {
+              "type": "bool",
+              "id": 7
+            }
+          }
+        },
+        "BatchRequest": {
+          "fields": {
+            "accountId": {
+              "type": "int64",
+              "id": 1
+            },
+            "method": {
+              "type": "string",
+              "id": 2
+            },
+            "uri": {
+              "type": "string",
+              "id": 3
+            },
+            "body": {
+              "type": "string",
+              "id": 4
+            },
+            "limitGroups": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 5
+            },
+            "batchTemplate": {
+              "type": "string",
+              "id": 6
+            },
+            "batchSeparator": {
+              "type": "string",
+              "id": 7
+            }
+          }
+        },
+        "BasicResponse": {
+          "fields": {
+            "message": {
+              "type": "string",
+              "id": 1
+            }
+          }
+        },
+        "CreationResponse": {
+          "fields": {
+            "message": {
+              "type": "string",
+              "id": 1
+            },
+            "newId": {
+              "type": "int64",
+              "id": 2
+            }
+          }
+        },
+        "IdBlock": {
+          "fields": {
+            "projectId": {
+              "type": "int64",
+              "id": 1
+            },
+            "projectEnvId": {
+              "type": "int64",
+              "id": 2
+            },
+            "sequenceName": {
+              "type": "string",
+              "id": 3
+            },
+            "start": {
+              "type": "int64",
+              "id": 4
+            },
+            "end": {
+              "type": "int64",
+              "id": 5
+            }
+          }
+        },
+        "IdBlockRequest": {
+          "fields": {
+            "projectId": {
+              "type": "int64",
+              "id": 1
+            },
+            "projectEnvId": {
+              "type": "int64",
+              "id": 2
+            },
+            "sequenceName": {
+              "type": "string",
+              "id": 3
+            },
+            "size": {
+              "type": "int64",
+              "id": 4
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,3 @@
+[submodule "prefab-cloud-integration-test-data"]
+	path = prefab-cloud-integration-test-data
+	url = git@github.com:prefab-cloud/prefab-cloud-integration-test-data.git

@@ -1,0 +1,39 @@
+{
+  "name": "prefab-cloud-node",
+  "version": "0.1.0",
+  "description": "Feature Flags, Live Config, and Dynamic Log Levels",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --cache=/tmp/prefab-cloud-node --write \"**/*.+(js|ts|json)\"",
+    "lint": "eslint --cache=true --ext .ts .",
+    "prep": "npm run lint && npm run format && npm run test && npm run build",
+    "regen-proto": "npx pbjs -t json ../prefab-cloud/prefab.proto > src/proto.json && protoc --ts_proto_opt=esModuleInterop=true --ts_proto_opt=forceLong=long --ts_proto_opt=onlyTypes=true --ts_proto_opt=env=node --ts_proto_out=./ -I ../prefab-cloud/ prefab.proto && mv prefab.ts src/proto.ts",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^29.5.1",
+    "@typescript-eslint/eslint-plugin": "^5.59.2",
+    "@typescript-eslint/parser": "^5.59.2",
+    "eslint": "^8.39.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-config-standard-with-typescript": "^34.0.1",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-n": "^15.7.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "jest": "^29.5.0",
+    "prettier": "^2.8.8",
+    "ts-jest": "^29.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.4",
+    "yaml": "^2.2.2"
+  },
+  "dependencies": {
+    "long": "^5.2.3",
+    "murmurhash": "^2.0.1",
+    "protobufjs": "^7.2.3"
+  }
+}

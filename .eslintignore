@@ -1,0 +1,3 @@
+dist/**/*
+src/proto.json
+src/proto.ts
