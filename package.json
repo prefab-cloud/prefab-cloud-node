@@ -32,6 +32,8 @@
     "yaml": "^2.2.2"
   },
   "dependencies": {
+    "@types/eventsource": "^1.1.11",
+    "eventsource": "^2.0.2",
     "long": "^5.2.3",
     "murmurhash": "^2.0.1",
     "protobufjs": "^7.2.3"

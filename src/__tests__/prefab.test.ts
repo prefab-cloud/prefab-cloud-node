@@ -40,9 +40,14 @@ describe("prefab", () => {
 
     it("throws a 401 if you have an invalid API key", async () => {
       const prefab = new Prefab({ apiKey: invalidApiKey });
+
+      jest.spyOn(console, "warn").mockImplementation();
+
       await expect(prefab.init()).rejects.toThrow(
         "Unauthorized. Check your Prefab SDK API key."
       );
+
+      expect(console.warn).toHaveBeenCalled();
     });
   });
 
