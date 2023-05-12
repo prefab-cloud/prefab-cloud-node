@@ -12,20 +12,22 @@ const emptyContexts: Contexts = new Map<string, Context>();
 const NOT_PROVIDED = Symbol("NOT_PROVIDED");
 
 class Resolver implements PrefabInterface {
-  private readonly config: Config[];
+  private readonly config: Map<string, Config>;
   private readonly projectEnvId: ProjectEnvId;
   private readonly namespace: string | undefined;
   private readonly onNoDefault: OnNoDefault;
   private readonly parentContext?: Contexts;
 
   constructor(
-    config: Config[],
+    configs: Config[] | Map<string, Config>,
     projectEnvId: ProjectEnvId,
     namespace: string | undefined,
     onNoDefault: OnNoDefault,
     contexts?: Contexts
   ) {
-    this.config = config;
+    this.config = Array.isArray(configs)
+      ? new Map(configs.map((config) => [config.key, config]))
+      : configs;
     this.projectEnvId = projectEnvId;
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
@@ -42,12 +44,14 @@ class Resolver implements PrefabInterface {
     );
   }
 
-  raw(key: string): Config | undefined {
-    const config = this.config.find(({ key: configKey }) => {
-      return key === configKey;
-    });
+  update(configs: Config[]): void {
+    for (const config of configs) {
+      this.config.set(config.key, config);
+    }
+  }
 
-    return config;
+  raw(key: string): Config | undefined {
+    return this.config.get(key);
   }
 
   get(
