@@ -67,6 +67,10 @@ export const unwrapValue = (
       return value.int?.toInt();
     case "bool":
       return value.bool;
+    case "double":
+      return value.double;
+    case "logLevel":
+      return value.logLevel;
     default:
       throw new Error(`Unexpected value ${JSON.stringify(value)}`);
   }
