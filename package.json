@@ -1,8 +1,9 @@
 {
-  "name": "prefab-cloud-node",
-  "version": "0.1.0",
+  "name": "@prefab-cloud/prefab-cloud-node",
+  "version": "0.1.1-alpha.0",
   "description": "Feature Flags, Live Config, and Dynamic Log Levels",
-  "main": "index.js",
+  "main": "dist/prefab.js",
+  "types": "dist/prefab.d.ts",
   "scripts": {
     "build": "tsc",
     "format": "prettier --cache=/tmp/prefab-cloud-node --write \"**/*.+(js|ts|json)\"",
@@ -12,7 +13,7 @@
     "test": "jest"
   },
   "keywords": [],
-  "author": "",
+  "author": "Jeffrey Chupp",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.1",
