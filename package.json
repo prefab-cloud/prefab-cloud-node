@@ -1,6 +1,6 @@
 {
   "name": "@prefab-cloud/prefab-cloud-node",
-  "version": "0.1.1-alpha.0",
+  "version": "0.1.1-alpha.1",
   "description": "Feature Flags, Live Config, and Dynamic Log Levels",
   "main": "dist/prefab.js",
   "types": "dist/prefab.d.ts",
