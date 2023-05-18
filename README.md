@@ -21,7 +21,7 @@ if (!process.env.PREFAB_API_KEY) {
   throw new Error("PREFAB_API_KEY is not set");
 }
 
-export const prefab = new Prefab({
+const prefab = new Prefab({
   apiKey: process.env.PREFAB_API_KEY,
   enableSSE: true,
   enablePolling: true,
