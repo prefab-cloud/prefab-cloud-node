@@ -31,6 +31,7 @@ interface ConstructorProps {
   namespace?: string;
   onNoDefault?: OnNoDefault;
   pollInterval?: number;
+  fetch?: typeof globalThis.fetch;
 }
 
 class Prefab implements PrefabInterface {
@@ -43,6 +44,7 @@ class Prefab implements PrefabInterface {
   private readonly onNoDefault: "error" | "warn" | "ignore";
   private readonly pollInterval: number;
   private resolver?: Resolver;
+  private readonly fetch: typeof globalThis.fetch;
 
   constructor({
     apiKey,
@@ -53,6 +55,7 @@ class Prefab implements PrefabInterface {
     enableSSE,
     enablePolling,
     pollInterval,
+    fetch = globalThis.fetch,
   }: ConstructorProps) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
@@ -62,6 +65,7 @@ class Prefab implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
+    this.fetch = fetch;
   }
 
   async init(): Promise<void> {
@@ -69,6 +73,7 @@ class Prefab implements PrefabInterface {
       apiKey: this.apiKey,
       cdnUrl: this.cdnUrl,
       apiUrl: this.apiUrl,
+      fetch: this.fetch,
     });
 
     this.setConfig(configs, projectEnvId);
