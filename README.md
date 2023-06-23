@@ -10,7 +10,7 @@ Prefab Node.js client
 
 Install the client
 
-`npm install @prefab-cloud/prefab-cloud-node` or `yarn install @prefab-cloud/prefab-cloud-node`
+`npm install @prefab-cloud/prefab-cloud-node` or `yarn add @prefab-cloud/prefab-cloud-node`
 
 Set up a Prefab client.
 
