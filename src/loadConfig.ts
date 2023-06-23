@@ -11,21 +11,23 @@ export async function loadConfig({
   cdnUrl,
   apiUrl,
   startAtId,
+  fetch = globalThis.fetch,
 }: {
   apiKey: string;
   cdnUrl: string;
   apiUrl: string;
   startAtId?: Long;
+  fetch?: typeof globalThis.fetch;
 }): Promise<{
   configs: Config[];
   projectEnvId: ProjectEnvId;
   startAtId: Long;
 }> {
   try {
-    return await loadConfigFromUrl({ apiKey, url: cdnUrl, startAtId });
+    return await loadConfigFromUrl({ apiKey, url: cdnUrl, startAtId, fetch });
   } catch (e) {
     console.warn(e);
-    return await loadConfigFromUrl({ apiKey, url: apiUrl, startAtId });
+    return await loadConfigFromUrl({ apiKey, url: apiUrl, startAtId, fetch });
   }
 }
 
@@ -33,10 +35,12 @@ const loadConfigFromUrl = async ({
   apiKey,
   url,
   startAtId,
+  fetch,
 }: {
   apiKey: string;
   url: string;
   startAtId?: Long;
+  fetch: typeof window.fetch;
 }): ReturnType<typeof loadConfig> => {
   const headers = {
     ...makeHeaders(apiKey),
