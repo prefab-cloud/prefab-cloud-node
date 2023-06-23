@@ -10,5 +10,7 @@ module.exports = {
     sourceType: "module",
     project: ["./tsconfig.eslint.json"],
   },
-  rules: {},
+  rules: {
+    "@typescript-eslint/no-var-requires": "off"
+  },
 };

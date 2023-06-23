@@ -1,6 +1,7 @@
 import fs from "fs";
-import YAML from "yaml";
 import type { Contexts } from "../types";
+
+const YAML = require("yaml");
 
 const testDataPath = `./prefab-cloud-integration-test-data`;
 

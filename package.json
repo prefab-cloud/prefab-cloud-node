@@ -2,10 +2,20 @@
   "name": "@prefab-cloud/prefab-cloud-node",
   "version": "0.1.1-alpha.1",
   "description": "Feature Flags, Live Config, and Dynamic Log Levels",
-  "main": "dist/prefab.js",
+  "main": "dist/prefab.cjs",
   "types": "dist/prefab.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/prefab.mjs",
+      "require": "./dist/prefab.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "npx unbuild",
     "format": "prettier --cache=/tmp/prefab-cloud-node --write \"**/*.+(js|ts|json)\"",
     "lint": "eslint --cache=true --ext .ts .",
     "prep": "npm run lint && npm run format && npm run test && npm run build",
@@ -17,6 +27,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.5.1",
+    "@types/yaml": "^1.9.7",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",
     "eslint": "^8.39.0",
