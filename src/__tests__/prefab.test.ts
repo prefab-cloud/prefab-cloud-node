@@ -54,6 +54,50 @@ describe("prefab", () => {
   // While the evaluation logic is best tested in evaluate.test.ts,
   // these serve as more integration-like tests for happy paths.
   describe("get", () => {
+    describe("when the key cannot be found", () => {
+      it("throws if no default is provided and onNoDefault is `error`", () => {
+        const prefab = new Prefab({ apiKey: irrelevant });
+        prefab.setConfig([], projectEnvIdUnderTest);
+
+        expect(() => {
+          prefab.get("missing.value");
+        }).toThrow("No value found for key 'missing.value'");
+      });
+
+      it("warns if no default is provided and onNoDefault is `warn`", () => {
+        const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
+        prefab.setConfig([], projectEnvIdUnderTest);
+
+        jest.spyOn(console, "warn").mockImplementation();
+
+        expect(prefab.get("missing.value")).toBeUndefined();
+
+        expect(console.warn).toHaveBeenCalledWith(
+          "No value found for key 'missing.value'"
+        );
+      });
+
+      it("returns undefined if no default is provided and onNoDefault is `ignore`", () => {
+        const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
+        prefab.setConfig([], projectEnvIdUnderTest);
+
+        jest.spyOn(console, "warn").mockImplementation();
+
+        expect(prefab.get("missing.value")).toBeUndefined();
+      });
+
+      it("returns the default if one is provided", () => {
+        const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
+        prefab.setConfig([], projectEnvIdUnderTest);
+
+        const defaultValue = "default-value";
+
+        expect(prefab.get("missing.value", new Map(), defaultValue)).toEqual(
+          defaultValue
+        );
+      });
+    });
+
     it("returns a config value with no rules", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
       prefab.setConfig(configs, projectEnvIdUnderTest);
@@ -128,6 +172,39 @@ describe("prefab", () => {
   });
 
   describe("isFeatureEnabled", () => {
+    describe("when the key cannot be found", () => {
+      it("throws if no default is provided and onNoDefault is `error`", () => {
+        const prefab = new Prefab({ apiKey: irrelevant });
+        prefab.setConfig([], projectEnvIdUnderTest);
+
+        expect(() => {
+          prefab.isFeatureEnabled("missing.value");
+        }).toThrow("No value found for key 'missing.value'");
+      });
+
+      it("returns false and warns if onNoDefault is `warn`", () => {
+        const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
+        prefab.setConfig([], projectEnvIdUnderTest);
+
+        jest.spyOn(console, "warn").mockImplementation();
+
+        expect(prefab.isFeatureEnabled("missing.value")).toEqual(false);
+
+        expect(console.warn).toHaveBeenCalledWith(
+          "No value found for key 'missing.value'"
+        );
+      });
+
+      it("returns false if onNoDefault is `ignore`", () => {
+        const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
+        prefab.setConfig([], projectEnvIdUnderTest);
+
+        jest.spyOn(console, "warn").mockImplementation();
+
+        expect(prefab.isFeatureEnabled("missing.value")).toEqual(false);
+      });
+    });
+
     it("returns true when the flag matches", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
       prefab.setConfig(configs, projectEnvIdUnderTest);
