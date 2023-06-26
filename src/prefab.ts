@@ -4,8 +4,8 @@ import { loadConfig } from "./loadConfig";
 import { Resolver } from "./resolver";
 import type { Contexts, OnNoDefault, ProjectEnvId } from "./types";
 
-import type { Config } from "./proto";
-import { ConfigType, LogLevel } from "./proto";
+import { LogLevel } from "./proto";
+import type { Config, ConfigType } from "./proto";
 import { wordLevelToNumber } from "./logger";
 import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
