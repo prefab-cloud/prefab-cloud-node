@@ -1,5 +1,5 @@
 import type { Contexts } from "./types";
-import { Resolver } from "./resolver";
+import { type Resolver } from "./resolver";
 
 export const PREFIX = "log-level.";
 
@@ -28,7 +28,7 @@ export const shouldLog = ({
   defaultLevel?: number;
   resolver: Resolver;
   contexts?: Contexts;
-}) => {
+}): boolean => {
   let loggerNameWithPrefix = PREFIX + loggerName;
 
   while (loggerNameWithPrefix.includes(".")) {
@@ -39,7 +39,7 @@ export const shouldLog = ({
       "ignore"
     );
 
-    if (resolvedLevel) {
+    if (resolvedLevel !== undefined) {
       return Number(resolvedLevel) <= desiredLevel;
     }
 

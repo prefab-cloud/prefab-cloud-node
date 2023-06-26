@@ -4,7 +4,7 @@ import { Resolver } from "../resolver";
 import { shouldLog, wordLevelToNumber, PREFIX } from "../logger";
 import { irrelevantLong, projectEnvIdUnderTest } from "./testHelpers";
 
-const getResolver = (configs: Config[]) => {
+const getResolver = (configs: Config[]): Resolver => {
   return new Resolver(
     configs,
     projectEnvIdUnderTest,
@@ -39,7 +39,7 @@ const levelAt = (path: string, level: string): Config => {
   };
 };
 
-const examples: [string, string, boolean][] = [
+const examples: Array<[string, string, boolean]> = [
   ["trace", "trace", true],
   ["trace", "debug", true],
   ["trace", "info", true],
@@ -99,7 +99,7 @@ describe("shouldLog", () => {
   });
 
   examples.forEach(([ruleLevel, desiredLevel, expected]) => {
-    it(`returns ${expected} if the resolved level is ${ruleLevel} and the desired level is ${desiredLevel}`, () => {
+    it(`returns ${expected.toString()} if the resolved level is ${ruleLevel} and the desired level is ${desiredLevel}`, () => {
       const loggerName = "some.test.name";
       const resolver = getResolver([levelAt(loggerName, ruleLevel)]);
       expect(
