@@ -1,5 +1,6 @@
 import fs from "fs";
 import type { Contexts } from "../types";
+import { PREFIX } from "../logger";
 
 const YAML = require("yaml");
 
@@ -108,7 +109,7 @@ const calcExpectedValue = (testCase: RawTestCase, key: string): any => {
     expectedValue = undefined;
   }
 
-  if (key.startsWith("log-level.")) {
+  if (key.startsWith(PREFIX)) {
     expectedValue = LogLevelLookup[expectedValue];
   }
 

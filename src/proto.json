@@ -34,7 +34,8 @@
                 "weightedValues",
                 "limitDefinition",
                 "logLevel",
-                "stringList"
+                "stringList",
+                "intRange"
               ]
             }
           },
@@ -74,6 +75,40 @@
             "stringList": {
               "type": "StringList",
               "id": 10
+            },
+            "intRange": {
+              "type": "IntRange",
+              "id": 11
+            }
+          }
+        },
+        "IntRange": {
+          "oneofs": {
+            "_start": {
+              "oneof": [
+                "start"
+              ]
+            },
+            "_end": {
+              "oneof": [
+                "end"
+              ]
+            }
+          },
+          "fields": {
+            "start": {
+              "type": "int64",
+              "id": 1,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "end": {
+              "type": "int64",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
             }
           }
         },
@@ -284,7 +319,8 @@
                 "PROP_IS_NOT_ONE_OF": 7,
                 "PROP_ENDS_WITH_ONE_OF": 8,
                 "PROP_DOES_NOT_END_WITH_ONE_OF": 9,
-                "HIERARCHICAL_MATCH": 10
+                "HIERARCHICAL_MATCH": 10,
+                "IN_INT_RANGE": 11
               }
             }
           }
@@ -808,6 +844,98 @@
             "size": {
               "type": "int64",
               "id": 4
+            }
+          }
+        },
+        "ContextShape": {
+          "fields": {
+            "name": {
+              "type": "string",
+              "id": 1
+            },
+            "fieldTypes": {
+              "keyType": "string",
+              "type": "int32",
+              "id": 2
+            }
+          }
+        },
+        "ContextShapes": {
+          "oneofs": {
+            "_namespace": {
+              "oneof": [
+                "namespace"
+              ]
+            }
+          },
+          "fields": {
+            "shapes": {
+              "rule": "repeated",
+              "type": "ContextShape",
+              "id": 1
+            },
+            "namespace": {
+              "type": "string",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "EvaluatedKeys": {
+          "oneofs": {
+            "_namespace": {
+              "oneof": [
+                "namespace"
+              ]
+            }
+          },
+          "fields": {
+            "keys": {
+              "rule": "repeated",
+              "type": "string",
+              "id": 1
+            },
+            "namespace": {
+              "type": "string",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "EvaluatedConfig": {
+          "fields": {
+            "key": {
+              "type": "string",
+              "id": 1
+            },
+            "configVersion": {
+              "type": "int64",
+              "id": 2
+            },
+            "result": {
+              "type": "ConfigValue",
+              "id": 3
+            },
+            "context": {
+              "type": "ContextSet",
+              "id": 4
+            },
+            "timestamp": {
+              "type": "int64",
+              "id": 5
+            }
+          }
+        },
+        "EvaluatedConfigs": {
+          "fields": {
+            "configs": {
+              "rule": "repeated",
+              "type": "EvaluatedConfig",
+              "id": 1
             }
           }
         }

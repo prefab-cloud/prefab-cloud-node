@@ -1,4 +1,5 @@
 import basicConfig from "./fixtures/basicConfig";
+import basicLogLevel from "./fixtures/basicLogLevel";
 import envConfig from "./fixtures/envConfig";
 import namespaceConfig from "./fixtures/namespaceConfig";
 import propDoesNotEndWithOneOf from "./fixtures/propDoesNotEndWithOneOf";
@@ -18,7 +19,8 @@ const emptyResolver = new Resolver(
   [],
   projectEnvIdUnderTest,
   noNamespace,
-  "error"
+  "error",
+  3
 );
 
 describe.only("evaluate", () => {
@@ -32,6 +34,18 @@ describe.only("evaluate", () => {
         resolver: emptyResolver,
       })
     ).toEqual(42);
+  });
+
+  it("returns a config logLevel value with no rules", () => {
+    expect(
+      evaluate({
+        config: basicLogLevel,
+        projectEnvId: projectEnvIdUnderTest,
+        namespace: noNamespace,
+        contexts: emptyContexts,
+        resolver: emptyResolver,
+      })
+    ).toEqual(3);
   });
 
   it("returns a config value with no rules but an environment", () => {
