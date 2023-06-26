@@ -1,13 +1,17 @@
+// TODO: test not provided behavior throughout
 import type Long from "long";
 import { loadConfig } from "./loadConfig";
 import { Resolver } from "./resolver";
 import type { Contexts, OnNoDefault, ProjectEnvId } from "./types";
 
 import type { Config } from "./proto";
+import { ConfigType, LogLevel } from "./proto";
+import { wordLevelToNumber } from "./logger";
 import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
+const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
 
 function requireResolver(
   resolver: Resolver | undefined
@@ -32,6 +36,7 @@ interface ConstructorProps {
   onNoDefault?: OnNoDefault;
   pollInterval?: number;
   fetch?: typeof globalThis.fetch;
+  defaultLogLevel?: number;
 }
 
 class Prefab implements PrefabInterface {
@@ -45,6 +50,7 @@ class Prefab implements PrefabInterface {
   private readonly pollInterval: number;
   private resolver?: Resolver;
   private readonly fetch: typeof globalThis.fetch;
+  private readonly defaultLogLevel: number;
 
   constructor({
     apiKey,
@@ -56,6 +62,7 @@ class Prefab implements PrefabInterface {
     enablePolling,
     pollInterval,
     fetch = globalThis.fetch,
+    defaultLogLevel = PREFAB_DEFAULT_LOG_LEVEL,
   }: ConstructorProps) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
@@ -65,6 +72,7 @@ class Prefab implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
+    this.defaultLogLevel = defaultLogLevel;
     this.fetch = fetch;
   }
 
@@ -94,7 +102,8 @@ class Prefab implements PrefabInterface {
       config,
       projectEnvId,
       this.namespace,
-      this.onNoDefault
+      this.onNoDefault,
+      this.defaultLogLevel
     );
   }
 
@@ -146,6 +155,27 @@ class Prefab implements PrefabInterface {
     return this.resolver.get(key, contexts, defaultValue);
   }
 
+  shouldLog({
+    loggerName,
+    desiredLevel,
+    defaultLogLevel,
+    contexts,
+  }: {
+    loggerName: string;
+    desiredLevel: number;
+    defaultLogLevel?: number;
+    contexts?: Contexts;
+  }): boolean {
+    requireResolver(this.resolver);
+
+    return this.resolver.shouldLog({
+      loggerName,
+      desiredLevel,
+      contexts,
+      defaultLogLevel,
+    });
+  }
+
   isFeatureEnabled(key: string, contexts?: Contexts): boolean {
     requireResolver(this.resolver);
 
@@ -153,4 +183,4 @@ class Prefab implements PrefabInterface {
   }
 }
 
-export { Prefab };
+export { Prefab, LogLevel, wordLevelToNumber, type Contexts, type ConfigType };

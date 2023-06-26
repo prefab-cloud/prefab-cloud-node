@@ -102,7 +102,9 @@ const allCriteriaMatch = (
       case Criterion_CriterionOperator.NOT_IN_SEG:
         return !inSegment(criterion, contexts, resolver);
       default:
-        throw new Error(`Unexpected criteria ${JSON.stringify(criterion)}`);
+        throw new Error(
+          `Unexpected criteria ${JSON.stringify(criterion.operator)}`
+        );
     }
   });
 };

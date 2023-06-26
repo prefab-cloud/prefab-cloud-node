@@ -55,6 +55,16 @@ export interface ConfigValue {
   limitDefinition?: LimitDefinition | undefined;
   logLevel?: LogLevel | undefined;
   stringList?: StringList | undefined;
+  intRange?: IntRange | undefined;
+}
+
+export interface IntRange {
+  /** if empty treat as Long.MIN_VALUE. Inclusive */
+  start?:
+    | Long
+    | undefined;
+  /** if empty treat as Long.MAX_VALUE. Exclusive */
+  end?: Long | undefined;
 }
 
 export interface StringList {
@@ -131,6 +141,7 @@ export enum Criterion_CriterionOperator {
   PROP_ENDS_WITH_ONE_OF = 8,
   PROP_DOES_NOT_END_WITH_ONE_OF = 9,
   HIERARCHICAL_MATCH = 10,
+  IN_INT_RANGE = 11,
   UNRECOGNIZED = -1,
 }
 
@@ -306,6 +317,38 @@ export interface IdBlockRequest {
   projectEnvId: Long;
   sequenceName: string;
   size: Long;
+}
+
+export interface ContextShape {
+  name: string;
+  fieldTypes: { [key: string]: number };
+}
+
+export interface ContextShape_FieldTypesEntry {
+  key: string;
+  value: number;
+}
+
+export interface ContextShapes {
+  shapes: ContextShape[];
+  namespace?: string | undefined;
+}
+
+export interface EvaluatedKeys {
+  keys: string[];
+  namespace?: string | undefined;
+}
+
+export interface EvaluatedConfig {
+  key: string;
+  configVersion: Long;
+  result: ConfigValue | undefined;
+  context: ContextSet | undefined;
+  timestamp: Long;
+}
+
+export interface EvaluatedConfigs {
+  configs: EvaluatedConfig[];
 }
 
 if (_m0.util.Long !== Long) {
