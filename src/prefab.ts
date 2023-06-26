@@ -166,14 +166,20 @@ class Prefab implements PrefabInterface {
     defaultLogLevel?: number;
     contexts?: Contexts;
   }): boolean {
-    requireResolver(this.resolver);
+    if (this.resolver !== undefined) {
+      return this.resolver.shouldLog({
+        loggerName,
+        desiredLevel,
+        contexts,
+        defaultLogLevel,
+      });
+    }
 
-    return this.resolver.shouldLog({
-      loggerName,
-      desiredLevel,
-      contexts,
-      defaultLogLevel,
-    });
+    console.warn(
+      "prefab.resolver is undefined. Did you call init()? Comparing against defaultLogLevel setting"
+    );
+
+    return (defaultLogLevel ?? this.defaultLogLevel) <= desiredLevel;
   }
 
   isFeatureEnabled(key: string, contexts?: Contexts): boolean {

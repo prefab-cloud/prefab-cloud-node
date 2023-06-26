@@ -15,7 +15,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "npx unbuild",
+    "build": "rm -rf dist/ && npx unbuild",
     "format": "prettier --cache=/tmp/prefab-cloud-node --write \"**/*.+(js|ts|json)\"",
     "lint": "eslint --cache=true --ext .ts .",
     "prep": "npm run lint && npm run format && npm run test && npm run build",
