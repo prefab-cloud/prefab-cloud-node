@@ -6,7 +6,7 @@ import type { Contexts, OnNoDefault, ProjectEnvId } from "./types";
 
 import { LogLevel } from "./proto";
 import type { Config, ConfigType } from "./proto";
-import { wordLevelToNumber } from "./logger";
+import { wordLevelToNumber, parseLevel } from "./logger";
 import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
 
@@ -36,7 +36,7 @@ interface ConstructorProps {
   onNoDefault?: OnNoDefault;
   pollInterval?: number;
   fetch?: typeof globalThis.fetch;
-  defaultLogLevel?: number;
+  defaultLogLevel?: number | string;
 }
 
 class Prefab implements PrefabInterface {
@@ -50,7 +50,7 @@ class Prefab implements PrefabInterface {
   private readonly pollInterval: number;
   private resolver?: Resolver;
   private readonly fetch: typeof globalThis.fetch;
-  private readonly defaultLogLevel: number;
+  private readonly defaultLogLevel: number | string;
 
   constructor({
     apiKey,
@@ -103,7 +103,7 @@ class Prefab implements PrefabInterface {
       projectEnvId,
       this.namespace,
       this.onNoDefault,
-      this.defaultLogLevel
+      parseLevel(this.defaultLogLevel) ?? PREFAB_DEFAULT_LOG_LEVEL
     );
   }
 
@@ -171,7 +171,8 @@ class Prefab implements PrefabInterface {
         loggerName,
         desiredLevel,
         contexts,
-        defaultLogLevel,
+        defaultLogLevel:
+          parseLevel(defaultLogLevel) ?? PREFAB_DEFAULT_LOG_LEVEL,
       });
     }
 
