@@ -98,6 +98,25 @@ describe("shouldLog", () => {
     ).toEqual(true);
   });
 
+  it("returns false if the desired level is invalid", () => {
+    jest.spyOn(console, "warn").mockImplementation();
+
+    const loggerName = "noDotsHere";
+    const resolver = getResolver([levelAt(loggerName, "trace")]);
+
+    expect(
+      shouldLog({
+        loggerName,
+        desiredLevel: "invalid",
+        resolver,
+      })
+    ).toEqual(false);
+
+    expect(console.warn).toHaveBeenCalledWith(
+      "[prefab] desiredLevel `invalid` is not a valid level"
+    );
+  });
+
   examples.forEach(([ruleLevel, desiredLevel, expected]) => {
     it(`returns ${expected.toString()} if the resolved level is ${ruleLevel} and the desired level is ${desiredLevel}`, () => {
       const loggerName = "some.test.name";
@@ -105,7 +124,7 @@ describe("shouldLog", () => {
       expect(
         shouldLog({
           loggerName,
-          desiredLevel: wordLevelToNumber(desiredLevel),
+          desiredLevel,
           resolver,
           defaultLevel: LogLevel.WARN,
         })
@@ -269,7 +288,7 @@ describe("wordLevelToNumber", () => {
     expect(wordLevelToNumber("fatal")).toEqual(9);
   });
 
-  it("returns a too-high number to match anything for unrecognized levels", () => {
-    expect(wordLevelToNumber("something-else")).toEqual(Infinity);
+  it("returns undefined for unrecognized levels", () => {
+    expect(wordLevelToNumber("something-else")).toBeUndefined();
   });
 });

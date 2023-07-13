@@ -12,8 +12,22 @@ const WORD_LEVEL_LOOKUP: Record<string, number> = {
   fatal: 9,
 };
 
-export const wordLevelToNumber = (level: string): number => {
-  return WORD_LEVEL_LOOKUP[level] ?? Infinity;
+export const wordLevelToNumber = (level: string): number | undefined => {
+  return WORD_LEVEL_LOOKUP[level];
+};
+
+export const parseLevel = (
+  level: number | string | undefined
+): number | undefined => {
+  if (typeof level === "number") {
+    return level;
+  }
+
+  if (typeof level === "string") {
+    return wordLevelToNumber(level.toLowerCase());
+  }
+
+  return undefined;
 };
 
 export const shouldLog = ({
@@ -24,12 +38,21 @@ export const shouldLog = ({
   contexts,
 }: {
   loggerName: string;
-  desiredLevel: number;
-  defaultLevel?: number;
+  desiredLevel: number | string;
+  defaultLevel?: number | string;
   resolver: Resolver;
   contexts?: Contexts;
 }): boolean => {
   let loggerNameWithPrefix = PREFIX + loggerName;
+
+  const numericDesiredLevel = parseLevel(desiredLevel);
+
+  if (typeof numericDesiredLevel === "undefined") {
+    console.warn(
+      `[prefab] desiredLevel \`${desiredLevel}\` is not a valid level`
+    );
+    return false;
+  }
 
   while (loggerNameWithPrefix.includes(".")) {
     const resolvedLevel = resolver.get(
@@ -40,7 +63,7 @@ export const shouldLog = ({
     );
 
     if (resolvedLevel !== undefined) {
-      return Number(resolvedLevel) <= desiredLevel;
+      return Number(resolvedLevel) <= numericDesiredLevel;
     }
 
     loggerNameWithPrefix = loggerNameWithPrefix.slice(
@@ -49,5 +72,9 @@ export const shouldLog = ({
     );
   }
 
-  return (defaultLevel ?? resolver.defaultLogLevel) <= desiredLevel;
+  const numericDefaultLevel = parseLevel(defaultLevel);
+
+  return (
+    (numericDefaultLevel ?? resolver.defaultLogLevel) <= numericDesiredLevel
+  );
 };
