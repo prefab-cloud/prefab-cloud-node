@@ -162,8 +162,8 @@ class Prefab implements PrefabInterface {
     contexts,
   }: {
     loggerName: string;
-    desiredLevel: number;
-    defaultLogLevel?: number;
+    desiredLevel: number | string;
+    defaultLogLevel?: number | string;
     contexts?: Contexts;
   }): boolean {
     if (this.resolver !== undefined) {

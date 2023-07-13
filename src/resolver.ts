@@ -131,8 +131,8 @@ class Resolver implements PrefabInterface {
     defaultLogLevel,
   }: {
     loggerName: string;
-    desiredLevel: number;
-    defaultLogLevel?: number;
+    desiredLevel: number | string;
+    defaultLogLevel?: number | string;
     contexts?: Contexts;
   }): boolean {
     return shouldLog({
