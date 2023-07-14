@@ -1,45 +1,25 @@
 import type { Config } from "../proto";
 import { ConfigType, LogLevel, Criterion_CriterionOperator } from "../proto";
 import { Resolver } from "../resolver";
-import { shouldLog, wordLevelToNumber, PREFIX } from "../logger";
-import { irrelevantLong, projectEnvIdUnderTest } from "./testHelpers";
+import {
+  shouldLog,
+  wordLevelToNumber,
+  PREFIX,
+  type ValidLogLevel,
+  type ValidLogLevelName,
+} from "../logger";
+import { levelAt, irrelevantLong, projectEnvIdUnderTest } from "./testHelpers";
 
 const getResolver = (configs: Config[]): Resolver => {
   return new Resolver(
     configs,
     projectEnvIdUnderTest,
     "some-namespace",
-    "error",
-    LogLevel.WARN
+    "error"
   );
 };
 
-const levelAt = (path: string, level: string): Config => {
-  return {
-    id: irrelevantLong,
-    projectId: irrelevantLong,
-    key: `${PREFIX}${path}`,
-    changedBy: undefined,
-    rows: [
-      {
-        properties: {},
-        values: [
-          {
-            criteria: [],
-            value: {
-              logLevel: wordLevelToNumber(level),
-            },
-          },
-        ],
-      },
-    ],
-    allowableValues: [],
-    configType: ConfigType.LOG_LEVEL,
-    draftId: irrelevantLong,
-  };
-};
-
-const examples: Array<[string, string, boolean]> = [
+const examples: Array<[ValidLogLevelName, ValidLogLevelName, boolean]> = [
   ["trace", "trace", true],
   ["trace", "debug", true],
   ["trace", "info", true],
@@ -98,25 +78,6 @@ describe("shouldLog", () => {
     ).toEqual(true);
   });
 
-  it("returns false if the desired level is invalid", () => {
-    jest.spyOn(console, "warn").mockImplementation();
-
-    const loggerName = "noDotsHere";
-    const resolver = getResolver([levelAt(loggerName, "trace")]);
-
-    expect(
-      shouldLog({
-        loggerName,
-        desiredLevel: "invalid",
-        resolver,
-      })
-    ).toEqual(false);
-
-    expect(console.warn).toHaveBeenCalledWith(
-      "[prefab] desiredLevel `invalid` is not a valid level"
-    );
-  });
-
   examples.forEach(([ruleLevel, desiredLevel, expected]) => {
     it(`returns ${expected.toString()} if the resolved level is ${ruleLevel} and the desired level is ${desiredLevel}`, () => {
       const loggerName = "some.test.name";
@@ -124,7 +85,7 @@ describe("shouldLog", () => {
       expect(
         shouldLog({
           loggerName,
-          desiredLevel,
+          desiredLevel: wordLevelToNumber(desiredLevel) as ValidLogLevel,
           resolver,
           defaultLevel: LogLevel.WARN,
         })
@@ -141,12 +102,18 @@ describe("shouldLog", () => {
     ]);
 
     expect(
-      shouldLog({ loggerName, desiredLevel: LogLevel.TRACE, resolver })
+      shouldLog({
+        loggerName,
+        defaultLevel: LogLevel.WARN,
+        desiredLevel: LogLevel.TRACE,
+        resolver,
+      })
     ).toEqual(true);
 
     expect(
       shouldLog({
         loggerName: "some.test",
+        defaultLevel: LogLevel.WARN,
         desiredLevel: LogLevel.TRACE,
         resolver,
       })
@@ -155,6 +122,7 @@ describe("shouldLog", () => {
     expect(
       shouldLog({
         loggerName: "some.test",
+        defaultLevel: LogLevel.WARN,
         desiredLevel: LogLevel.DEBUG,
         resolver,
       })
@@ -163,6 +131,7 @@ describe("shouldLog", () => {
     expect(
       shouldLog({
         loggerName: "some.test",
+        defaultLevel: LogLevel.WARN,
         desiredLevel: LogLevel.INFO,
         resolver,
       })
@@ -218,6 +187,7 @@ describe("shouldLog", () => {
     expect(
       shouldLog({
         loggerName: "some.test.name.here",
+        defaultLevel: LogLevel.WARN,
         desiredLevel: LogLevel.INFO,
         resolver,
         contexts: new Map(),
@@ -228,6 +198,7 @@ describe("shouldLog", () => {
     expect(
       shouldLog({
         loggerName: "some.test.name.here",
+        defaultLevel: LogLevel.WARN,
         desiredLevel: LogLevel.INFO,
         resolver,
         contexts: new Map().set("user", new Map().set("country", "CA")),
@@ -238,6 +209,7 @@ describe("shouldLog", () => {
     expect(
       shouldLog({
         loggerName: "some.test.name.here",
+        defaultLevel: LogLevel.WARN,
         desiredLevel: LogLevel.INFO,
         resolver,
         contexts: new Map().set("user", new Map().set("country", "US")),
@@ -289,6 +261,6 @@ describe("wordLevelToNumber", () => {
   });
 
   it("returns undefined for unrecognized levels", () => {
-    expect(wordLevelToNumber("something-else")).toBeUndefined();
+    expect(wordLevelToNumber("something-else" as any)).toBeUndefined();
   });
 });

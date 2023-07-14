@@ -19,8 +19,7 @@ const emptyResolver = new Resolver(
   [],
   projectEnvIdUnderTest,
   noNamespace,
-  "error",
-  3
+  "error"
 );
 
 describe.only("evaluate", () => {

@@ -7,8 +7,14 @@ import propIsOneOf from "./fixtures/propIsOneOf";
 import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
 import { Prefab } from "../prefab";
 import type { Contexts } from "../types";
+import { LogLevel } from "../proto";
 
-import { nTimes, irrelevant, projectEnvIdUnderTest } from "./testHelpers";
+import {
+  nTimes,
+  irrelevant,
+  projectEnvIdUnderTest,
+  levelAt,
+} from "./testHelpers";
 
 const configs = [
   basicConfig,
@@ -19,6 +25,10 @@ const configs = [
   propIsOneOfAndEndsWith,
   rolloutFlag,
 ];
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
 
 describe("prefab", () => {
   describe("init", () => {
@@ -245,6 +255,133 @@ describe("prefab", () => {
           true
         );
       });
+    });
+  });
+
+  describe("shouldLog", () => {
+    it("returns true if the resolved level is greater than or equal to the desired level", () => {
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig([levelAt(loggerName, "info")], projectEnvIdUnderTest);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: "error",
+        })
+      ).toEqual(true);
+    });
+
+    it("returns false if the resolved level is lower than the desired level", () => {
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig([levelAt(loggerName, "info")], projectEnvIdUnderTest);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: "debug",
+        })
+      ).toEqual(false);
+    });
+
+    it("returns true if the desired level is invalid", () => {
+      jest.spyOn(console, "warn").mockImplementation();
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig([levelAt(loggerName, "trace")], projectEnvIdUnderTest);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: "invalid" as any,
+        })
+      ).toEqual(true);
+
+      expect(console.warn).toHaveBeenCalledWith(
+        "[prefab]: Invalid desiredLevel `invalid` provided to shouldLog. Returning `true`"
+      );
+    });
+
+    it("returns the default level provided if there is no match", () => {
+      jest.spyOn(console, "warn").mockImplementation();
+
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig([], projectEnvIdUnderTest);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: LogLevel.DEBUG,
+          defaultLevel: LogLevel.TRACE,
+        })
+      ).toEqual(true);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: LogLevel.DEBUG,
+          defaultLevel: LogLevel.DEBUG,
+        })
+      ).toEqual(true);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: LogLevel.DEBUG,
+          defaultLevel: LogLevel.INFO,
+        })
+      ).toEqual(false);
+
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+
+    it("returns the default level provided if the resolver hasn't finalized", () => {
+      const mockConsoleWarn = jest.spyOn(console, "warn").mockImplementation();
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({ apiKey: irrelevant });
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: LogLevel.DEBUG,
+          defaultLevel: LogLevel.TRACE,
+        })
+      ).toEqual(true);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: LogLevel.DEBUG,
+          defaultLevel: LogLevel.DEBUG,
+        })
+      ).toEqual(true);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: LogLevel.DEBUG,
+          defaultLevel: LogLevel.INFO,
+        })
+      ).toEqual(false);
+
+      expect(mockConsoleWarn.mock.calls).toEqual([
+        [
+          "[prefab] Still initializing... Comparing against defaultLogLevel setting: 5",
+        ],
+        [
+          "[prefab] Still initializing... Comparing against defaultLogLevel setting: 5",
+        ],
+        [
+          "[prefab] Still initializing... Comparing against defaultLogLevel setting: 5",
+        ],
+      ]);
     });
   });
 });

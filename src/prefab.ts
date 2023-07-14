@@ -6,7 +6,8 @@ import type { Contexts, OnNoDefault, ProjectEnvId } from "./types";
 
 import { LogLevel } from "./proto";
 import type { Config, ConfigType } from "./proto";
-import { wordLevelToNumber, parseLevel } from "./logger";
+import { shouldLog, wordLevelToNumber, parseLevel } from "./logger";
+import type { ValidLogLevelName, ValidLogLevel } from "./logger";
 import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
 
@@ -36,7 +37,7 @@ interface ConstructorProps {
   onNoDefault?: OnNoDefault;
   pollInterval?: number;
   fetch?: typeof globalThis.fetch;
-  defaultLogLevel?: number | string;
+  defaultLogLevel?: ValidLogLevel | ValidLogLevelName;
 }
 
 class Prefab implements PrefabInterface {
@@ -50,7 +51,7 @@ class Prefab implements PrefabInterface {
   private readonly pollInterval: number;
   private resolver?: Resolver;
   private readonly fetch: typeof globalThis.fetch;
-  private readonly defaultLogLevel: number | string;
+  private readonly defaultLogLevel: ValidLogLevel;
 
   constructor({
     apiKey,
@@ -72,7 +73,17 @@ class Prefab implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
-    this.defaultLogLevel = defaultLogLevel;
+
+    const parsedDefaultLogLevel = parseLevel(defaultLogLevel);
+
+    if (parsedDefaultLogLevel === undefined) {
+      console.warn(
+        `Invalid default log level provided: ${defaultLogLevel}. Defaulting to ${PREFAB_DEFAULT_LOG_LEVEL}.`
+      );
+    }
+
+    this.defaultLogLevel = parsedDefaultLogLevel ?? PREFAB_DEFAULT_LOG_LEVEL;
+
     this.fetch = fetch;
   }
 
@@ -102,8 +113,7 @@ class Prefab implements PrefabInterface {
       config,
       projectEnvId,
       this.namespace,
-      this.onNoDefault,
-      parseLevel(this.defaultLogLevel) ?? PREFAB_DEFAULT_LOG_LEVEL
+      this.onNoDefault
     );
   }
 
@@ -158,29 +168,41 @@ class Prefab implements PrefabInterface {
   shouldLog({
     loggerName,
     desiredLevel,
-    defaultLogLevel,
+    defaultLevel,
     contexts,
   }: {
     loggerName: string;
-    desiredLevel: number | string;
-    defaultLogLevel?: number | string;
+    desiredLevel: ValidLogLevel | ValidLogLevelName;
+    defaultLevel?: ValidLogLevel | ValidLogLevelName;
     contexts?: Contexts;
   }): boolean {
+    const numericDesiredLevel = parseLevel(desiredLevel);
+
+    if (numericDesiredLevel === undefined) {
+      console.warn(
+        `[prefab]: Invalid desiredLevel \`${desiredLevel}\` provided to shouldLog. Returning \`true\``
+      );
+
+      return true;
+    }
+
     if (this.resolver !== undefined) {
-      return this.resolver.shouldLog({
+      return shouldLog({
         loggerName,
-        desiredLevel,
+        desiredLevel: numericDesiredLevel,
         contexts,
-        defaultLogLevel:
-          parseLevel(defaultLogLevel) ?? PREFAB_DEFAULT_LOG_LEVEL,
+        resolver: this.resolver,
+        defaultLevel: parseLevel(defaultLevel) ?? PREFAB_DEFAULT_LOG_LEVEL,
       });
     }
 
     console.warn(
-      "prefab.resolver is undefined. Did you call init()? Comparing against defaultLogLevel setting"
+      `[prefab] Still initializing... Comparing against defaultLogLevel setting: ${this.defaultLogLevel}`
     );
 
-    return (defaultLogLevel ?? this.defaultLogLevel) <= desiredLevel;
+    return (
+      (parseLevel(defaultLevel) ?? this.defaultLogLevel) <= numericDesiredLevel
+    );
   }
 
   isFeatureEnabled(key: string, contexts?: Contexts): boolean {
@@ -190,4 +212,12 @@ class Prefab implements PrefabInterface {
   }
 }
 
-export { Prefab, LogLevel, wordLevelToNumber, type Contexts, type ConfigType };
+export {
+  Prefab,
+  LogLevel,
+  wordLevelToNumber,
+  type Contexts,
+  type ConfigType,
+  type ValidLogLevelName,
+  type ValidLogLevel,
+};

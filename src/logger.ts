@@ -3,7 +3,17 @@ import { type Resolver } from "./resolver";
 
 export const PREFIX = "log-level.";
 
-const WORD_LEVEL_LOOKUP: Record<string, number> = {
+export type ValidLogLevelName =
+  | "trace"
+  | "debug"
+  | "info"
+  | "warn"
+  | "error"
+  | "fatal";
+
+export type ValidLogLevel = 1 | 2 | 3 | 5 | 6 | 9;
+
+const WORD_LEVEL_LOOKUP: Record<ValidLogLevelName, ValidLogLevel> = {
   trace: 1,
   debug: 2,
   info: 3,
@@ -12,19 +22,21 @@ const WORD_LEVEL_LOOKUP: Record<string, number> = {
   fatal: 9,
 };
 
-export const wordLevelToNumber = (level: string): number | undefined => {
+export const wordLevelToNumber = (
+  level: ValidLogLevelName
+): ValidLogLevel | undefined => {
   return WORD_LEVEL_LOOKUP[level];
 };
 
 export const parseLevel = (
-  level: number | string | undefined
-): number | undefined => {
+  level: ValidLogLevel | ValidLogLevelName | undefined
+): ValidLogLevel | undefined => {
   if (typeof level === "number") {
     return level;
   }
 
   if (typeof level === "string") {
-    return wordLevelToNumber(level.toLowerCase());
+    return wordLevelToNumber(level);
   }
 
   return undefined;
@@ -38,21 +50,12 @@ export const shouldLog = ({
   contexts,
 }: {
   loggerName: string;
-  desiredLevel: number | string;
-  defaultLevel?: number | string;
+  desiredLevel: ValidLogLevel;
+  defaultLevel: ValidLogLevel;
   resolver: Resolver;
   contexts?: Contexts;
 }): boolean => {
   let loggerNameWithPrefix = PREFIX + loggerName;
-
-  const numericDesiredLevel = parseLevel(desiredLevel);
-
-  if (typeof numericDesiredLevel === "undefined") {
-    console.warn(
-      `[prefab] desiredLevel \`${desiredLevel}\` is not a valid level`
-    );
-    return false;
-  }
 
   while (loggerNameWithPrefix.includes(".")) {
     const resolvedLevel = resolver.get(
@@ -63,7 +66,7 @@ export const shouldLog = ({
     );
 
     if (resolvedLevel !== undefined) {
-      return Number(resolvedLevel) <= numericDesiredLevel;
+      return Number(resolvedLevel) <= desiredLevel;
     }
 
     loggerNameWithPrefix = loggerNameWithPrefix.slice(
@@ -72,9 +75,5 @@ export const shouldLog = ({
     );
   }
 
-  const numericDefaultLevel = parseLevel(defaultLevel);
-
-  return (
-    (numericDefaultLevel ?? resolver.defaultLogLevel) <= numericDesiredLevel
-  );
+  return defaultLevel <= desiredLevel;
 };
