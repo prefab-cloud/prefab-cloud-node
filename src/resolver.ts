@@ -7,20 +7,9 @@ import { mergeContexts } from "./mergeContexts";
 import type { GetValue } from "./unwrap";
 import { evaluate } from "./evaluate";
 
-import { shouldLog } from "./logger";
-
 const emptyContexts: Contexts = new Map<string, Context>();
 
 export const NOT_PROVIDED = Symbol("NOT_PROVIDED");
-
-export const LogLevelLookup: Record<number, string> = {
-  1: "TRACE",
-  2: "DEBUG",
-  3: "INFO",
-  5: "WARN",
-  6: "ERROR",
-  9: "FATAL",
-};
 
 class Resolver implements PrefabInterface {
   private readonly config: Map<string, Config>;
@@ -28,14 +17,12 @@ class Resolver implements PrefabInterface {
   private readonly namespace: string | undefined;
   private readonly onNoDefault: OnNoDefault;
   private readonly parentContext?: Contexts;
-  readonly defaultLogLevel: number;
 
   constructor(
     configs: Config[] | Map<string, Config>,
     projectEnvId: ProjectEnvId,
     namespace: string | undefined,
     onNoDefault: OnNoDefault,
-    defaultLogLevel: number,
     contexts?: Contexts
   ) {
     this.config = Array.isArray(configs)
@@ -45,7 +32,6 @@ class Resolver implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
     this.parentContext = contexts;
-    this.defaultLogLevel = defaultLogLevel;
   }
 
   cloneWithContext(contexts: Contexts): Resolver {
@@ -54,7 +40,6 @@ class Resolver implements PrefabInterface {
       this.projectEnvId,
       this.namespace,
       this.onNoDefault,
-      this.defaultLogLevel,
       contexts
     );
   }
@@ -122,26 +107,6 @@ class Resolver implements PrefabInterface {
       `Expected boolean value for key ${key}, got ${typeof value}. Non-boolean FF's return \`false\` for isFeatureEnabled checks.`
     );
     return false;
-  }
-
-  shouldLog({
-    loggerName,
-    desiredLevel,
-    contexts,
-    defaultLogLevel,
-  }: {
-    loggerName: string;
-    desiredLevel: number | string;
-    defaultLogLevel?: number;
-    contexts?: Contexts;
-  }): boolean {
-    return shouldLog({
-      loggerName,
-      desiredLevel,
-      contexts,
-      defaultLevel: defaultLogLevel ?? this.defaultLogLevel,
-      resolver: this,
-    });
   }
 }
 
