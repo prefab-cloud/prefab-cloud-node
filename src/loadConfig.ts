@@ -6,6 +6,8 @@ import type { Config } from "./proto";
 import type { ProjectEnvId } from "./types";
 import { parseConfigs } from "./parseConfigs";
 
+const version: string = require("../package.json").version;
+
 export async function loadConfig({
   apiKey,
   cdnUrl,
@@ -46,6 +48,7 @@ const loadConfigFromUrl = async ({
     ...makeHeaders(apiKey),
     "Content-Type": "application/x-protobuf",
     Accept: "application/x-protobuf",
+    "X-PrefabCloud-Client-Version": `prefab-cloud-node-${version}`,
   };
 
   const response = await fetch(
