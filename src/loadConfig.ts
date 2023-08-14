@@ -77,7 +77,5 @@ const loadConfigFromUrl = async ({
     };
   }
 
-  throw new Error(
-    `Something went wrong talking to ${url}. ${response.status as number}`
-  );
+  throw new Error(`Something went wrong talking to ${url}. ${response.status}`);
 };

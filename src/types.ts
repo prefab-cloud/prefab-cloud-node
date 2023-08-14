@@ -12,4 +12,11 @@ export type HashByPropertyValue = string | undefined;
 
 export type OnNoDefault = "error" | "warn" | "ignore";
 
-export type Fetch = (resource: any, options?: any) => Promise<any>;
+export type Fetch = (
+  resource: any,
+  options?: any
+) => Promise<{
+  status: number;
+  arrayBuffer: () => Promise<ArrayBuffer>;
+  [key: string]: any;
+}>;

@@ -50,7 +50,7 @@ class Prefab implements PrefabInterface {
   private readonly onNoDefault: "error" | "warn" | "ignore";
   private readonly pollInterval: number;
   private resolver?: Resolver;
-  private readonly fetch: typeof globalThis.fetch;
+  private readonly fetch: Fetch;
   private readonly defaultLogLevel: ValidLogLevel;
 
   constructor({
