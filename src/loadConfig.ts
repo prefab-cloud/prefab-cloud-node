@@ -3,10 +3,8 @@ import type Long from "long";
 import { maxLong } from "./maxLong";
 
 import type { Config } from "./proto";
-import type { ProjectEnvId } from "./types";
+import type { Fetch, ProjectEnvId } from "./types";
 import { parseConfigs } from "./parseConfigs";
-
-const version: string = require("../package.json").version;
 
 export async function loadConfig({
   apiKey,
@@ -19,7 +17,7 @@ export async function loadConfig({
   cdnUrl: string;
   apiUrl: string;
   startAtId?: Long;
-  fetch?: typeof globalThis.fetch;
+  fetch?: Fetch;
 }): Promise<{
   configs: Config[];
   projectEnvId: ProjectEnvId;
@@ -42,13 +40,12 @@ const loadConfigFromUrl = async ({
   apiKey: string;
   url: string;
   startAtId?: Long;
-  fetch: typeof window.fetch;
+  fetch: Fetch;
 }): ReturnType<typeof loadConfig> => {
   const headers = {
     ...makeHeaders(apiKey),
     "Content-Type": "application/x-protobuf",
     Accept: "application/x-protobuf",
-    "X-PrefabCloud-Client-Version": `prefab-cloud-node-${version}`,
   };
 
   const response = await fetch(
@@ -80,5 +77,7 @@ const loadConfigFromUrl = async ({
     };
   }
 
-  throw new Error(`Something went wrong talking to ${url}. ${response.status}`);
+  throw new Error(
+    `Something went wrong talking to ${url}. ${response.status as number}`
+  );
 };

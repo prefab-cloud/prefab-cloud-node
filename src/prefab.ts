@@ -2,7 +2,7 @@
 import type Long from "long";
 import { loadConfig } from "./loadConfig";
 import { Resolver } from "./resolver";
-import type { Contexts, OnNoDefault, ProjectEnvId } from "./types";
+import type { Contexts, Fetch, OnNoDefault, ProjectEnvId } from "./types";
 
 import { LogLevel } from "./proto";
 import type { Config, ConfigType } from "./proto";
@@ -36,7 +36,7 @@ interface ConstructorProps {
   namespace?: string;
   onNoDefault?: OnNoDefault;
   pollInterval?: number;
-  fetch?: typeof globalThis.fetch;
+  fetch?: Fetch;
   defaultLogLevel?: ValidLogLevel | ValidLogLevelName;
 }
 
