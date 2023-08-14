@@ -42,7 +42,10 @@ describe("prefab", () => {
         );
       }
 
-      const prefab = new Prefab({ apiKey: validApiKey });
+      const prefab = new Prefab({
+        apiKey: validApiKey,
+        collectLoggerCounts: false,
+      });
       await prefab.init();
 
       expect(prefab.get("abc")).toEqual(true);
@@ -271,6 +274,12 @@ describe("prefab", () => {
           desiredLevel: "error",
         })
       ).toEqual(true);
+
+      expect(prefab.telemetry.knownLoggers.data).toStrictEqual({
+        [loggerName]: {
+          [LogLevel.ERROR]: 1,
+        },
+      });
     });
 
     it("returns false if the resolved level is lower than the desired level", () => {
@@ -285,6 +294,12 @@ describe("prefab", () => {
           desiredLevel: "debug",
         })
       ).toEqual(false);
+
+      expect(prefab.telemetry.knownLoggers.data).toStrictEqual({
+        [loggerName]: {
+          [LogLevel.DEBUG]: 1,
+        },
+      });
     });
 
     it("returns true if the desired level is invalid", () => {
@@ -304,6 +319,8 @@ describe("prefab", () => {
       expect(console.warn).toHaveBeenCalledWith(
         "[prefab]: Invalid desiredLevel `invalid` provided to shouldLog. Returning `true`"
       );
+
+      expect(prefab.telemetry.knownLoggers.data).toStrictEqual({});
     });
 
     it("returns the default level provided if there is no match", () => {
@@ -339,6 +356,12 @@ describe("prefab", () => {
       ).toEqual(false);
 
       expect(console.warn).not.toHaveBeenCalled();
+
+      expect(prefab.telemetry.knownLoggers.data).toStrictEqual({
+        [loggerName]: {
+          [LogLevel.DEBUG]: 3,
+        },
+      });
     });
 
     it("returns the default level provided if the resolver hasn't finalized", () => {
@@ -382,6 +405,31 @@ describe("prefab", () => {
           "[prefab] Still initializing... Comparing against defaultLogLevel setting: 5",
         ],
       ]);
+
+      expect(prefab.telemetry.knownLoggers.data).toStrictEqual({
+        [loggerName]: {
+          [LogLevel.DEBUG]: 3,
+        },
+      });
+    });
+
+    it("does not collect telemetry if collectLoggerCounts=false", () => {
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({
+        apiKey: irrelevant,
+        collectLoggerCounts: false,
+      });
+      prefab.setConfig([levelAt(loggerName, "info")], projectEnvIdUnderTest);
+
+      expect(
+        prefab.shouldLog({
+          loggerName,
+          desiredLevel: "error",
+        })
+      ).toEqual(true);
+
+      expect(prefab.telemetry.knownLoggers.data).toStrictEqual({});
     });
   });
 });

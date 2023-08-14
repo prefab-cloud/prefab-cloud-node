@@ -26,17 +26,21 @@ const LogLevelLookup: Record<string, number> = {
 
 type YAMLContext = Record<string, Record<string, any>> | undefined;
 
+type RawAggregator = "log_path";
+
+type Aggregator = "knownLoggers";
+
 interface RawTestSuite {
   name: string;
   fileName: string;
   context: YAMLContext;
-  cases: RawTestCase[];
+  cases: Array<RawInputOutputTestCase | RawTelemetryTestCase>;
 }
 
-interface RawTestCase {
+interface RawInputOutputTestCase {
   name: string;
   client: string;
-  function: string;
+  function: "enabled" | "get" | "get_or_raise";
   input: {
     key?: string;
     flag?: string;
@@ -49,12 +53,25 @@ interface RawTestCase {
     message?: string;
   };
   client_overrides: {
-    namespace: string | undefined;
-    on_no_default: 2 | undefined;
+    namespace?: string;
+    on_no_default?: 2;
   };
 }
 
-export interface Test {
+interface RawTelemetryTestCase {
+  name: string;
+  client: string;
+  function: "post";
+  data: Record<string, any>;
+  expected_data: Record<string, any>;
+  aggregator: RawAggregator;
+  client_overrides: {
+    collect_sync_interval?: number;
+    context_upload_mode?: string;
+  };
+}
+
+export interface InputOutputTest {
   name: string;
   parentContext: Contexts | undefined;
   context: Contexts | undefined;
@@ -73,10 +90,26 @@ export interface Test {
     message?: string;
   };
   client_overrides: {
-    namespace: string | undefined;
-    on_no_default: 2 | undefined;
+    namespace?: string;
+    on_no_default?: 2;
   };
 }
+
+export interface TelemetryTest {
+  name: string;
+  data: Record<string, any>;
+  function: "post";
+  expectedTelemetryData: Record<string, any>;
+  aggregator: Aggregator;
+  client_overrides: {
+    collect_sync_interval?: number;
+    context_upload_mode?: string;
+  };
+}
+
+const aggregatorLookup: Record<RawAggregator, Aggregator> = {
+  log_path: "knownLoggers",
+};
 
 const formatContext = (
   context: Record<string, Record<string, any>>
@@ -102,7 +135,14 @@ const contextMaybe = (context: YAMLContext): Contexts | undefined => {
   return context !== undefined ? formatContext(context) : undefined;
 };
 
-const calcExpectedValue = (testCase: RawTestCase, key: string): any => {
+const calcExpectedValue = (
+  testCase: RawInputOutputTestCase,
+  key: string
+): any => {
+  if (testCase.expected === undefined) {
+    return undefined;
+  }
+
   let expectedValue = testCase.expected.value;
 
   if (expectedValue === null) {
@@ -116,7 +156,10 @@ const calcExpectedValue = (testCase: RawTestCase, key: string): any => {
   return expectedValue;
 };
 
-export const tests = (): Test[] => {
+export const tests = (): {
+  inputOutputTests: InputOutputTest[];
+  telemetryTests: TelemetryTest[];
+} => {
   const testSuites: RawTestSuite[] = [];
 
   fs.readdirSync(testsPath).forEach((file) => {
@@ -125,11 +168,27 @@ export const tests = (): Test[] => {
     }
   });
 
-  return testSuites.flatMap((testSuite) => {
-    return testSuite.cases.map((testCase) => {
+  const telemetryTests: TelemetryTest[] = [];
+  const inputOutputTests: InputOutputTest[] = [];
+
+  testSuites.forEach((testSuite) => {
+    testSuite.cases.forEach((testCase) => {
       const name = [testSuite.fileName, testSuite.name, testCase.name]
         .filter((name) => name !== undefined)
         .join(" - ");
+
+      if (testCase.function === "post") {
+        telemetryTests.push({
+          name,
+          function: testCase.function,
+          data: testCase.data,
+          expectedTelemetryData: testCase.expected_data,
+          client_overrides: testCase.client_overrides,
+          aggregator: aggregatorLookup[testCase.aggregator],
+        });
+
+        return;
+      }
 
       const parentContext = contextMaybe(testSuite.context);
 
@@ -146,7 +205,7 @@ export const tests = (): Test[] => {
           ) ?? ""
         ];
 
-      return {
+      inputOutputTests.push({
         name,
         parentContext,
         context,
@@ -156,7 +215,12 @@ export const tests = (): Test[] => {
         input: { ...testCase.input, key },
         expected: { ...testCase.expected, value: expectedValue },
         client_overrides: testCase.client_overrides,
-      };
+      });
     });
   });
+
+  return {
+    telemetryTests,
+    inputOutputTests,
+  };
 };

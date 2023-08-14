@@ -2,7 +2,7 @@ import type Long from "long";
 import { makeHeaders } from "./makeHeaders";
 import type { Resolver } from "./resolver";
 import EventSource from "eventsource";
-import { parseConfigs } from "./parseConfigs";
+import { parseConfigs } from "./parseProto";
 
 interface ConstructorProps {
   apiKey: string;

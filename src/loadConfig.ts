@@ -4,7 +4,7 @@ import type { ApiClient } from "./apiClient";
 
 import type { Config } from "./proto";
 import type { ProjectEnvId } from "./types";
-import { parseConfigs } from "./parseConfigs";
+import { parseConfigs } from "./parseProto";
 
 export async function loadConfig({
   cdnUrl,
@@ -40,12 +40,6 @@ const loadConfigFromUrl = async ({
 }): ReturnType<typeof loadConfig> => {
   const response = await apiClient.fetch({
     url: `${url}/api/v1/configs/${startAtId?.toString() ?? 0}`,
-    options: {
-      headers: {
-        "Content-Type": "application/x-protobuf",
-        Accept: "application/x-protobuf",
-      },
-    },
   });
 
   if (response.status === 401) {

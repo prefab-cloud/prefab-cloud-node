@@ -1,4 +1,4 @@
-// TODO: test not provided behavior throughout
+import crypto from "crypto";
 import type Long from "long";
 import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
@@ -11,6 +11,9 @@ import { shouldLog, wordLevelToNumber, parseLevel } from "./logger";
 import type { ValidLogLevelName, ValidLogLevel } from "./logger";
 import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
+import { TelemetryReporter } from "./telemetry/reporter";
+
+import { knownLoggers } from "./telemetry/knownLoggers";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
 const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
@@ -39,6 +42,7 @@ interface ConstructorProps {
   pollInterval?: number;
   fetch?: Fetch;
   defaultLogLevel?: ValidLogLevel | ValidLogLevelName;
+  collectLoggerCounts?: boolean;
 }
 
 class Prefab implements PrefabInterface {
@@ -53,6 +57,12 @@ class Prefab implements PrefabInterface {
   private resolver?: Resolver;
   private readonly apiClient: ApiClient;
   private readonly defaultLogLevel: ValidLogLevel;
+  readonly telemetry: {
+    knownLoggers: ReturnType<typeof knownLoggers>;
+  };
+
+  readonly instanceHash: string;
+  readonly collectLoggerCounts: boolean;
 
   constructor({
     apiKey,
@@ -65,6 +75,7 @@ class Prefab implements PrefabInterface {
     pollInterval,
     fetch = globalThis.fetch,
     defaultLogLevel = PREFAB_DEFAULT_LOG_LEVEL,
+    collectLoggerCounts = true,
   }: ConstructorProps) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
@@ -74,6 +85,8 @@ class Prefab implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
+    this.instanceHash = crypto.randomUUID();
+    this.collectLoggerCounts = collectLoggerCounts;
 
     const parsedDefaultLogLevel = parseLevel(defaultLogLevel);
 
@@ -86,6 +99,15 @@ class Prefab implements PrefabInterface {
     this.defaultLogLevel = parsedDefaultLogLevel ?? PREFAB_DEFAULT_LOG_LEVEL;
 
     this.apiClient = apiClient(this.apiUrl, this.apiKey, fetch);
+
+    this.telemetry = {
+      knownLoggers: knownLoggers(
+        this.apiClient,
+        this.instanceHash,
+        collectLoggerCounts,
+        this.namespace
+      ),
+    };
   }
 
   async init(): Promise<void> {
@@ -106,6 +128,10 @@ class Prefab implements PrefabInterface {
         this.startPolling();
       }, this.pollInterval);
     }
+
+    setTimeout(() => {
+      TelemetryReporter.start(Object.values(this.telemetry));
+    });
   }
 
   setConfig(config: Config[], projectEnvId: ProjectEnvId): void {
@@ -185,6 +211,8 @@ class Prefab implements PrefabInterface {
 
       return true;
     }
+
+    this.telemetry.knownLoggers.push(loggerName, numericDesiredLevel);
 
     if (this.resolver !== undefined) {
       return shouldLog({
