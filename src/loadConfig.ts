@@ -1,59 +1,52 @@
-import { makeHeaders } from "./makeHeaders";
 import type Long from "long";
 import { maxLong } from "./maxLong";
+import type { ApiClient } from "./apiClient";
 
 import type { Config } from "./proto";
-import type { Fetch, ProjectEnvId } from "./types";
+import type { ProjectEnvId } from "./types";
 import { parseConfigs } from "./parseConfigs";
 
 export async function loadConfig({
-  apiKey,
   cdnUrl,
   apiUrl,
   startAtId,
-  fetch = globalThis.fetch,
+  apiClient,
 }: {
-  apiKey: string;
   cdnUrl: string;
   apiUrl: string;
   startAtId?: Long;
-  fetch?: Fetch;
+  apiClient: ApiClient;
 }): Promise<{
   configs: Config[];
   projectEnvId: ProjectEnvId;
   startAtId: Long;
 }> {
   try {
-    return await loadConfigFromUrl({ apiKey, url: cdnUrl, startAtId, fetch });
+    return await loadConfigFromUrl({ url: cdnUrl, startAtId, apiClient });
   } catch (e) {
     console.warn(e);
-    return await loadConfigFromUrl({ apiKey, url: apiUrl, startAtId, fetch });
+    return await loadConfigFromUrl({ url: apiUrl, startAtId, apiClient });
   }
 }
 
 const loadConfigFromUrl = async ({
-  apiKey,
   url,
   startAtId,
-  fetch,
+  apiClient,
 }: {
-  apiKey: string;
   url: string;
   startAtId?: Long;
-  fetch: Fetch;
+  apiClient: ApiClient;
 }): ReturnType<typeof loadConfig> => {
-  const headers = {
-    ...makeHeaders(apiKey),
-    "Content-Type": "application/x-protobuf",
-    Accept: "application/x-protobuf",
-  };
-
-  const response = await fetch(
-    `${url}/api/v1/configs/${startAtId?.toString() ?? 0}`,
-    {
-      headers,
-    }
-  );
+  const response = await apiClient.fetch({
+    url: `${url}/api/v1/configs/${startAtId?.toString() ?? 0}`,
+    options: {
+      headers: {
+        "Content-Type": "application/x-protobuf",
+        Accept: "application/x-protobuf",
+      },
+    },
+  });
 
   if (response.status === 401) {
     throw new Error("Unauthorized. Check your Prefab SDK API key.");

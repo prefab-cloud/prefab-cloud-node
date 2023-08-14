@@ -19,10 +19,9 @@ class SSEConnection {
   }
 
   start(resolver: Resolver, startAtId: Long): void {
-    const headers = {
-      ...makeHeaders(this.apiKey),
+    const headers = makeHeaders(this.apiKey, {
       "x-prefab-start-at-id": startAtId.toString(),
-    };
+    });
 
     const channel = new EventSource(`${this.apiUrl}/api/v1/sse/config`, {
       headers,

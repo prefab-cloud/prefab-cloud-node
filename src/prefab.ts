@@ -1,5 +1,6 @@
 // TODO: test not provided behavior throughout
 import type Long from "long";
+import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
 import { Resolver } from "./resolver";
 import type { Contexts, Fetch, OnNoDefault, ProjectEnvId } from "./types";
@@ -50,7 +51,7 @@ class Prefab implements PrefabInterface {
   private readonly onNoDefault: "error" | "warn" | "ignore";
   private readonly pollInterval: number;
   private resolver?: Resolver;
-  private readonly fetch: Fetch;
+  private readonly apiClient: ApiClient;
   private readonly defaultLogLevel: ValidLogLevel;
 
   constructor({
@@ -84,15 +85,14 @@ class Prefab implements PrefabInterface {
 
     this.defaultLogLevel = parsedDefaultLogLevel ?? PREFAB_DEFAULT_LOG_LEVEL;
 
-    this.fetch = fetch;
+    this.apiClient = apiClient(this.apiUrl, this.apiKey, fetch);
   }
 
   async init(): Promise<void> {
     const { configs, projectEnvId, startAtId } = await loadConfig({
-      apiKey: this.apiKey,
-      cdnUrl: this.cdnUrl,
       apiUrl: this.apiUrl,
-      fetch: this.fetch,
+      apiClient: this.apiClient,
+      cdnUrl: this.cdnUrl,
     });
 
     this.setConfig(configs, projectEnvId);
@@ -133,9 +133,9 @@ class Prefab implements PrefabInterface {
 
     const poll = (): void => {
       loadConfig({
-        apiKey: this.apiKey,
         cdnUrl: this.cdnUrl,
         apiUrl: this.apiUrl,
+        apiClient: this.apiClient,
       })
         .then(({ configs }) => {
           if (configs.length > 0) {
