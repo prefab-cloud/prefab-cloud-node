@@ -28,7 +28,11 @@ export const apiClient = (
 
       return await fetch(url ?? apiUrl + path, {
         ...opts,
-        headers: makeHeaders(apiKey, opts["headers"] ?? {}),
+        headers: makeHeaders(apiKey, {
+          ...(opts["headers"] ?? {}),
+          "Content-Type": "application/x-protobuf",
+          Accept: "application/x-protobuf",
+        }),
       });
     },
   };
