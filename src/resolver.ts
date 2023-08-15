@@ -1,6 +1,6 @@
 import type { Config } from "./proto";
 import type { Context, Contexts, OnNoDefault, ProjectEnvId } from "./types";
-import type { PrefabInterface } from "./prefab";
+import type { PrefabInterface, Telemetry } from "./prefab";
 
 import { mergeContexts } from "./mergeContexts";
 
@@ -17,12 +17,14 @@ class Resolver implements PrefabInterface {
   private readonly namespace: string | undefined;
   private readonly onNoDefault: OnNoDefault;
   private readonly parentContext?: Contexts;
+  private readonly telemetry: Telemetry | undefined;
 
   constructor(
     configs: Config[] | Map<string, Config>,
     projectEnvId: ProjectEnvId,
     namespace: string | undefined,
     onNoDefault: OnNoDefault,
+    telemetry?: Telemetry,
     contexts?: Contexts
   ) {
     this.config = Array.isArray(configs)
@@ -32,6 +34,7 @@ class Resolver implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
     this.parentContext = contexts;
+    this.telemetry = telemetry;
   }
 
   cloneWithContext(contexts: Contexts): Resolver {
@@ -40,6 +43,7 @@ class Resolver implements PrefabInterface {
       this.projectEnvId,
       this.namespace,
       this.onNoDefault,
+      this.telemetry,
       contexts
     );
   }
@@ -82,6 +86,10 @@ class Resolver implements PrefabInterface {
       this.parentContext,
       contexts ?? emptyContexts
     );
+
+    if (this.telemetry !== undefined) {
+      this.telemetry.contextShapes.push(mergedContexts);
+    }
 
     return evaluate({
       config,

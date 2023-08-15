@@ -26,13 +26,15 @@ export const apiClient = (
     fetch: async ({ path, url, options }: InternalFetchArgs): FetchResult => {
       const opts = options ?? {};
 
+      const headers = makeHeaders(apiKey, {
+        ...(opts["headers"] ?? {}),
+        "Content-Type": "application/x-protobuf",
+        Accept: "application/x-protobuf",
+      });
+
       return await fetch(url ?? apiUrl + path, {
         ...opts,
-        headers: makeHeaders(apiKey, {
-          ...(opts["headers"] ?? {}),
-          "Content-Type": "application/x-protobuf",
-          Accept: "application/x-protobuf",
-        }),
+        headers,
       });
     },
   };

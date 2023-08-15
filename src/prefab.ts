@@ -13,7 +13,9 @@ import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
 import { TelemetryReporter } from "./telemetry/reporter";
 
+import type { ContextUploadMode } from "./telemetry/types";
 import { knownLoggers } from "./telemetry/knownLoggers";
+import { contextShapes } from "./telemetry/contextShapes";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
 const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
@@ -31,6 +33,11 @@ export interface PrefabInterface {
   isFeatureEnabled: (key: string, contexts?: Contexts) => boolean;
 }
 
+export interface Telemetry {
+  knownLoggers: ReturnType<typeof knownLoggers>;
+  contextShapes: ReturnType<typeof contextShapes>;
+}
+
 interface ConstructorProps {
   apiKey: string;
   apiUrl?: string;
@@ -43,6 +50,7 @@ interface ConstructorProps {
   fetch?: Fetch;
   defaultLogLevel?: ValidLogLevel | ValidLogLevelName;
   collectLoggerCounts?: boolean;
+  contextUploadMode?: ContextUploadMode;
 }
 
 class Prefab implements PrefabInterface {
@@ -57,9 +65,7 @@ class Prefab implements PrefabInterface {
   private resolver?: Resolver;
   private readonly apiClient: ApiClient;
   private readonly defaultLogLevel: ValidLogLevel;
-  readonly telemetry: {
-    knownLoggers: ReturnType<typeof knownLoggers>;
-  };
+  readonly telemetry: Telemetry;
 
   readonly instanceHash: string;
   readonly collectLoggerCounts: boolean;
@@ -76,6 +82,7 @@ class Prefab implements PrefabInterface {
     fetch = globalThis.fetch,
     defaultLogLevel = PREFAB_DEFAULT_LOG_LEVEL,
     collectLoggerCounts = true,
+    contextUploadMode = "periodicExample",
   }: ConstructorProps) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
@@ -107,6 +114,7 @@ class Prefab implements PrefabInterface {
         collectLoggerCounts,
         this.namespace
       ),
+      contextShapes: contextShapes(this.apiClient, contextUploadMode),
     };
   }
 
@@ -139,7 +147,8 @@ class Prefab implements PrefabInterface {
       config,
       projectEnvId,
       this.namespace,
-      this.onNoDefault
+      this.onNoDefault,
+      this.telemetry
     );
   }
 
