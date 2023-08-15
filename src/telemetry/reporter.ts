@@ -1,16 +1,6 @@
 import Long from "long";
 import { Backoff } from "./backoff";
-
-export interface SyncResult {
-  status: number;
-  dataSent: any;
-}
-
-export interface Telemetry {
-  sync: () => Promise<SyncResult | undefined>;
-  enabled: boolean;
-  timeout: NodeJS.Timeout | undefined;
-}
+import type { Telemetry } from "./types";
 
 export const now = (): Long => Long.fromNumber(Date.now());
 
@@ -27,9 +17,9 @@ const syncTelemetry = (telemetry: Telemetry, backoff: Backoff): void => {
 export const TelemetryReporter = {
   start(telemetries: Telemetry[]): void {
     telemetries.forEach((telemetry) => {
-      const backoff = new Backoff({ maxDelay: 600, initialDelay: 8 });
-
       if (telemetry.enabled) {
+        const backoff = new Backoff({ maxDelay: 600, initialDelay: 8 });
+
         syncTelemetry(telemetry, backoff);
       }
     });

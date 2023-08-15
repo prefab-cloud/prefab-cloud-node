@@ -1,24 +1,11 @@
 import Long from "long";
 import { knownLoggers, stub } from "../../telemetry/knownLoggers";
+import { mockApiClient } from "../testHelpers";
 
+// NOTE: Integration tests for this function are in the prefab.test.ts file.
 describe("knownLoggers", () => {
-  const mockApiClient = {
-    fetch: jest.fn(async () => ({
-      status: 200,
-      arrayBuffer: async (): Promise<ArrayBuffer> => {
-        return await Promise.resolve(new ArrayBuffer(0));
-      },
-    })),
-  };
-
-  it("should initialize a known logger with collectLoggerCounts set to false", () => {
-    const logger = knownLoggers(mockApiClient, "instanceHash", false);
-    expect(logger).toBe(stub);
-  });
-
-  it("should initialize a known logger with collectLoggerCounts set to true", () => {
-    const logger = knownLoggers(mockApiClient, "instanceHash", true);
-    expect(logger.data).toEqual({});
+  it("returns stub if collectLoggerCounts is false", () => {
+    expect(knownLoggers(mockApiClient, "instanceHash", false)).toBe(stub);
   });
 
   it("should push log entries to the logger", () => {

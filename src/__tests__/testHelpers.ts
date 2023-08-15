@@ -39,3 +39,12 @@ export const levelAt = (path: string, level: string): Config => {
     draftId: irrelevantLong,
   };
 };
+
+export const mockApiClient = {
+  fetch: jest.fn(async () => ({
+    status: 200,
+    arrayBuffer: async (): Promise<ArrayBuffer> => {
+      return await Promise.resolve(new ArrayBuffer(0));
+    },
+  })),
+};

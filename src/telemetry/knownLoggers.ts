@@ -3,20 +3,8 @@ import type { Logger, Loggers } from "../proto";
 import type { ApiClient } from "../apiClient";
 import { encode } from "../parseProto";
 import type { ValidLogLevelName } from "../logger";
-import { type SyncResult, type Telemetry, now } from "./reporter";
-
-type Pluralize<S extends string> = `${S}s`;
-
-export type LoggerLevelName = Pluralize<ValidLogLevelName>;
-
-const NUMBER_LEVEL_LOOKUP: Record<string, LoggerLevelName> = {
-  1: "traces",
-  2: "debugs",
-  3: "infos",
-  5: "warns",
-  6: "errors",
-  9: "fatals",
-};
+import { now } from "./reporter";
+import type { SyncResult, Telemetry } from "./types";
 
 const ENDPOINT = "/api/v1/known-loggers";
 
@@ -31,6 +19,19 @@ export const stub: KnownLogger = {
   push() {},
   sync: async () => undefined,
   timeout: undefined,
+};
+
+type Pluralize<S extends string> = `${S}s`;
+
+export type LoggerLevelName = Pluralize<ValidLogLevelName>;
+
+const NUMBER_LEVEL_LOOKUP: Record<string, LoggerLevelName> = {
+  1: "traces",
+  2: "debugs",
+  3: "infos",
+  5: "warns",
+  6: "errors",
+  9: "fatals",
 };
 
 export const knownLoggers = (
@@ -66,7 +67,6 @@ export const knownLoggers = (
 
     async sync(): Promise<SyncResult | undefined> {
       if (Object.keys(data).length === 0) {
-        await Promise.resolve(undefined);
         return;
       }
 
@@ -105,7 +105,7 @@ export const knownLoggers = (
         path: ENDPOINT,
         options: {
           method: "POST",
-          body: encode<Loggers>("Loggers", apiData),
+          body: encode("Loggers", apiData),
         },
       });
 

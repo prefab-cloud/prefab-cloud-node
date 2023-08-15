@@ -2,9 +2,13 @@ import type Long from "long";
 
 export type ContextValue = string | number | boolean | undefined;
 
-export type Context = Map<string, ContextValue>;
+type ContextName = string;
 
-export type Contexts = Map<string, Context>;
+type ContextKey = string;
+
+export type Context = Map<ContextKey, ContextValue>;
+
+export type Contexts = Map<ContextName, Context>;
 
 export type ProjectEnvId = Long;
 

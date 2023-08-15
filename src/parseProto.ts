@@ -16,9 +16,9 @@ export const decode = <T>(type: string, input: ArrayBuffer | string): T => {
   return root.lookupType("prefab." + type).decode(buffer) as T;
 };
 
-export const encode = <T>(type: string, data: any): T => {
+export const encode = (type: string, data: any): ArrayBuffer => {
   return root
     .lookupType("prefab." + type)
     .encode(data)
-    .finish() as T;
+    .finish();
 };
