@@ -617,6 +617,11 @@
               "oneof": [
                 "bool"
               ]
+            },
+            "_logLevel": {
+              "oneof": [
+                "logLevel"
+              ]
             }
           },
           "fields": {
@@ -644,6 +649,13 @@
             "bool": {
               "type": "bool",
               "id": 4,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "logLevel": {
+              "type": "LogLevel",
+              "id": 5,
               "options": {
                 "proto3_optional": true
               }
@@ -936,6 +948,216 @@
               "rule": "repeated",
               "type": "EvaluatedConfig",
               "id": 1
+            }
+          }
+        },
+        "ConfigEvaluationCounter": {
+          "oneofs": {
+            "_configId": {
+              "oneof": [
+                "configId"
+              ]
+            },
+            "_selectedIndex": {
+              "oneof": [
+                "selectedIndex"
+              ]
+            },
+            "_selectedValue": {
+              "oneof": [
+                "selectedValue"
+              ]
+            },
+            "_configRowIndex": {
+              "oneof": [
+                "configRowIndex"
+              ]
+            },
+            "_conditionalValueIndex": {
+              "oneof": [
+                "conditionalValueIndex"
+              ]
+            },
+            "_weightedValueIndex": {
+              "oneof": [
+                "weightedValueIndex"
+              ]
+            }
+          },
+          "fields": {
+            "count": {
+              "type": "int64",
+              "id": 1
+            },
+            "configId": {
+              "type": "int64",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "selectedIndex": {
+              "type": "uint32",
+              "id": 3,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "selectedValue": {
+              "type": "ConfigValue",
+              "id": 4,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "configRowIndex": {
+              "type": "uint32",
+              "id": 5,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "conditionalValueIndex": {
+              "type": "uint32",
+              "id": 6,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "weightedValueIndex": {
+              "type": "uint32",
+              "id": 7,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "reason": {
+              "type": "Reason",
+              "id": 8
+            }
+          },
+          "nested": {
+            "Reason": {
+              "values": {
+                "UNKNOWN": 0
+              }
+            }
+          }
+        },
+        "ConfigEvaluationSummary": {
+          "fields": {
+            "key": {
+              "type": "string",
+              "id": 1
+            },
+            "type": {
+              "type": "ConfigType",
+              "id": 2
+            },
+            "counters": {
+              "rule": "repeated",
+              "type": "ConfigEvaluationCounter",
+              "id": 3
+            }
+          }
+        },
+        "ConfigEvaluationSummaries": {
+          "fields": {
+            "start": {
+              "type": "int64",
+              "id": 1
+            },
+            "end": {
+              "type": "int64",
+              "id": 2
+            },
+            "summaries": {
+              "rule": "repeated",
+              "type": "ConfigEvaluationSummary",
+              "id": 3
+            }
+          }
+        },
+        "TelemetryEvent": {
+          "oneofs": {
+            "payload": {
+              "oneof": [
+                "summaries",
+                "exampleContexts",
+                "clientStats"
+              ]
+            }
+          },
+          "fields": {
+            "summaries": {
+              "type": "ConfigEvaluationSummaries",
+              "id": 2
+            },
+            "exampleContexts": {
+              "type": "ExampleContexts",
+              "id": 3
+            },
+            "clientStats": {
+              "type": "ClientStats",
+              "id": 4
+            }
+          }
+        },
+        "TelemetryEvents": {
+          "fields": {
+            "instanceHash": {
+              "type": "string",
+              "id": 1
+            },
+            "events": {
+              "rule": "repeated",
+              "type": "TelemetryEvent",
+              "id": 2
+            }
+          }
+        },
+        "TelemetryEventsResponse": {
+          "fields": {
+            "success": {
+              "type": "bool",
+              "id": 1
+            }
+          }
+        },
+        "ExampleContexts": {
+          "fields": {
+            "examples": {
+              "rule": "repeated",
+              "type": "ExampleContext",
+              "id": 1
+            }
+          }
+        },
+        "ExampleContext": {
+          "fields": {
+            "timestamp": {
+              "type": "int64",
+              "id": 1
+            },
+            "contextSet": {
+              "type": "ContextSet",
+              "id": 2
+            }
+          }
+        },
+        "ClientStats": {
+          "fields": {
+            "start": {
+              "type": "int64",
+              "id": 1
+            },
+            "end": {
+              "type": "int64",
+              "id": 2
+            },
+            "droppedEventCount": {
+              "type": "uint64",
+              "id": 3
             }
           }
         }

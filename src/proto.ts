@@ -242,6 +242,7 @@ export interface ClientConfigValue {
   string?: string | undefined;
   double?: number | undefined;
   bool?: boolean | undefined;
+  logLevel?: LogLevel | undefined;
 }
 
 export interface ConfigEvaluations {
@@ -349,6 +350,78 @@ export interface EvaluatedConfig {
 
 export interface EvaluatedConfigs {
   configs: EvaluatedConfig[];
+}
+
+export interface ConfigEvaluationCounter {
+  count: Long;
+  configId?:
+    | Long
+    | undefined;
+  /** index into the allowed-values list in the config */
+  selectedIndex?: number | undefined;
+  selectedValue?:
+    | ConfigValue
+    | undefined;
+  /** which row matched */
+  configRowIndex?:
+    | number
+    | undefined;
+  /** which ConditionalValue in the row matched? */
+  conditionalValueIndex?:
+    | number
+    | undefined;
+  /** index into the weighted value array */
+  weightedValueIndex?: number | undefined;
+  reason: ConfigEvaluationCounter_Reason;
+}
+
+export enum ConfigEvaluationCounter_Reason {
+  UNKNOWN = 0,
+  UNRECOGNIZED = -1,
+}
+
+export interface ConfigEvaluationSummary {
+  key: string;
+  /** type of config eval */
+  type: ConfigType;
+  counters: ConfigEvaluationCounter[];
+}
+
+export interface ConfigEvaluationSummaries {
+  start: Long;
+  end: Long;
+  summaries: ConfigEvaluationSummary[];
+}
+
+export interface TelemetryEvent {
+  summaries?: ConfigEvaluationSummaries | undefined;
+  exampleContexts?: ExampleContexts | undefined;
+  clientStats?: ClientStats | undefined;
+}
+
+export interface TelemetryEvents {
+  /** random UUID generated on startup - represents the server so we can aggregate */
+  instanceHash: string;
+  events: TelemetryEvent[];
+}
+
+export interface TelemetryEventsResponse {
+  success: boolean;
+}
+
+export interface ExampleContexts {
+  examples: ExampleContext[];
+}
+
+export interface ExampleContext {
+  timestamp: Long;
+  contextSet: ContextSet | undefined;
+}
+
+export interface ClientStats {
+  start: Long;
+  end: Long;
+  droppedEventCount: Long;
 }
 
 if (_m0.util.Long !== Long) {
