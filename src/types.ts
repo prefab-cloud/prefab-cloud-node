@@ -1,6 +1,6 @@
 import type Long from "long";
 
-export type ContextValue = string | number | boolean | undefined;
+export type ContextValue = unknown;
 
 type ContextName = string;
 
