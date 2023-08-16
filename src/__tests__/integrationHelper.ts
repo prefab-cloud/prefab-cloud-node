@@ -26,9 +26,17 @@ const LogLevelLookup: Record<string, number> = {
 
 type YAMLContext = Record<string, Record<string, any>> | undefined;
 
-type RawAggregator = "log_path" | "context_shape";
+type RawAggregator =
+  | "log_path"
+  | "context_shape"
+  | "evaluation_summary"
+  | "example_contexts";
 
-type Aggregator = "knownLoggers" | "contextShapes";
+type Aggregator =
+  | "knownLoggers"
+  | "contextShapes"
+  | "evaluationSummary"
+  | "exampleContexts";
 
 interface RawTestSuite {
   name: string;
@@ -62,7 +70,7 @@ interface RawTelemetryTestCase {
   name: string;
   client: string;
   function: "post";
-  data: Record<string, any>;
+  data: Record<string, any> | Array<Record<string, any>>;
   expected_data: Record<string, any>;
   aggregator: RawAggregator;
   client_overrides: {
@@ -97,7 +105,7 @@ export interface InputOutputTest {
 
 export interface TelemetryTest {
   name: string;
-  data: Record<string, any>;
+  data: Array<Record<string, any>>;
   function: "post";
   expectedTelemetryData: Record<string, any>;
   aggregator: Aggregator;
@@ -110,6 +118,8 @@ export interface TelemetryTest {
 const aggregatorLookup: Record<RawAggregator, Aggregator> = {
   log_path: "knownLoggers",
   context_shape: "contextShapes",
+  evaluation_summary: "evaluationSummary",
+  example_contexts: "exampleContexts",
 };
 
 const formatContext = (
@@ -179,13 +189,21 @@ export const tests = (): {
         .join(" - ");
 
       if (testCase.function === "post") {
+        const aggregator = aggregatorLookup[testCase.aggregator];
+
+        if (aggregator === undefined) {
+          throw new Error(
+            `Unknown aggregator type ${testCase.aggregator} in ${name}`
+          );
+        }
+
         telemetryTests.push({
           name,
           function: testCase.function,
-          data: testCase.data,
+          data: Array.isArray(testCase.data) ? testCase.data : [testCase.data],
           expectedTelemetryData: testCase.expected_data,
           client_overrides: testCase.client_overrides,
-          aggregator: aggregatorLookup[testCase.aggregator],
+          aggregator,
         });
 
         return;

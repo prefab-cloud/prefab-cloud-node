@@ -16,6 +16,7 @@ import { TelemetryReporter } from "./telemetry/reporter";
 import type { ContextUploadMode } from "./telemetry/types";
 import { knownLoggers } from "./telemetry/knownLoggers";
 import { contextShapes } from "./telemetry/contextShapes";
+import { exampleContexts } from "./telemetry/exampleContexts";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
 const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
@@ -36,6 +37,7 @@ export interface PrefabInterface {
 export interface Telemetry {
   knownLoggers: ReturnType<typeof knownLoggers>;
   contextShapes: ReturnType<typeof contextShapes>;
+  exampleContexts: ReturnType<typeof exampleContexts>;
 }
 
 interface ConstructorProps {
@@ -115,6 +117,11 @@ class Prefab implements PrefabInterface {
         this.namespace
       ),
       contextShapes: contextShapes(this.apiClient, contextUploadMode),
+      exampleContexts: exampleContexts(
+        this.apiClient,
+        this.instanceHash,
+        contextUploadMode
+      ),
     };
   }
 
