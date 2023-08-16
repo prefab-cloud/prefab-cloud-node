@@ -45,6 +45,7 @@ describe("prefab", () => {
       const prefab = new Prefab({
         apiKey: validApiKey,
         collectLoggerCounts: false,
+        contextUploadMode: "none",
       });
       await prefab.init();
 

@@ -22,6 +22,11 @@ const teamContext = new Map<string, any>([
   ["size", 9],
 ]);
 
+const contexts: Contexts = new Map([
+  ["user", userContext],
+  ["team", teamContext],
+]);
+
 describe("contextShapes", () => {
   it("returns stub if contextUploadMode is not shapeOnly", () => {
     expect(contextShapes(mockApiClient, "periodicExample")).toBe(stub);
@@ -30,11 +35,6 @@ describe("contextShapes", () => {
 
   it("pushes data", () => {
     const aggregator = contextShapes(mockApiClient, "shapeOnly");
-
-    const contexts: Contexts = new Map([
-      ["user", userContext],
-      ["team", teamContext],
-    ]);
 
     aggregator.push(contexts);
 
@@ -56,11 +56,6 @@ describe("contextShapes", () => {
 
   it("should sync context shapes to the server", async () => {
     const aggregator = contextShapes(mockApiClient, "shapeOnly");
-
-    const contexts: Contexts = new Map([
-      ["user", userContext],
-      ["team", teamContext],
-    ]);
 
     aggregator.push(contexts);
 

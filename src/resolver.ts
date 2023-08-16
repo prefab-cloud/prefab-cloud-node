@@ -89,6 +89,7 @@ class Resolver implements PrefabInterface {
 
     if (this.telemetry !== undefined) {
       this.telemetry.contextShapes.push(mergedContexts);
+      this.telemetry.exampleContexts.push(mergedContexts);
     }
 
     return evaluate({

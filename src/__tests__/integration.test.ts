@@ -5,9 +5,10 @@ import type { Context, Contexts, ContextValue } from "../types";
 import type { GetValue } from "../unwrap";
 import { tests } from "./integrationHelper";
 import type { InputOutputTest, TelemetryTest } from "./integrationHelper";
-import type { ContextShapes, Logger, Loggers } from "../proto";
+import type { ContextShapes, Logger, Loggers, TelemetryEvents } from "../proto";
 import type { knownLoggers, LoggerLevelName } from "../telemetry/knownLoggers";
 import type { contextShapes } from "../telemetry/contextShapes";
+import type { exampleContexts } from "../telemetry/exampleContexts";
 
 const func = (prefab: PrefabInterface, test: InputOutputTest): any => {
   switch (test.function) {
@@ -42,6 +43,7 @@ describe("integration tests", () => {
         apiKey,
         cdnUrl,
         namespace: test.client_overrides?.namespace,
+        contextUploadMode: "none",
       };
 
       if (test.client_overrides?.on_no_default === 2) {
@@ -91,6 +93,32 @@ describe("integration tests", () => {
   });
 
   telemetryTests.forEach((test) => {
+    const coerceContexts = (
+      incomingContexts: Record<string, Record<string, any>>
+    ): Contexts => {
+      const contexts: Contexts = new Map();
+
+      Object.keys(incomingContexts).forEach((contextName) => {
+        const incomingContext = incomingContexts[contextName];
+
+        if (typeof incomingContext !== "object") {
+          throw new Error(
+            `Invalid context: ${contextName} is not an object: ${
+              incomingContext ?? `undefined`
+            }`
+          );
+        }
+
+        const context: Context = new Map<string, ContextValue>(
+          Object.entries(incomingContext)
+        );
+
+        contexts.set(contextName, context);
+      });
+
+      return contexts;
+    };
+
     const aggregatorSpecificLogic = {
       contextShapes(test: TelemetryTest) {
         return {
@@ -99,17 +127,11 @@ describe("integration tests", () => {
           },
 
           exercise: (aggregator: unknown) => {
-            const contexts: Contexts = new Map();
+            test.data.forEach((data: Record<string, Record<string, any>>) => {
+              const contexts = coerceContexts(data);
 
-            Object.keys(test.data).forEach((contextName) => {
-              const context: Context = new Map<string, ContextValue>(
-                Object.entries(test.data[contextName])
-              );
-
-              contexts.set(contextName, context);
+              (aggregator as ReturnType<typeof contextShapes>).push(contexts);
             });
-
-            (aggregator as ReturnType<typeof contextShapes>).push(contexts);
           },
 
           massageData: (dataSent: ContextShapes) => {
@@ -120,6 +142,54 @@ describe("integration tests", () => {
               };
             });
           },
+        };
+      },
+
+      exampleContexts(test: TelemetryTest) {
+        return {
+          customOptions: {},
+
+          exercise: (aggregator: unknown) => {
+            test.data.forEach((data: Record<string, Record<string, any>>) => {
+              const contexts = coerceContexts(data);
+              (aggregator as ReturnType<typeof exampleContexts>).push(contexts);
+            });
+          },
+
+          massageData: (dataSent: TelemetryEvents) => {
+            return dataSent.events.flatMap((event) => {
+              return event.exampleContexts?.examples.map((example) => {
+                const result: Record<string, any> = {};
+
+                example.contextSet?.contexts.forEach((context) => {
+                  if (context.type === undefined) {
+                    throw new Error("context.type is undefined");
+                  }
+
+                  result[context.type] = Object.entries(context.values)
+                    .reverse()
+                    .map(([key, value]) => {
+                      return {
+                        key,
+                        value: Object.values(value)[0],
+                        value_type: Object.keys(value)[0],
+                      };
+                    });
+                });
+
+                return result;
+              });
+            });
+          },
+        };
+      },
+
+      evaluationSummary(test: TelemetryTest) {
+        console.log(test);
+        return {
+          customOptions: {},
+          exercise: (_: unknown) => {},
+          massageData: (_: unknown) => {},
         };
       },
 
@@ -136,8 +206,15 @@ describe("integration tests", () => {
               wordLevelToNumber("fatal"),
             ];
 
-            Object.keys(test.data).forEach((loggerName) => {
-              test.data[loggerName].forEach(
+            // There's only one Record
+            const data = test.data[0];
+
+            if (data === undefined) {
+              throw new Error("data is undefined");
+            }
+
+            Object.keys(data).forEach((loggerName) => {
+              data[loggerName].forEach(
                 (count: number, severityIndex: number) => {
                   for (let i = 0; i < count; i++) {
                     const severity = severityTranslator[severityIndex];
@@ -189,7 +266,8 @@ describe("integration tests", () => {
 
     if (
       test.name.includes("log aggregation") ||
-      test.name.includes("context shape aggregation")
+      test.name.includes("context shape aggregation") ||
+      test.name.includes("example contexts")
     ) {
       it(test.name, async () => {
         const apiUrl = "https://api.staging-prefab.cloud";
@@ -208,6 +286,10 @@ describe("integration tests", () => {
 
         await prefab.init();
 
+        if (test.aggregator === "evaluationSummary") {
+          throw new Error("evaluationSummary is not implemented yet");
+        }
+
         const aggregator = prefab.telemetry[test.aggregator];
 
         exercise(aggregator);
@@ -223,10 +305,13 @@ describe("integration tests", () => {
         expect(result.status).toBe(200);
 
         const actualData = massageData(result.dataSent);
+
         expect(actualData).toStrictEqual(test.expectedTelemetryData);
 
         if (aggregator.data instanceof Map) {
           expect(aggregator.data.size).toBe(0);
+        } else if (aggregator.data instanceof Array) {
+          expect(aggregator.data.length).toBe(0);
         } else {
           expect(aggregator.data).toStrictEqual({});
         }

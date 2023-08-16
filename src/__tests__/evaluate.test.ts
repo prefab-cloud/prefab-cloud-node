@@ -22,7 +22,7 @@ const emptyResolver = new Resolver(
   "error"
 );
 
-describe.only("evaluate", () => {
+describe("evaluate", () => {
   it("returns a config value with no rules", () => {
     expect(
       evaluate({
