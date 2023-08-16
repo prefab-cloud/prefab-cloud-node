@@ -20,7 +20,8 @@
     "lint": "eslint --cache=true --ext .ts .",
     "prep": "npm run lint && npm run format && npm run test && npm run build",
     "regen-proto": "npx pbjs -t json ../prefab-cloud/prefab.proto > src/proto.json && protoc --ts_proto_opt=esModuleInterop=true --ts_proto_opt=forceLong=long --ts_proto_opt=onlyTypes=true --ts_proto_opt=env=node --ts_proto_out=./ -I ../prefab-cloud/ prefab.proto && mv prefab.ts src/proto.ts",
-    "test": "jest"
+    "test": "jest",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": "Jeffrey Chupp",
@@ -42,7 +43,8 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
-    "yaml": "^2.2.2"
+    "yaml": "^2.2.2",
+    "husky": "^8.0.0"
   },
   "dependencies": {
     "@types/eventsource": "^1.1.11",
