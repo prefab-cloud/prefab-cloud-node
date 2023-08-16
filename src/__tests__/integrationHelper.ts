@@ -26,9 +26,9 @@ const LogLevelLookup: Record<string, number> = {
 
 type YAMLContext = Record<string, Record<string, any>> | undefined;
 
-type RawAggregator = "log_path";
+type RawAggregator = "log_path" | "context_shape";
 
-type Aggregator = "knownLoggers";
+type Aggregator = "knownLoggers" | "contextShapes";
 
 interface RawTestSuite {
   name: string;
@@ -109,6 +109,7 @@ export interface TelemetryTest {
 
 const aggregatorLookup: Record<RawAggregator, Aggregator> = {
   log_path: "knownLoggers",
+  context_shape: "contextShapes",
 };
 
 const formatContext = (
