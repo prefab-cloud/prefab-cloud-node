@@ -1,5 +1,11 @@
+import type Long from "long";
+import { wordLevelToNumber } from "../prefab";
+import type { Context, Contexts, ContextValue } from "../types";
+import type { ContextShapes, Logger, Loggers, TelemetryEvents } from "../proto";
+import type { knownLoggers, LoggerLevelName } from "../telemetry/knownLoggers";
+import type { contextShapes } from "../telemetry/contextShapes";
+import type { exampleContexts } from "../telemetry/exampleContexts";
 import fs from "fs";
-import type { Contexts } from "../types";
 import { PREFIX } from "../logger";
 
 const YAML = require("yaml");
@@ -109,10 +115,11 @@ export interface TelemetryTest {
   function: "post";
   expectedTelemetryData: Record<string, any>;
   aggregator: Aggregator;
-  client_overrides: {
-    collect_sync_interval?: number;
-    context_upload_mode?: string;
+  customOptions: {
+    contextUploadMode?: "shapeOnly" | "periodicExample" | "none";
   };
+  exercise: (aggregator: unknown) => void;
+  massageData: (dataSent: unknown) => unknown;
 }
 
 const aggregatorLookup: Record<RawAggregator, Aggregator> = {
@@ -167,6 +174,167 @@ const calcExpectedValue = (
   return expectedValue;
 };
 
+const coerceContexts = (
+  incomingContexts: Record<string, Record<string, any>>
+): Contexts => {
+  const contexts: Contexts = new Map();
+
+  Object.keys(incomingContexts).forEach((contextName) => {
+    const incomingContext = incomingContexts[contextName];
+
+    if (typeof incomingContext !== "object") {
+      throw new Error(
+        `Invalid context: ${contextName} is not an object: ${
+          incomingContext ?? `undefined`
+        }`
+      );
+    }
+
+    const context: Context = new Map<string, ContextValue>(
+      Object.entries(incomingContext)
+    );
+
+    contexts.set(contextName, context);
+  });
+
+  return contexts;
+};
+
+const aggregatorSpecificLogic = {
+  contextShapes(data: TelemetryTest["data"]) {
+    return {
+      exercise: (aggregator: unknown) => {
+        data.forEach((data: Record<string, Record<string, any>>) => {
+          const contexts = coerceContexts(data);
+
+          (aggregator as ReturnType<typeof contextShapes>).push(contexts);
+        });
+      },
+
+      massageData: (dataSent: unknown) => {
+        return (dataSent as ContextShapes).shapes.map(
+          ({ name, fieldTypes }) => {
+            return {
+              name,
+              field_types: fieldTypes,
+            };
+          }
+        );
+      },
+    };
+  },
+
+  exampleContexts(data: TelemetryTest["data"]) {
+    return {
+      exercise: (aggregator: unknown) => {
+        data.forEach((data: Record<string, Record<string, any>>) => {
+          const contexts = coerceContexts(data);
+          (aggregator as ReturnType<typeof exampleContexts>).push(contexts);
+        });
+      },
+
+      massageData: (dataSent: unknown) => {
+        return (dataSent as TelemetryEvents).events.flatMap((event) => {
+          return event.exampleContexts?.examples.map((example) => {
+            const result: Record<string, any> = {};
+
+            example.contextSet?.contexts.forEach((context) => {
+              if (context.type === undefined) {
+                throw new Error("context.type is undefined");
+              }
+
+              result[context.type] = Object.entries(context.values)
+                .reverse()
+                .map(([key, value]) => {
+                  return {
+                    key,
+                    value: Object.values(value)[0],
+                    value_type: Object.keys(value)[0],
+                  };
+                });
+            });
+
+            return result;
+          });
+        });
+      },
+    };
+  },
+
+  evaluationSummary(_: TelemetryTest["data"]) {
+    return {
+      exercise: (_: unknown) => {},
+      massageData: (_: unknown) => {},
+    };
+  },
+
+  knownLoggers(testData: TelemetryTest["data"]) {
+    return {
+      exercise: (aggregator: unknown) => {
+        const severityTranslator = [
+          wordLevelToNumber("debug"),
+          wordLevelToNumber("info"),
+          wordLevelToNumber("warn"),
+          wordLevelToNumber("error"),
+          wordLevelToNumber("fatal"),
+        ];
+
+        // There's only one Record
+        const data = testData[0];
+
+        if (data === undefined) {
+          throw new Error("data is undefined");
+        }
+
+        Object.keys(data).forEach((loggerName) => {
+          data[loggerName].forEach((count: number, severityIndex: number) => {
+            for (let i = 0; i < count; i++) {
+              const severity = severityTranslator[severityIndex];
+
+              if (severity === undefined) {
+                throw new Error(
+                  `Invalid severity index: ${severityIndex} for ${loggerName}`
+                );
+              }
+
+              (aggregator as ReturnType<typeof knownLoggers>).push(
+                loggerName,
+                severity
+              );
+            }
+          });
+        });
+      },
+
+      massageData: (dataSent: unknown) => {
+        return (dataSent as Loggers).loggers.map((logger: Logger) => {
+          const counts: Record<string, any> = {};
+          const levels: LoggerLevelName[] = [
+            "debugs",
+            "infos",
+            "warns",
+            "errors",
+            "fatals",
+          ];
+
+          levels.forEach((severity) => {
+            const recordedSeverity: Long | undefined = logger[severity];
+
+            if (recordedSeverity != null) {
+              counts[severity] = recordedSeverity.toNumber();
+            }
+          });
+
+          return {
+            logger_name: logger.loggerName,
+            counts,
+          };
+        });
+      },
+    };
+  },
+};
+
 export const tests = (): {
   inputOutputTests: InputOutputTest[];
   telemetryTests: TelemetryTest[];
@@ -197,13 +365,23 @@ export const tests = (): {
           );
         }
 
+        const data = Array.isArray(testCase.data)
+          ? testCase.data
+          : [testCase.data];
+
         telemetryTests.push({
           name,
           function: testCase.function,
-          data: Array.isArray(testCase.data) ? testCase.data : [testCase.data],
+          data,
           expectedTelemetryData: testCase.expected_data,
-          client_overrides: testCase.client_overrides,
+          customOptions:
+            testCase.client_overrides.context_upload_mode === ":shape_only"
+              ? {
+                  contextUploadMode: "shapeOnly" as const,
+                }
+              : {},
           aggregator,
+          ...aggregatorSpecificLogic[aggregator](data),
         });
 
         return;
