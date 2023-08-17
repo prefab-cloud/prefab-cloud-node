@@ -19,6 +19,7 @@ const userContext = new Map<string, any>([
   ["age", 12],
   ["shoeSize", 11.5],
   ["someArray", [1, 2, 3, 4]],
+  ["cars", ["Ford", "BMW", "Fiat"]],
 ]);
 
 const teamContext = new Map<string, any>([
@@ -135,7 +136,10 @@ describe("exampleContexts", () => {
                           double: 11.5,
                         },
                         someArray: {
-                          stringList: [1, 2, 3, 4],
+                          stringList: { values: ["1", "2", "3", "4"] },
+                        },
+                        cars: {
+                          stringList: { values: ["Ford", "BMW", "Fiat"] },
                         },
                       },
                     },

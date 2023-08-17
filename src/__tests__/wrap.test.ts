@@ -36,7 +36,9 @@ describe("wrap", () => {
     expect(wrap(3.14)).toEqual({ double: 3.14 });
     expect(wrap(true)).toEqual({ bool: true });
     expect(wrap(["apple", "banana"])).toEqual({
-      stringList: ["apple", "banana"],
+      stringList: {
+        values: ["apple", "banana"],
+      },
     });
     expect(wrap("hello")).toEqual({ string: "hello" });
   });
