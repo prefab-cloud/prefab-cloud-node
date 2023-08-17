@@ -1,5 +1,4 @@
 import Long from "long";
-
 import { Prefab } from "../../prefab";
 import { exampleContexts, stub } from "../../telemetry/exampleContexts";
 import type { Contexts } from "../../types";

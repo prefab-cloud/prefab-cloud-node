@@ -17,6 +17,7 @@ import type { ContextUploadMode } from "./telemetry/types";
 import { knownLoggers } from "./telemetry/knownLoggers";
 import { contextShapes } from "./telemetry/contextShapes";
 import { exampleContexts } from "./telemetry/exampleContexts";
+import { evaluationSummaries } from "./telemetry/evaluationSummaries";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
 const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
@@ -38,6 +39,7 @@ export interface Telemetry {
   knownLoggers: ReturnType<typeof knownLoggers>;
   contextShapes: ReturnType<typeof contextShapes>;
   exampleContexts: ReturnType<typeof exampleContexts>;
+  evaluationSummaries: ReturnType<typeof evaluationSummaries>;
 }
 
 interface ConstructorProps {
@@ -53,6 +55,7 @@ interface ConstructorProps {
   defaultLogLevel?: ValidLogLevel | ValidLogLevelName;
   collectLoggerCounts?: boolean;
   contextUploadMode?: ContextUploadMode;
+  collectEvaluationSummaries?: boolean;
 }
 
 class Prefab implements PrefabInterface {
@@ -67,10 +70,8 @@ class Prefab implements PrefabInterface {
   private resolver?: Resolver;
   private readonly apiClient: ApiClient;
   private readonly defaultLogLevel: ValidLogLevel;
+  private readonly instanceHash: string;
   readonly telemetry: Telemetry;
-
-  readonly instanceHash: string;
-  readonly collectLoggerCounts: boolean;
 
   constructor({
     apiKey,
@@ -85,6 +86,7 @@ class Prefab implements PrefabInterface {
     defaultLogLevel = PREFAB_DEFAULT_LOG_LEVEL,
     collectLoggerCounts = true,
     contextUploadMode = "periodicExample",
+    collectEvaluationSummaries = true,
   }: ConstructorProps) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
@@ -95,7 +97,6 @@ class Prefab implements PrefabInterface {
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
     this.instanceHash = crypto.randomUUID();
-    this.collectLoggerCounts = collectLoggerCounts;
 
     const parsedDefaultLogLevel = parseLevel(defaultLogLevel);
 
@@ -121,6 +122,11 @@ class Prefab implements PrefabInterface {
         this.apiClient,
         this.instanceHash,
         contextUploadMode
+      ),
+      evaluationSummaries: evaluationSummaries(
+        this.apiClient,
+        this.instanceHash,
+        collectEvaluationSummaries
       ),
     };
   }

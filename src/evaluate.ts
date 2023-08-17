@@ -1,3 +1,4 @@
+import type Long from "long";
 import type {
   ConditionalValue,
   Config,
@@ -115,10 +116,12 @@ const matchingConfigValue = (
   namespace: string | undefined,
   contexts: Contexts,
   resolver: Resolver
-): ConfigValue | undefined => {
+): [number, number, ConfigValue | undefined] => {
   let match: ConfigValue | undefined;
+  let conditionalValueIndex: number = -1;
+  let configRowIndex: number = -1;
 
-  sortRows(rows, projectEnvId).forEach((row) => {
+  sortRows(rows, projectEnvId).forEach((row, rIndex) => {
     if (match !== undefined) {
       return;
     }
@@ -127,12 +130,17 @@ const matchingConfigValue = (
       return;
     }
 
-    match = row.values.find((value: any) => {
+    match = row.values.find((value: any, vIndex) => {
+      conditionalValueIndex = vIndex;
       return allCriteriaMatch(value, namespace, contexts, resolver);
     })?.value;
+
+    if (match !== undefined) {
+      configRowIndex = rIndex;
+    }
   });
 
-  return match;
+  return [conditionalValueIndex, configRowIndex, match];
 };
 
 export interface EvaluateArgs {
@@ -143,20 +151,47 @@ export interface EvaluateArgs {
   resolver: Resolver;
 }
 
+export interface Evaluation {
+  configId: Long;
+  configKey: string;
+  configType: number;
+  selectedValue?: ConfigValue;
+  unwrappedValue: GetValue;
+  conditionalValueIndex: number;
+  configRowIndex: number;
+  weightedValueIndex?: number;
+}
+
 export const evaluate = ({
   config,
   projectEnvId,
   namespace,
   contexts,
   resolver,
-}: EvaluateArgs): GetValue => {
-  const value = matchingConfigValue(
-    config.rows,
-    projectEnvId,
-    namespace,
-    contexts ?? new Map(),
-    resolver
+}: EvaluateArgs): Evaluation => {
+  const [conditionalValueIndex, configRowIndex, selectedValue] =
+    matchingConfigValue(
+      config.rows,
+      projectEnvId,
+      namespace,
+      contexts ?? new Map(),
+      resolver
+    );
+
+  const [unwrappedValue, weightedValueIndex] = unwrap(
+    config.key,
+    selectedValue,
+    getHashByPropertyValue(selectedValue, contexts)
   );
 
-  return unwrap(config.key, value, getHashByPropertyValue(value, contexts));
+  return {
+    configKey: config.key,
+    configId: config.id,
+    configType: config.configType,
+    selectedValue,
+    conditionalValueIndex,
+    configRowIndex,
+    unwrappedValue,
+    weightedValueIndex,
+  };
 };

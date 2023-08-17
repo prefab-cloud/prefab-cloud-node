@@ -92,13 +92,19 @@ class Resolver implements PrefabInterface {
       this.telemetry.exampleContexts.push(mergedContexts);
     }
 
-    return evaluate({
+    const evaluation = evaluate({
       config,
       projectEnvId: this.projectEnvId,
       namespace: this.namespace,
       contexts: mergedContexts,
       resolver: this,
     });
+
+    if (this.telemetry !== undefined) {
+      this.telemetry.evaluationSummaries.push(evaluation);
+    }
+
+    return evaluation.unwrappedValue;
   }
 
   isFeatureEnabled(key: string, contexts?: Contexts): boolean {
