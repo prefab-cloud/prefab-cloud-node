@@ -4,7 +4,7 @@ import { ConfigType } from "../../proto";
 import { irrelevantLong } from "../testHelpers";
 
 const config: Config = {
-  id: irrelevantLong,
+  id: new Long(999),
   projectId: irrelevantLong,
   key: "basic.value",
   changedBy: undefined,

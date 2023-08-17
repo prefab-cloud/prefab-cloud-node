@@ -87,67 +87,65 @@ describe("integration tests", () => {
   });
 
   telemetryTests.forEach((test) => {
-    if (
-      test.name.includes("log aggregation") ||
-      test.name.includes("context shape aggregation") ||
-      test.name.includes("example contexts")
-    ) {
-      it(test.name, async () => {
-        const apiUrl = "https://api.staging-prefab.cloud";
+    it(test.name, async () => {
+      const apiUrl = "https://api.staging-prefab.cloud";
 
-        const options: ConstructorParameters<typeof Prefab>[0] = {
-          apiKey,
-          apiUrl,
-          cdnUrl,
-          ...test.customOptions,
-        };
+      const options: ConstructorParameters<typeof Prefab>[0] = {
+        apiKey,
+        apiUrl,
+        cdnUrl,
+        ...test.customOptions,
+      };
 
-        const prefab = new Prefab(options);
+      const prefab = new Prefab(options);
 
-        await prefab.init();
+      await prefab.init();
 
-        if (test.aggregator === "evaluationSummary") {
-          throw new Error("evaluationSummary is not implemented yet");
-        }
+      const aggregator = prefab.telemetry[test.aggregator];
 
-        const aggregator = prefab.telemetry[test.aggregator];
+      if (!aggregator.enabled) {
+        throw new Error(`Aggregator ${test.aggregator} is not enabled`);
+      }
 
-        if (!aggregator.enabled) {
-          throw new Error(`Aggregator ${test.aggregator} is not enabled`);
-        }
+      test.exercise(aggregator, prefab);
 
-        test.exercise(aggregator);
+      const result = await aggregator.sync();
 
-        const result = await aggregator.sync();
+      if (result == null) {
+        throw new Error(
+          "Result was unexpectedly void. Maybe `data.size === 0`?"
+        );
+      }
 
-        if (result == null) {
-          throw new Error(
-            "Result was unexpectedly void. Maybe `data.size === 0`?"
-          );
-        }
+      expect(result.status).toBe(200);
 
-        expect(result.status).toBe(200);
+      const actualData = test.massageData(result.dataSent);
 
-        const actualData = test.massageData(result.dataSent);
+      if (Array.isArray(actualData)) {
+        expect(actualData.length).toBe(
+          (test.expectedTelemetryData as unknown[]).length
+        );
 
-        expect(actualData).toStrictEqual(test.expectedTelemetryData);
-
-        if (aggregator.data instanceof Map) {
-          expect(aggregator.data.size).toBe(0);
-        } else if (aggregator.data instanceof Array) {
-          expect(aggregator.data.length).toBe(0);
-        } else {
-          expect(aggregator.data).toStrictEqual({});
-        }
-
-        expect(aggregator.timeout).toBeDefined();
-
-        Object.values(prefab.telemetry).forEach((aggregator) => {
-          clearTimeout(aggregator.timeout);
+        (test.expectedTelemetryData as any[]).forEach((expected) => {
+          expect(actualData).toContainEqual(expected);
         });
+      } else {
+        expect(actualData).toStrictEqual(test.expectedTelemetryData);
+      }
+
+      if (aggregator.data instanceof Map) {
+        expect(aggregator.data.size).toBe(0);
+      } else if (aggregator.data instanceof Array) {
+        expect(aggregator.data.length).toBe(0);
+      } else {
+        expect(aggregator.data).toStrictEqual({});
+      }
+
+      expect(aggregator.timeout).toBeDefined();
+
+      Object.values(prefab.telemetry).forEach((aggregator) => {
+        clearTimeout(aggregator.timeout);
       });
-    } else {
-      it.skip(test.name, async () => {});
-    }
+    });
   });
 });

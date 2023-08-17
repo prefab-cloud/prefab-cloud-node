@@ -1,4 +1,5 @@
 import type Long from "long";
+import type { Prefab } from "../prefab";
 import { wordLevelToNumber } from "../prefab";
 import type { Context, Contexts, ContextValue } from "../types";
 import type { ContextShapes, Logger, Loggers, TelemetryEvents } from "../proto";
@@ -21,7 +22,14 @@ const expectedWarnings: Record<string, RegExp> = {
     /Non-boolean FF's return `false` for isFeatureEnabled checks./,
 };
 
-const LogLevelLookup: Record<string, number> = {
+const typeLookup: Record<number, string> = {
+  1: "CONFIG",
+  2: "FEATURE_FLAG",
+  3: "LOG_LEVEL",
+  4: "SEGMENT",
+};
+
+const logLevelLookup: Record<string, number> = {
   TRACE: 1,
   DEBUG: 2,
   INFO: 3,
@@ -41,7 +49,7 @@ type RawAggregator =
 type Aggregator =
   | "knownLoggers"
   | "contextShapes"
-  | "evaluationSummary"
+  | "evaluationSummaries"
   | "exampleContexts";
 
 interface RawTestSuite {
@@ -76,7 +84,7 @@ interface RawTelemetryTestCase {
   name: string;
   client: string;
   function: "post";
-  data: Record<string, any> | Array<Record<string, any>>;
+  data: Record<string, any> | Array<Record<string, any>> | string[];
   expected_data: Record<string, any>;
   aggregator: RawAggregator;
   client_overrides: {
@@ -111,21 +119,21 @@ export interface InputOutputTest {
 
 export interface TelemetryTest {
   name: string;
-  data: Array<Record<string, any>>;
+  data: Array<Record<string, any>> | string[];
   function: "post";
   expectedTelemetryData: Record<string, any>;
   aggregator: Aggregator;
   customOptions: {
     contextUploadMode?: "shapeOnly" | "periodicExample" | "none";
   };
-  exercise: (aggregator: unknown) => void;
+  exercise: (aggregator: unknown, prefab: Prefab) => void;
   massageData: (dataSent: unknown) => unknown;
 }
 
 const aggregatorLookup: Record<RawAggregator, Aggregator> = {
   log_path: "knownLoggers",
   context_shape: "contextShapes",
-  evaluation_summary: "evaluationSummary",
+  evaluation_summary: "evaluationSummaries",
   example_contexts: "exampleContexts",
 };
 
@@ -168,7 +176,7 @@ const calcExpectedValue = (
   }
 
   if (key.startsWith(PREFIX)) {
-    expectedValue = LogLevelLookup[expectedValue];
+    expectedValue = logLevelLookup[expectedValue];
   }
 
   return expectedValue;
@@ -204,8 +212,10 @@ const aggregatorSpecificLogic = {
   contextShapes(data: TelemetryTest["data"]) {
     return {
       exercise: (aggregator: unknown) => {
-        data.forEach((data: Record<string, Record<string, any>>) => {
-          const contexts = coerceContexts(data);
+        data.forEach((data: unknown) => {
+          const contexts = coerceContexts(
+            data as Record<string, Record<string, any>>
+          );
 
           (aggregator as ReturnType<typeof contextShapes>).push(contexts);
         });
@@ -227,8 +237,10 @@ const aggregatorSpecificLogic = {
   exampleContexts(data: TelemetryTest["data"]) {
     return {
       exercise: (aggregator: unknown) => {
-        data.forEach((data: Record<string, Record<string, any>>) => {
-          const contexts = coerceContexts(data);
+        data.forEach((data: unknown) => {
+          const contexts = coerceContexts(
+            data as Record<string, Record<string, any>>
+          );
           (aggregator as ReturnType<typeof exampleContexts>).push(contexts);
         });
       },
@@ -261,14 +273,51 @@ const aggregatorSpecificLogic = {
     };
   },
 
-  evaluationSummary(_: TelemetryTest["data"]) {
+  evaluationSummaries(data: TelemetryTest["data"]) {
     return {
-      exercise: (_: unknown) => {},
-      massageData: (_: unknown) => {},
+      exercise: (_: unknown, prefab: Prefab) => {
+        data.forEach((key: unknown) => {
+          prefab.get(key as string);
+        });
+      },
+      massageData: (dataSent: unknown) => {
+        const summaries = (dataSent as TelemetryEvents).events[0]?.summaries
+          ?.summaries;
+
+        if (summaries === undefined) {
+          throw new Error("summaries is undefined");
+        }
+
+        return summaries.flatMap((summary) => {
+          return summary.counters.flatMap((counter) => {
+            let valueType = Object.keys(
+              counter.selectedValue as Record<string, unknown>
+            )[0];
+
+            if (valueType === "stringList") {
+              valueType = "string_list";
+            }
+
+            return {
+              key: summary.key,
+              type: typeLookup[summary.type],
+              value: Object.values(
+                counter.selectedValue as Record<string, unknown>
+              )[0],
+              value_type: valueType,
+              count: counter.count.toNumber(),
+              summary: {
+                config_row_index: counter.configRowIndex,
+                conditional_value_index: counter.conditionalValueIndex,
+              },
+            };
+          });
+        });
+      },
     };
   },
 
-  knownLoggers(testData: TelemetryTest["data"]) {
+  knownLoggers(testData: Record<string, any>) {
     return {
       exercise: (aggregator: unknown) => {
         const severityTranslator = [

@@ -1,9 +1,10 @@
+import Long from "long";
 import type { Config } from "../../proto";
 import { ConfigType, LogLevel } from "../../proto";
 import { irrelevantLong } from "../testHelpers";
 
 const config: Config = {
-  id: irrelevantLong,
+  id: new Long(33),
   projectId: irrelevantLong,
   key: "log-level.some.component.path",
   changedBy: undefined,

@@ -1,9 +1,10 @@
+import Long from "long";
 import type { Config } from "../../proto";
 import { ConfigType, Criterion_CriterionOperator } from "../../proto";
 import { irrelevantLong, projectEnvIdUnderTest } from "../testHelpers";
 
 const config: Config = {
-  id: irrelevantLong,
+  id: new Long(991),
   projectId: irrelevantLong,
 
   key: "prop.is.one.of",

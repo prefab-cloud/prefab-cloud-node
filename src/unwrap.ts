@@ -5,6 +5,13 @@ import murmurhash from "murmurhash";
 
 export type GetValue = string | number | boolean | string[] | undefined;
 
+type WeightedValueIndex = number;
+
+type GetValueWithWeightedValueIndex = [
+  GetValue,
+  WeightedValueIndex | undefined
+];
+
 const userPercent = (key: string, hashByPropertyValue: string): number => {
   return murmurhash.v3(`${key}${hashByPropertyValue}`) / 4_294_967_294.0;
 };
@@ -33,12 +40,12 @@ const unwrapWeightedValues = (
   key: string,
   value: ConfigValue,
   hashByPropertyValue: HashByPropertyValue
-): GetValue => {
+): GetValueWithWeightedValueIndex => {
   const values = value.weightedValues?.weightedValues;
 
   if (values === undefined) {
     console.warn(`Unexpected value ${JSON.stringify(value)}`);
-    return undefined;
+    return [undefined, undefined];
   }
 
   const percent =
@@ -48,29 +55,38 @@ const unwrapWeightedValues = (
 
   const index = variantIndex(percent, values);
 
-  return unwrap(key, values[index]?.value, hashByPropertyValue);
+  const underlyingValue = unwrap(
+    key,
+    values[index]?.value,
+    hashByPropertyValue
+  );
+
+  return [
+    Array.isArray(underlyingValue) ? underlyingValue[0] : underlyingValue,
+    index,
+  ];
 };
 
 export const unwrapValue = (
   key: string,
   value: ConfigValue,
   hashByPropertyValue: HashByPropertyValue
-): GetValue => {
+): GetValueWithWeightedValueIndex => {
   switch (Object.keys(value)[0]) {
     case "string":
-      return value.string;
+      return [value.string, undefined];
     case "stringList":
-      return value.stringList?.values;
+      return [value.stringList?.values, undefined];
     case "weightedValues":
       return unwrapWeightedValues(key, value, hashByPropertyValue);
     case "int":
-      return value.int?.toInt();
+      return [value.int?.toInt(), undefined];
     case "bool":
-      return value.bool;
+      return [value.bool, undefined];
     case "double":
-      return value.double;
+      return [value.double, undefined];
     case "logLevel":
-      return value.logLevel;
+      return [value.logLevel, undefined];
     default:
       throw new Error(`Unexpected value ${JSON.stringify(value)}`);
   }
@@ -80,9 +96,9 @@ export const unwrap = (
   key: string,
   value: ConfigValue | undefined,
   hashByPropertyValue: HashByPropertyValue
-): GetValue => {
+): GetValueWithWeightedValueIndex => {
   if (value === undefined) {
-    return undefined;
+    return [undefined, undefined];
   }
 
   return unwrapValue(key, value, hashByPropertyValue);
