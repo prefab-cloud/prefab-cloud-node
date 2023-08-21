@@ -92,7 +92,7 @@ class Prefab implements PrefabInterface {
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
     this.cdnUrl = cdnUrl ?? "https://api-prefab-cloud.global.ssl.fastly.net";
     this.enablePolling = enablePolling ?? false;
-    this.enableSSE = enableSSE ?? false;
+    this.enableSSE = enableSSE ?? true;
     this.namespace = namespace;
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
