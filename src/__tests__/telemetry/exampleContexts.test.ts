@@ -167,6 +167,45 @@ describe("exampleContexts", () => {
     expect(aggregator.cache.prune).toHaveBeenCalled();
   });
 
+  it("won't add data past the maxDataSize", () => {
+    const aggregator = exampleContexts(
+      mockApiClient,
+      instanceHash,
+      "periodicExample",
+      2
+    );
+
+    const orgContext = new Map([
+      [
+        "org",
+        new Map([
+          ["key", "def"],
+          ["favoriteSandwich", "BLT"],
+        ]),
+      ],
+    ]);
+
+    const frContexts = new Map([
+      [
+        "user",
+        new Map([
+          ["trackingId", "hij"],
+          ["country", "France"],
+        ]),
+      ],
+    ]);
+
+    aggregator.push(contexts);
+
+    aggregator.push(orgContext);
+    aggregator.push(frContexts);
+
+    expect(aggregator.data).toStrictEqual([
+      [Date.now(), contexts],
+      [Date.now(), orgContext],
+    ]);
+  });
+
   describe("integration tests", () => {
     it("records context examples by default", () => {
       const prefab = new Prefab({

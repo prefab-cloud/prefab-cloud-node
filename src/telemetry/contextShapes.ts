@@ -6,6 +6,8 @@ import type { ContextUploadMode, SyncResult, Telemetry } from "./types";
 
 const ENDPOINT = "/api/v1/context-shapes";
 
+const MAX_DATA_SIZE = 10000;
+
 type ContextShapeTelemetry = Telemetry & {
   data: Map<string, Record<string, number>>;
   push: (contexts: Contexts) => void;
@@ -42,7 +44,8 @@ export const fieldTypeForValue = (value: unknown): number => {
 export const contextShapes = (
   apiClient: ApiClient,
   contextUploadMode: ContextUploadMode,
-  namespace?: string
+  namespace?: string,
+  maxDataSize: number = MAX_DATA_SIZE
 ): ContextShapeTelemetry => {
   if (contextUploadMode !== "shapeOnly") {
     return stub;
@@ -60,7 +63,13 @@ export const contextShapes = (
     push(contexts: Contexts) {
       contexts.forEach((context, name) => {
         context.forEach((value, key) => {
-          const shape = data.get(name) ?? {};
+          let shape = data.get(name);
+
+          if (shape === undefined && data.size >= maxDataSize) {
+            return;
+          }
+
+          shape = shape ?? {};
 
           if (shape[key] === undefined) {
             shape[key] = fieldTypeForValue(value);

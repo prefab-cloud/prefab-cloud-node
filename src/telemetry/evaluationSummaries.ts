@@ -33,7 +33,8 @@ export const stub: EvaluationSummariesTelemetry = {
 export const evaluationSummaries = (
   apiClient: ApiClient,
   instanceHash: string,
-  collectEvaluationSummaries: boolean
+  collectEvaluationSummaries: boolean,
+  maxDataSize: number = 10000
 ): EvaluationSummariesTelemetry => {
   if (!collectEvaluationSummaries) {
     return stub;
@@ -65,6 +66,10 @@ export const evaluationSummaries = (
     timeout: undefined,
 
     push(evaluation: Evaluation): void {
+      if (data.size >= maxDataSize) {
+        return;
+      }
+
       startAt = startAt ?? now();
 
       if (

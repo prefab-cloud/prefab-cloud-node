@@ -236,6 +236,21 @@ describe("evaluationSummaries", () => {
     expect(aggregator.data).toStrictEqual(new Map());
   });
 
+  it("won't add data past the maxDataSize", () => {
+    const aggregator = evaluationSummaries(
+      mockApiClient,
+      instanceHash,
+      true,
+      2
+    );
+
+    aggregator.push(evaluationFor(propIsOneOf, usContexts));
+    aggregator.push(evaluationFor(basicConfig, usContexts));
+    aggregator.push(evaluationFor(rolloutFlag, usContexts));
+
+    expect(aggregator.data.size).toEqual(2);
+  });
+
   describe("integration tests", () => {
     it("records evaluation summaries by default", () => {
       const prefab = new Prefab({
