@@ -2,10 +2,6 @@
 
 Prefab Node.js client
 
-**Note: This library is under active development and not quite ready for production usage**
-
-[Sign up to be notified when this library releases](https://share.hsforms.com/1BKgbsgReSl2bP351bfdJDg9z48)
-
 ---
 
 Install the client
@@ -27,7 +23,7 @@ const prefab = new Prefab({
   enablePolling: true,
 });
 
-await prefab.init()
+await prefab.init();
 ```
 
 After the init completes you can use
@@ -47,8 +43,8 @@ const context = {
   },
   subscription: {
     plan: "pro",
-  }
-}
+  },
+};
 ```
 
 You can pass this in to each call
