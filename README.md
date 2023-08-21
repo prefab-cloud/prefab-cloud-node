@@ -30,6 +30,7 @@ After the init completes you can use
 
 - `prefab.get('some.config.name')` returns a raw value
 - `prefab.isFeatureEnabled('some.feature.name')` returns true or false
+- `prefab.shouldLog(loggerName, desiredLevel, defaultLevel, contexts)` returns true or false
 
 Prefab supports [context](https://docs.prefab.cloud/docs/explanations/context) for intelligent rule-based evaluation of `get` and `isFeatureEnabled` based on the current request/device/user/etc.
 
@@ -38,10 +39,12 @@ Given
 ```js
 const context = {
   user: {
+    key: "some-unique-identifier",
     email: "test@example.com",
     isAdmin: false,
   },
   subscription: {
+    key: "sub-pro",
     plan: "pro",
   },
 };
@@ -62,3 +65,16 @@ prefab.inContext(context, (pf) => {
   console.log(pf.isEnabled("some.config.name", optionalJustInTimeContext, false))
 })
 ```
+
+#### Option Definitions
+
+Besides `apiKey`, you can initialize `new Prefab(...)` with the following options
+
+| Name                       | Description                                                                                                                           | Default           |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| collectEvaluationSummaries | Send counts of config/flag evaluation results back to Prefab to view in web app                                                       | true              |
+| collectLoggerCounts        | Send counts of logger usage back to Prefab to power log-levels configuration screen                                                   | true              |
+| contextUploadMode          | Upload either context "shapes" (the names and data types your app uses in prefab contexts) or periodically send full example contexts | "periodicExample" |
+| defaultLevel               | Level to be used as the min-verbosity for a `loggerPath` if no value is configured in Prefab                                          | "warn"            |
+| enableSSE                  | Whether or not we should listen for live changes from Prefab                                                                          | true              |
+| enablePolling              | Whether or not we should poll for changes from Prefab                                                                                 | false             |
