@@ -15,6 +15,8 @@ import { wrap } from "../wrap";
 
 const ENDPOINT = "/api/v1/telemetry";
 
+const MAX_DATA_SIZE = 10000;
+
 type SeenContext = [number, Contexts];
 
 type ExampleContextsTelemetry = Telemetry & {
@@ -34,7 +36,7 @@ export const stub: ExampleContextsTelemetry = {
 const groupedKey = (contexts: Contexts): string => {
   return Array.from(contexts.values())
     .map((context) => {
-      const key = context.get("key");
+      const key = context.get("key") ?? context.get("trackingId");
       return typeof key === "string" ? key : JSON.stringify(key);
     })
     .sort()
@@ -61,7 +63,8 @@ const contextsToProto = (contexts: Contexts): Context[] => {
 export const exampleContexts = (
   apiClient: ApiClient,
   instanceHash: string,
-  contextUploadMode: ContextUploadMode
+  contextUploadMode: ContextUploadMode,
+  maxDataSize: number = MAX_DATA_SIZE
 ): ExampleContextsTelemetry => {
   if (contextUploadMode !== "periodicExample") {
     return stub;
@@ -81,6 +84,10 @@ export const exampleContexts = (
     cache,
 
     push(contexts: Contexts) {
+      if (data.length >= maxDataSize) {
+        return;
+      }
+
       const key = groupedKey(contexts);
 
       if (!cache.isFresh(key)) {

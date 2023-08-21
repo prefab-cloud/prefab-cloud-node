@@ -8,6 +8,8 @@ import type { SyncResult, Telemetry } from "./types";
 
 const ENDPOINT = "/api/v1/known-loggers";
 
+const MAX_DATA_SIZE = 10000;
+
 type KnownLogger = Telemetry & {
   data: Record<string, Record<string, number>>;
   push: (loggerName: string, severity: number) => void;
@@ -38,7 +40,8 @@ export const knownLoggers = (
   apiClient: ApiClient,
   instanceHash: string,
   collectLoggerCounts: boolean,
-  namespace?: string
+  namespace?: string,
+  maxDataSize: number = MAX_DATA_SIZE
 ): KnownLogger => {
   if (!collectLoggerCounts) {
     return stub;
@@ -58,6 +61,10 @@ export const knownLoggers = (
       startAt = startAt ?? now();
 
       if (data[loggerName] == null) {
+        if (Object.keys(data).length >= maxDataSize) {
+          return;
+        }
+
         data[loggerName] = {};
       }
 

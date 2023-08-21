@@ -57,5 +57,26 @@ describe("knownLoggers", () => {
         instanceHash: "instanceHash",
       }),
     });
+
+    expect(logger.data).toEqual({});
+  });
+
+  it("won't add data past the maxDataSize", () => {
+    const logger = knownLoggers(
+      mockApiClient,
+      "instanceHash",
+      true,
+      undefined,
+      2
+    );
+    logger.push("loggerName1", 1);
+    logger.push("loggerName2", 1);
+    logger.push("loggerName3", 2);
+    logger.push("loggerName1", 1);
+
+    expect(logger.data).toEqual({
+      loggerName1: { 1: 2 },
+      loggerName2: { 1: 1 },
+    });
   });
 });

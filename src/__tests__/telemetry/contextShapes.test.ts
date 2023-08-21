@@ -8,6 +8,8 @@ import {
 } from "../testHelpers";
 import basicConfig from "../fixtures/basicConfig";
 
+const frContexts = new Map([["user", new Map([["country", "FR"]])]]);
+
 const userContext = new Map<string, any>([
   ["key", "abc"],
   ["email", "test@example.com"],
@@ -84,6 +86,46 @@ describe("contextShapes", () => {
     });
 
     expect(aggregator.data).toStrictEqual(new Map());
+  });
+
+  it("won't add data past the maxDataSize", () => {
+    const aggregator = contextShapes(mockApiClient, "shapeOnly", undefined, 2);
+
+    aggregator.push(contexts);
+
+    expect(Object.fromEntries(aggregator.data)).toStrictEqual({
+      team: {
+        key: 2,
+        size: 1,
+      },
+      user: {
+        activated: 5,
+        age: 1,
+        email: 2,
+        key: 2,
+        shoeSize: 4,
+        someArray: 10,
+      },
+    });
+
+    aggregator.push(frContexts);
+    aggregator.push(new Map([["org", new Map([["favoriteSandwich", "BLT"]])]]));
+
+    expect(Object.fromEntries(aggregator.data)).toStrictEqual({
+      team: {
+        key: 2,
+        size: 1,
+      },
+      user: {
+        activated: 5,
+        age: 1,
+        country: 2, // from frContexts
+        email: 2,
+        key: 2,
+        shoeSize: 4,
+        someArray: 10,
+      },
+    });
   });
 
   describe("integration tests", () => {
