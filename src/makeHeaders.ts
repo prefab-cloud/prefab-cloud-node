@@ -1,6 +1,5 @@
 import { makeToken } from "./makeToken";
-
-const version: string = require("../package.json").version;
+import { version } from "../package.json";
 
 export const makeHeaders = (
   apiKey: string,
