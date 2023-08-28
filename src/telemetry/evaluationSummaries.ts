@@ -11,6 +11,7 @@ import type {
 import { ConfigType } from "../proto";
 import { encode } from "../parseProto";
 import { now } from "./reporter";
+import { valueType } from "../wrap";
 
 const ENDPOINT = "/api/v1/telemetry";
 
@@ -88,7 +89,7 @@ export const evaluationSummaries = (
         evaluation.configId.toString(),
         evaluation.conditionalValueIndex,
         evaluation.configRowIndex,
-        Object.keys(evaluation.selectedValue)[0],
+        valueType(evaluation.unwrappedValue),
         evaluation.unwrappedValue,
         evaluation.weightedValueIndex,
       ]);
@@ -124,9 +125,12 @@ export const evaluationSummaries = (
             configRowIndex,
             selectedValue: { [valueType]: unwrappedValue },
             count: Long.fromNumber(count),
-            weightedValueIndex,
             reason: 0,
           };
+
+          if (weightedValueIndex !== null) {
+            counter.weightedValueIndex = weightedValueIndex;
+          }
 
           counters.push(counter);
         });

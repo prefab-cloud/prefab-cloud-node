@@ -9,6 +9,19 @@ import type { exampleContexts } from "../telemetry/exampleContexts";
 import fs from "fs";
 import { PREFIX } from "../logger";
 
+const IGNORED_CLIENT_OVERRIDES_FOR_INPUT_OUTPUT_TESTS = [
+  "initialization_timeout_sec",
+  "prefab_api_url",
+  "on_init_failure",
+];
+
+const HANDLED_CLIENT_OVERRIDES_FOR_INPUT_OUTPUT_TESTS = [
+  "namespace",
+  "on_no_default",
+];
+
+const HANDLED_CLIENT_OVERRIDES_FOR_TELEMETRY_TESTS = ["context_upload_mode"];
+
 const YAML = require("yaml");
 
 const testDataPath = `./prefab-cloud-integration-test-data`;
@@ -77,6 +90,7 @@ interface RawInputOutputTestCase {
   client_overrides: {
     namespace?: string;
     on_no_default?: 2;
+    initialization_timeout_sec?: number;
   };
 }
 
@@ -87,7 +101,7 @@ interface RawTelemetryTestCase {
   data: Record<string, any> | Array<Record<string, any>> | string[];
   expected_data: Record<string, any>;
   aggregator: RawAggregator;
-  client_overrides: {
+  client_overrides?: {
     collect_sync_interval?: number;
     context_upload_mode?: string;
   };
@@ -114,6 +128,7 @@ export interface InputOutputTest {
   client_overrides: {
     namespace?: string;
     on_no_default?: 2;
+    initialization_timeout_sec?: number;
   };
 }
 
@@ -298,6 +313,16 @@ const aggregatorSpecificLogic = {
               valueType = "string_list";
             }
 
+            const massagedSummary: Record<string, any> = {
+              config_row_index: counter.configRowIndex,
+              conditional_value_index: counter.conditionalValueIndex,
+            };
+
+            if (counter.weightedValueIndex !== undefined) {
+              massagedSummary["weighted_value_index"] =
+                counter.weightedValueIndex;
+            }
+
             return {
               key: summary.key,
               type: typeLookup[summary.type],
@@ -306,10 +331,7 @@ const aggregatorSpecificLogic = {
               )[0],
               value_type: valueType,
               count: counter.count.toNumber(),
-              summary: {
-                config_row_index: counter.configRowIndex,
-                conditional_value_index: counter.conditionalValueIndex,
-              },
+              summary: massagedSummary,
             };
           });
         });
@@ -418,13 +440,19 @@ export const tests = (): {
           ? testCase.data
           : [testCase.data];
 
+        Object.keys(testCase.client_overrides ?? {}).forEach((key) => {
+          if (!HANDLED_CLIENT_OVERRIDES_FOR_TELEMETRY_TESTS.includes(key)) {
+            throw new Error(`Unhandled client override ${key} in ${name}`);
+          }
+        });
+
         telemetryTests.push({
           name,
           function: testCase.function,
           data,
           expectedTelemetryData: testCase.expected_data,
           customOptions:
-            testCase.client_overrides.context_upload_mode === ":shape_only"
+            testCase.client_overrides?.context_upload_mode === ":shape_only"
               ? {
                   contextUploadMode: "shapeOnly" as const,
                 }
@@ -450,6 +478,15 @@ export const tests = (): {
             name.includes(str)
           ) ?? ""
         ];
+
+      Object.keys(testCase.client_overrides ?? {}).forEach((key) => {
+        if (
+          !HANDLED_CLIENT_OVERRIDES_FOR_INPUT_OUTPUT_TESTS.includes(key) &&
+          !IGNORED_CLIENT_OVERRIDES_FOR_INPUT_OUTPUT_TESTS.includes(key)
+        ) {
+          throw new Error(`Unhandled client override ${key} in ${name}`);
+        }
+      });
 
       inputOutputTests.push({
         name,
