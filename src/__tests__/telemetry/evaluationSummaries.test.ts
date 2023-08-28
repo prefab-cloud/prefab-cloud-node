@@ -137,8 +137,8 @@ describe("evaluationSummaries", () => {
         [
           '["rollout.flag","2"]',
           new Map([
-            ['["4294967295",0,0,"weightedValues",false,0]', 2],
-            ['["4294967295",0,0,"weightedValues",true,1]', 1],
+            ['["4294967295",0,0,"bool",false,0]', 2],
+            ['["4294967295",0,0,"bool",true,1]', 1],
           ]),
         ],
       ])
@@ -194,7 +194,6 @@ describe("evaluationSummaries", () => {
                       string: "correct",
                     },
                     count: Long.fromNumber(2),
-                    weightedValueIndex: null,
                     reason: 0,
                   },
                   {
@@ -205,7 +204,6 @@ describe("evaluationSummaries", () => {
                       string: "default",
                     },
                     count: Long.fromNumber(3),
-                    weightedValueIndex: null,
                     reason: 0,
                   },
                 ],
@@ -222,7 +220,6 @@ describe("evaluationSummaries", () => {
                       int: 42,
                     },
                     count: Long.fromNumber(1),
-                    weightedValueIndex: null,
                     reason: 0,
                   },
                 ],
