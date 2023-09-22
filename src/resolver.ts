@@ -123,6 +123,10 @@ class Resolver implements PrefabInterface {
     );
     return false;
   }
+
+  keys(): string[] {
+    return Array.from(this.config.keys());
+  }
 }
 
 export { Resolver };

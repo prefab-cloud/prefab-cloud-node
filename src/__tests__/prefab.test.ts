@@ -262,6 +262,39 @@ describe("prefab", () => {
     });
   });
 
+  describe("keys", () => {
+    it("returns the keys of the known config", () => {
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig(configs, projectEnvIdUnderTest);
+
+      expect(prefab.keys()).toStrictEqual([
+        "basic.value",
+        "basic.flag",
+        "basic.env",
+        "basic.namespace",
+        "prop.is.one.of",
+        "prop.is.one.of.and.ends.with",
+        "rollout.flag",
+      ]);
+    });
+  });
+
+  describe("raw", () => {
+    it("returns a raw config", () => {
+      const prefab = new Prefab({ apiKey: irrelevant });
+
+      prefab.setConfig([], projectEnvIdUnderTest);
+
+      expect(prefab.raw("basic.value")).toBeUndefined();
+
+      prefab.setConfig(configs, projectEnvIdUnderTest);
+
+      expect(JSON.stringify(prefab.raw("basic.value"))).toStrictEqual(
+        '{"id":{"low":999,"high":0,"unsigned":false},"projectId":{"low":-1,"high":0,"unsigned":false},"key":"basic.value","rows":[{"properties":{},"values":[{"criteria":[],"value":{"int":{"low":42,"high":0,"unsigned":false}}}]}],"allowableValues":[],"configType":1,"draftId":{"low":-1,"high":0,"unsigned":false}}'
+      );
+    });
+  });
+
   describe("shouldLog", () => {
     it("returns true if the resolved level is greater than or equal to the desired level", () => {
       const loggerName = "a.b.c.d";

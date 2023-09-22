@@ -260,6 +260,18 @@ class Prefab implements PrefabInterface {
 
     return this.resolver.isFeatureEnabled(key, contexts);
   }
+
+  raw(key: string): Config | undefined {
+    requireResolver(this.resolver);
+
+    return this.resolver.raw(key);
+  }
+
+  keys(): string[] {
+    requireResolver(this.resolver);
+
+    return this.resolver.keys();
+  }
 }
 
 export {
