@@ -32,22 +32,28 @@ After the init completes you can use
 - `prefab.isFeatureEnabled('some.feature.name')` returns true or false
 - `prefab.shouldLog(loggerName, desiredLevel, defaultLevel, contexts)` returns true or false
 
-Prefab supports [context](https://docs.prefab.cloud/docs/explanations/context) for intelligent rule-based evaluation of `get` and `isFeatureEnabled` based on the current request/device/user/etc.
+Prefab supports [context](https://docs.prefab.cloud/docs/explanations/concepts/context) for intelligent rule-based evaluation of `get` and `isFeatureEnabled` based on the current request/device/user/etc.
 
 Given
 
-```js
-const context = {
-  user: {
-    key: "some-unique-identifier",
-    email: "test@example.com",
-    isAdmin: false,
-  },
-  subscription: {
-    key: "sub-pro",
-    plan: "pro",
-  },
-};
+```javascript
+const context = new Map([
+  [
+    "user",
+    new Map([
+      ["key", "some-unique-identifier"],
+      ["country", "US"],
+    ]),
+  ],
+
+  [
+    "subscription",
+    new Map([
+      ["key", "pro-sub"],
+      ["plan", "pro"],
+    ]),
+  ],
+]);
 ```
 
 You can pass this in to each call
