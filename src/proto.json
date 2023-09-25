@@ -156,6 +156,36 @@
             }
           }
         },
+        "ApiKeyMetadata": {
+          "oneofs": {
+            "_keyId": {
+              "oneof": [
+                "keyId"
+              ]
+            },
+            "_userId": {
+              "oneof": [
+                "userId"
+              ]
+            }
+          },
+          "fields": {
+            "keyId": {
+              "type": "string",
+              "id": 1,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "userId": {
+              "type": "int64",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
         "Configs": {
           "fields": {
             "configs": {
@@ -166,6 +196,10 @@
             "configServicePointer": {
               "type": "ConfigServicePointer",
               "id": 2
+            },
+            "apikeyMetadata": {
+              "type": "ApiKeyMetadata",
+              "id": 3
             }
           }
         },
@@ -236,6 +270,10 @@
             "email": {
               "type": "string",
               "id": 2
+            },
+            "apiKeyId": {
+              "type": "string",
+              "id": 3
             }
           }
         },
@@ -668,6 +706,10 @@
               "keyType": "string",
               "type": "ClientConfigValue",
               "id": 1
+            },
+            "apikeyMetadata": {
+              "type": "ApiKeyMetadata",
+              "id": 2
             }
           }
         },
@@ -1078,13 +1120,31 @@
             }
           }
         },
+        "LoggersTelemetryEvent": {
+          "fields": {
+            "loggers": {
+              "rule": "repeated",
+              "type": "Logger",
+              "id": 1
+            },
+            "startAt": {
+              "type": "int64",
+              "id": 2
+            },
+            "endAt": {
+              "type": "int64",
+              "id": 3
+            }
+          }
+        },
         "TelemetryEvent": {
           "oneofs": {
             "payload": {
               "oneof": [
                 "summaries",
                 "exampleContexts",
-                "clientStats"
+                "clientStats",
+                "loggers"
               ]
             }
           },
@@ -1100,6 +1160,10 @@
             "clientStats": {
               "type": "ClientStats",
               "id": 4
+            },
+            "loggers": {
+              "type": "LoggersTelemetryEvent",
+              "id": 5
             }
           }
         },

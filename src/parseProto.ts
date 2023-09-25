@@ -1,4 +1,4 @@
-import protobuf from "protobufjs/light";
+import protobuf from "protobufjs/light.js";
 import type { Configs } from "./proto";
 import protoJSON from "./proto.json";
 const root = protobuf.Root.fromJSON(protoJSON);

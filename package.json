@@ -19,7 +19,7 @@
     "format": "prettier --cache=/tmp/prefab-cloud-node --write \"**/*.+(js|ts|json)\"",
     "lint": "eslint --cache=true --ext .ts .",
     "prep": "npm run lint && npm run format && npm run test && npm run build",
-    "regen-proto": "npx pbjs -t json ../prefab-cloud/prefab.proto > src/proto.json && protoc --ts_proto_opt=esModuleInterop=true --ts_proto_opt=forceLong=long --ts_proto_opt=onlyTypes=true --ts_proto_opt=env=node --ts_proto_out=./ -I ../prefab-cloud/ prefab.proto && mv prefab.ts src/proto.ts",
+    "regen-proto": "npx pbjs -t json ../prefab-cloud/prefab.proto > src/proto.json && protoc --ts_proto_opt=esModuleInterop=true --ts_proto_opt=forceLong=long --ts_proto_opt=onlyTypes=true --ts_proto_opt=env=node --ts_proto_out=./ --ts_proto_opt=importSuffix=.js -I ../prefab-cloud/ prefab.proto && mv prefab.ts src/proto.ts",
     "test": "jest --forceExit",
     "prepare": "husky install"
   },
