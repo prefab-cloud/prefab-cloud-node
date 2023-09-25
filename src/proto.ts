@@ -1,6 +1,6 @@
 /* eslint-disable */
 import Long from "long";
-import _m0 from "protobufjs/minimal";
+import _m0 from "protobufjs/minimal.js";
 
 export const protobufPackage = "prefab";
 
@@ -82,9 +82,16 @@ export interface WeightedValues {
   hashByPropertyName?: string | undefined;
 }
 
+export interface ApiKeyMetadata {
+  /** numeric currently, but making it string will be more flexible over time */
+  keyId?: string | undefined;
+  userId?: Long | undefined;
+}
+
 export interface Configs {
   configs: Config[];
   configServicePointer: ConfigServicePointer | undefined;
+  apikeyMetadata: ApiKeyMetadata | undefined;
 }
 
 export interface Config {
@@ -101,6 +108,7 @@ export interface Config {
 export interface ChangedBy {
   userId: Long;
   email: string;
+  apiKeyId: string;
 }
 
 export interface ConfigRow {
@@ -247,6 +255,7 @@ export interface ClientConfigValue {
 
 export interface ConfigEvaluations {
   values: { [key: string]: ClientConfigValue };
+  apikeyMetadata: ApiKeyMetadata | undefined;
 }
 
 export interface ConfigEvaluations_ValuesEntry {
@@ -393,10 +402,17 @@ export interface ConfigEvaluationSummaries {
   summaries: ConfigEvaluationSummary[];
 }
 
+export interface LoggersTelemetryEvent {
+  loggers: Logger[];
+  startAt: Long;
+  endAt: Long;
+}
+
 export interface TelemetryEvent {
   summaries?: ConfigEvaluationSummaries | undefined;
   exampleContexts?: ExampleContexts | undefined;
   clientStats?: ClientStats | undefined;
+  loggers?: LoggersTelemetryEvent | undefined;
 }
 
 export interface TelemetryEvents {

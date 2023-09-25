@@ -35,3 +35,9 @@ jobs:
         env:
           PREFAB_INTEGRATION_TEST_API_KEY: ${{ secrets.PREFAB_INTEGRATION_TEST_API_KEY }}
           PREFAB_TEST_API_KEY: ${{ secrets.PREFAB_TEST_API_KEY }}
+
+      - name: Validate cjs version
+        run: node dist/prefab.cjs
+
+      - name: Validate esm version
+        run: node dist/prefab.mjs
