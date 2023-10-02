@@ -84,14 +84,18 @@ export interface WeightedValues {
 
 export interface ApiKeyMetadata {
   /** numeric currently, but making it string will be more flexible over time */
-  keyId?: string | undefined;
-  userId?: Long | undefined;
+  keyId?:
+    | string
+    | undefined;
+  /** ditto */
+  userId?: string | undefined;
 }
 
 export interface Configs {
   configs: Config[];
   configServicePointer: ConfigServicePointer | undefined;
-  apikeyMetadata: ApiKeyMetadata | undefined;
+  apikeyMetadata?: ApiKeyMetadata | undefined;
+  defaultContext?: ContextSet | undefined;
 }
 
 export interface Config {
@@ -255,7 +259,8 @@ export interface ClientConfigValue {
 
 export interface ConfigEvaluations {
   values: { [key: string]: ClientConfigValue };
-  apikeyMetadata: ApiKeyMetadata | undefined;
+  apikeyMetadata?: ApiKeyMetadata | undefined;
+  defaultContext?: ContextSet | undefined;
 }
 
 export interface ConfigEvaluations_ValuesEntry {
