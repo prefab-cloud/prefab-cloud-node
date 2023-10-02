@@ -11,13 +11,34 @@ const emptyContexts: Contexts = new Map<string, Context>();
 
 export const NOT_PROVIDED = Symbol("NOT_PROVIDED");
 
+const mergeDefaultContexts = (
+  contexts: Contexts,
+  defaultContext: Contexts
+): Contexts => {
+  const mergedContexts: Contexts = contexts;
+
+  for (const type of defaultContext.keys()) {
+    mergedContexts.set(
+      type,
+      new Map(
+        ...(contexts.get(type) ?? new Map()),
+        defaultContext.get(type) ?? new Map()
+      )
+    );
+  }
+
+  return mergedContexts;
+};
+
 class Resolver implements PrefabInterface {
   private readonly config: Map<string, Config>;
   private readonly projectEnvId: ProjectEnvId;
   private readonly namespace: string | undefined;
   private readonly onNoDefault: OnNoDefault;
-  private readonly parentContext?: Contexts;
+  private parentContext?: Contexts;
   private readonly telemetry: Telemetry | undefined;
+  private readonly onUpdate: (configs: Config[]) => void;
+  private readonly defaultContext?: Contexts;
 
   constructor(
     configs: Config[] | Map<string, Config>,
@@ -25,7 +46,9 @@ class Resolver implements PrefabInterface {
     namespace: string | undefined,
     onNoDefault: OnNoDefault,
     telemetry?: Telemetry,
-    contexts?: Contexts
+    contexts?: Contexts,
+    onUpdate?: (configs: Config[]) => void,
+    defaultContext?: Contexts
   ) {
     this.config = Array.isArray(configs)
       ? new Map(configs.map((config) => [config.key, config]))
@@ -33,8 +56,13 @@ class Resolver implements PrefabInterface {
     this.projectEnvId = projectEnvId;
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
-    this.parentContext = contexts;
+    this.defaultContext = defaultContext ?? new Map();
+    this.parentContext = mergeDefaultContexts(
+      contexts ?? new Map(),
+      defaultContext ?? new Map()
+    );
     this.telemetry = telemetry;
+    this.onUpdate = onUpdate ?? (() => {});
   }
 
   cloneWithContext(contexts: Contexts): Resolver {
@@ -44,14 +72,25 @@ class Resolver implements PrefabInterface {
       this.namespace,
       this.onNoDefault,
       this.telemetry,
-      contexts
+      contexts,
+      this.onUpdate,
+      this.defaultContext
     );
   }
 
-  update(configs: Config[]): void {
+  update(configs: Config[], defaultContext?: Contexts): void {
     for (const config of configs) {
       this.config.set(config.key, config);
     }
+
+    if (defaultContext !== undefined) {
+      this.parentContext = mergeDefaultContexts(
+        this.parentContext ?? new Map(),
+        defaultContext
+      );
+    }
+
+    this.onUpdate(configs);
   }
 
   raw(key: string): Config | undefined {

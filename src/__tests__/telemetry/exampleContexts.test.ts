@@ -211,7 +211,7 @@ describe("exampleContexts", () => {
       const prefab = new Prefab({
         apiKey: irrelevant,
       });
-      prefab.setConfig([basicConfig], projectEnvIdUnderTest);
+      prefab.setConfig([basicConfig], projectEnvIdUnderTest, new Map());
 
       prefab.get("basic.value", contexts);
 
@@ -225,7 +225,7 @@ describe("exampleContexts", () => {
         apiKey: irrelevant,
         contextUploadMode: "none",
       });
-      prefab.setConfig([basicConfig], projectEnvIdUnderTest);
+      prefab.setConfig([basicConfig], projectEnvIdUnderTest, new Map());
 
       prefab.get("basic.value", contexts);
 

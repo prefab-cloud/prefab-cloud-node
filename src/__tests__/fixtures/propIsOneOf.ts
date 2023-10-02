@@ -29,6 +29,22 @@ const config: Config = {
         {
           criteria: [
             {
+              propertyName: "prefab.user-id",
+              operator: Criterion_CriterionOperator.PROP_IS_ONE_OF,
+              valueToMatch: {
+                stringList: {
+                  values: ["4", "5"],
+                },
+              },
+            },
+          ],
+          value: {
+            string: "context-override",
+          },
+        },
+        {
+          criteria: [
+            {
               propertyName: "user.country",
               operator: Criterion_CriterionOperator.PROP_IS_ONE_OF,
               valueToMatch: {

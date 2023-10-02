@@ -239,7 +239,7 @@ describe("evaluate", () => {
       unwrappedValue: "default",
       configRowIndex: 0,
       selectedValue: { string: "default" },
-      conditionalValueIndex: 1,
+      conditionalValueIndex: 2,
       weightedValueIndex: undefined,
     });
 
@@ -250,7 +250,7 @@ describe("evaluate", () => {
       unwrappedValue: "correct",
       configRowIndex: 0,
       selectedValue: { string: "correct" },
-      conditionalValueIndex: 0,
+      conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
 
@@ -261,7 +261,7 @@ describe("evaluate", () => {
       unwrappedValue: "correct",
       configRowIndex: 0,
       selectedValue: { string: "correct" },
-      conditionalValueIndex: 0,
+      conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
 
@@ -272,7 +272,7 @@ describe("evaluate", () => {
       unwrappedValue: "default",
       configRowIndex: 0,
       selectedValue: { string: "default" },
-      conditionalValueIndex: 1,
+      conditionalValueIndex: 2,
       weightedValueIndex: undefined,
     });
   });

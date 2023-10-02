@@ -178,15 +178,33 @@
               }
             },
             "userId": {
-              "type": "int64",
-              "id": 2,
+              "type": "string",
+              "id": 3,
               "options": {
                 "proto3_optional": true
               }
             }
-          }
+          },
+          "reserved": [
+            [
+              2,
+              2
+            ]
+          ]
         },
         "Configs": {
+          "oneofs": {
+            "_apikeyMetadata": {
+              "oneof": [
+                "apikeyMetadata"
+              ]
+            },
+            "_defaultContext": {
+              "oneof": [
+                "defaultContext"
+              ]
+            }
+          },
           "fields": {
             "configs": {
               "rule": "repeated",
@@ -199,7 +217,17 @@
             },
             "apikeyMetadata": {
               "type": "ApiKeyMetadata",
-              "id": 3
+              "id": 3,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "defaultContext": {
+              "type": "ContextSet",
+              "id": 4,
+              "options": {
+                "proto3_optional": true
+              }
             }
           }
         },
@@ -701,6 +729,18 @@
           }
         },
         "ConfigEvaluations": {
+          "oneofs": {
+            "_apikeyMetadata": {
+              "oneof": [
+                "apikeyMetadata"
+              ]
+            },
+            "_defaultContext": {
+              "oneof": [
+                "defaultContext"
+              ]
+            }
+          },
           "fields": {
             "values": {
               "keyType": "string",
@@ -709,7 +749,17 @@
             },
             "apikeyMetadata": {
               "type": "ApiKeyMetadata",
-              "id": 2
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "defaultContext": {
+              "type": "ContextSet",
+              "id": 3,
+              "options": {
+                "proto3_optional": true
+              }
             }
           }
         },

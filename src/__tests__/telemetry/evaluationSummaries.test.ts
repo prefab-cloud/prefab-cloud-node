@@ -97,8 +97,8 @@ describe("evaluationSummaries", () => {
         [
           '["prop.is.one.of","1"]',
           new Map([
-            ['["991",0,0,"string","correct",null]', 2],
-            ['["991",1,0,"string","default",null]', 3],
+            ['["991",1,0,"string","correct",null]', 2],
+            ['["991",2,0,"string","default",null]', 3],
           ]),
         ],
       ])
@@ -116,8 +116,8 @@ describe("evaluationSummaries", () => {
         [
           '["prop.is.one.of","1"]',
           new Map([
-            ['["991",0,0,"string","correct",null]', 2],
-            ['["991",1,0,"string","default",null]', 4],
+            ['["991",1,0,"string","correct",null]', 2],
+            ['["991",2,0,"string","default",null]', 4],
           ]),
         ],
         ['["basic.value","1"]', new Map([['["999",0,0,"int",42,null]', 1]])],
@@ -188,7 +188,7 @@ describe("evaluationSummaries", () => {
                 counters: [
                   {
                     configId: Long.fromNumber(991),
-                    conditionalValueIndex: 0,
+                    conditionalValueIndex: 1,
                     configRowIndex: 0,
                     selectedValue: {
                       string: "correct",
@@ -198,7 +198,7 @@ describe("evaluationSummaries", () => {
                   },
                   {
                     configId: Long.fromNumber(991),
-                    conditionalValueIndex: 1,
+                    conditionalValueIndex: 2,
                     configRowIndex: 0,
                     selectedValue: {
                       string: "default",
@@ -253,7 +253,7 @@ describe("evaluationSummaries", () => {
       const prefab = new Prefab({
         apiKey: irrelevant,
       });
-      prefab.setConfig([basicConfig], projectEnvIdUnderTest);
+      prefab.setConfig([basicConfig], projectEnvIdUnderTest, new Map());
 
       prefab.get("basic.value", usContexts);
 
@@ -269,7 +269,7 @@ describe("evaluationSummaries", () => {
         apiKey: irrelevant,
         collectEvaluationSummaries: false,
       });
-      prefab.setConfig([basicConfig], projectEnvIdUnderTest);
+      prefab.setConfig([basicConfig], projectEnvIdUnderTest, new Map());
 
       prefab.get("basic.value", usContexts);
 

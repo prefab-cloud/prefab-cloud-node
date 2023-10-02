@@ -56,6 +56,7 @@ interface ConstructorProps {
   collectLoggerCounts?: boolean;
   contextUploadMode?: ContextUploadMode;
   collectEvaluationSummaries?: boolean;
+  onUpdate?: (configs: Config[]) => void;
 }
 
 class Prefab implements PrefabInterface {
@@ -71,6 +72,7 @@ class Prefab implements PrefabInterface {
   private readonly apiClient: ApiClient;
   private readonly defaultLogLevel: ValidLogLevel;
   private readonly instanceHash: string;
+  private readonly onUpdate: (configs: Config[]) => void;
   readonly telemetry: Telemetry;
 
   constructor({
@@ -87,6 +89,7 @@ class Prefab implements PrefabInterface {
     collectLoggerCounts = true,
     contextUploadMode = "periodicExample",
     collectEvaluationSummaries = true,
+    onUpdate = () => {},
   }: ConstructorProps) {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
@@ -97,6 +100,7 @@ class Prefab implements PrefabInterface {
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
     this.instanceHash = crypto.randomUUID();
+    this.onUpdate = onUpdate;
 
     const parsedDefaultLogLevel = parseLevel(defaultLogLevel);
 
@@ -132,13 +136,14 @@ class Prefab implements PrefabInterface {
   }
 
   async init(): Promise<void> {
-    const { configs, projectEnvId, startAtId } = await loadConfig({
-      apiUrl: this.apiUrl,
-      apiClient: this.apiClient,
-      cdnUrl: this.cdnUrl,
-    });
+    const { configs, projectEnvId, startAtId, defaultContext } =
+      await loadConfig({
+        apiUrl: this.apiUrl,
+        apiClient: this.apiClient,
+        cdnUrl: this.cdnUrl,
+      });
 
-    this.setConfig(configs, projectEnvId);
+    this.setConfig(configs, projectEnvId, defaultContext);
 
     if (this.enableSSE) {
       this.startSSE(startAtId);
@@ -155,13 +160,20 @@ class Prefab implements PrefabInterface {
     });
   }
 
-  setConfig(config: Config[], projectEnvId: ProjectEnvId): void {
+  setConfig(
+    config: Config[],
+    projectEnvId: ProjectEnvId,
+    defaultContext: Contexts
+  ): void {
     this.resolver = new Resolver(
       config,
       projectEnvId,
       this.namespace,
       this.onNoDefault,
-      this.telemetry
+      this.telemetry,
+      undefined,
+      this.onUpdate,
+      defaultContext
     );
   }
 
@@ -185,9 +197,9 @@ class Prefab implements PrefabInterface {
         apiUrl: this.apiUrl,
         apiClient: this.apiClient,
       })
-        .then(({ configs }) => {
+        .then(({ configs, defaultContext }) => {
           if (configs.length > 0) {
-            this.resolver?.update(configs);
+            this.resolver?.update(configs, defaultContext);
           }
         })
         .catch((err) => {

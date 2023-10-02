@@ -144,7 +144,7 @@ describe("contextShapes", () => {
         apiKey: irrelevant,
         contextUploadMode: "shapeOnly",
       });
-      prefab.setConfig([basicConfig], projectEnvIdUnderTest);
+      prefab.setConfig([basicConfig], projectEnvIdUnderTest, new Map());
 
       prefab.get("basic.value", contexts);
 
@@ -164,7 +164,11 @@ describe("contextShapes", () => {
       const prefabWithoutShapes = new Prefab({
         apiKey: irrelevant,
       });
-      prefabWithoutShapes.setConfig([basicConfig], projectEnvIdUnderTest);
+      prefabWithoutShapes.setConfig(
+        [basicConfig],
+        projectEnvIdUnderTest,
+        new Map()
+      );
 
       prefabWithoutShapes.get("basic.value", contexts);
 

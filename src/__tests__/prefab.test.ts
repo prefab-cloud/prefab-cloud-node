@@ -35,7 +35,7 @@ describe("prefab", () => {
     const invalidApiKey = "this won't work";
     const validApiKey = process.env["PREFAB_TEST_API_KEY"];
 
-    it("should be able to parse config from the CDN", async () => {
+    it("can parse config from the CDN", async () => {
       if (validApiKey === undefined) {
         throw new Error(
           "You must set the PREFAB_TEST_API_KEY environment variable to run this test."
@@ -71,7 +71,7 @@ describe("prefab", () => {
     describe("when the key cannot be found", () => {
       it("throws if no default is provided and onNoDefault is `error`", () => {
         const prefab = new Prefab({ apiKey: irrelevant });
-        prefab.setConfig([], projectEnvIdUnderTest);
+        prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
         expect(() => {
           prefab.get("missing.value");
@@ -80,7 +80,7 @@ describe("prefab", () => {
 
       it("warns if no default is provided and onNoDefault is `warn`", () => {
         const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
-        prefab.setConfig([], projectEnvIdUnderTest);
+        prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
         jest.spyOn(console, "warn").mockImplementation();
 
@@ -93,7 +93,7 @@ describe("prefab", () => {
 
       it("returns undefined if no default is provided and onNoDefault is `ignore`", () => {
         const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
-        prefab.setConfig([], projectEnvIdUnderTest);
+        prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
         jest.spyOn(console, "warn").mockImplementation();
 
@@ -102,7 +102,7 @@ describe("prefab", () => {
 
       it("returns the default if one is provided", () => {
         const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
-        prefab.setConfig([], projectEnvIdUnderTest);
+        prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
         const defaultValue = "default-value";
 
@@ -114,13 +114,13 @@ describe("prefab", () => {
 
     it("returns a config value with no rules", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
       expect(prefab.get("basic.value")).toEqual(42);
     });
 
     it("returns a config value with no rules but an environment", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
       expect(prefab.get("basic.env")).toEqual(["a", "b", "c", "d"]);
     });
 
@@ -129,20 +129,20 @@ describe("prefab", () => {
         apiKey: irrelevant,
         namespace: "my-namespace",
       });
-      prefabNs1.setConfig(configs, projectEnvIdUnderTest);
+      prefabNs1.setConfig(configs, projectEnvIdUnderTest, new Map());
       expect(prefabNs1.get("basic.namespace")).toEqual(["in-namespace"]);
 
       const prefabNs2 = new Prefab({
         apiKey: irrelevant,
         namespace: "incorrect-namespace",
       });
-      prefabNs2.setConfig(configs, projectEnvIdUnderTest);
+      prefabNs2.setConfig(configs, projectEnvIdUnderTest, new Map());
       expect(prefabNs2.get("basic.namespace")).toEqual(["not-in-namespace"]);
 
       const prefabNsMissing = new Prefab({
         apiKey: irrelevant,
       });
-      prefabNsMissing.setConfig(configs, projectEnvIdUnderTest);
+      prefabNsMissing.setConfig(configs, projectEnvIdUnderTest, new Map());
       expect(prefabNsMissing.get("basic.namespace")).toEqual([
         "not-in-namespace",
       ]);
@@ -150,7 +150,7 @@ describe("prefab", () => {
 
     it("returns a config value for a PROP_IS_ONE_OF match", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       expect(prefab.get("prop.is.one.of")).toEqual("default");
 
@@ -164,7 +164,7 @@ describe("prefab", () => {
 
     it("returns a config value for a PROP_IS_ONE_OF and PROP_ENDS_WITH_ONE_OF match", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       expect(prefab.get("prop.is.one.of.and.ends.with")).toEqual("default");
 
@@ -183,13 +183,39 @@ describe("prefab", () => {
         )
       ).toEqual("correct");
     });
+
+    it("can use prefab default context as an override", () => {
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig(
+        configs,
+        projectEnvIdUnderTest,
+        new Map([["prefab", new Map([["user-id", "5"]])]])
+      );
+
+      expect(prefab.get("prop.is.one.of")).toEqual("context-override");
+
+      expect(
+        prefab.get(
+          "prop.is.one.of",
+          new Map([
+            [
+              "user",
+              new Map([
+                ["country", "US"],
+                ["email", "test@prefab.cloud"],
+              ]),
+            ],
+          ])
+        )
+      ).toEqual("context-override");
+    });
   });
 
   describe("isFeatureEnabled", () => {
     describe("when the key cannot be found", () => {
       it("throws if no default is provided and onNoDefault is `error`", () => {
         const prefab = new Prefab({ apiKey: irrelevant });
-        prefab.setConfig([], projectEnvIdUnderTest);
+        prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
         expect(() => {
           prefab.isFeatureEnabled("missing.value");
@@ -198,7 +224,7 @@ describe("prefab", () => {
 
       it("returns false and warns if onNoDefault is `warn`", () => {
         const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
-        prefab.setConfig([], projectEnvIdUnderTest);
+        prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
         jest.spyOn(console, "warn").mockImplementation();
 
@@ -211,7 +237,7 @@ describe("prefab", () => {
 
       it("returns false if onNoDefault is `ignore`", () => {
         const prefab = new Prefab({ apiKey: irrelevant, onNoDefault: "warn" });
-        prefab.setConfig([], projectEnvIdUnderTest);
+        prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
         jest.spyOn(console, "warn").mockImplementation();
 
@@ -221,13 +247,13 @@ describe("prefab", () => {
 
     it("returns true when the flag matches", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
       expect(prefab.isFeatureEnabled("basic.flag")).toEqual(true);
     });
 
     it("returns a random value for a weighted flag with no context", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       const results: Record<string, number> = { true: 0, false: 0 };
 
@@ -243,7 +269,7 @@ describe("prefab", () => {
 
     it("returns a consistent value for a weighted flag with context", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       const context = (trackingId: string): Contexts =>
         new Map([["user", new Map([["trackingId", trackingId]])]]);
@@ -265,7 +291,7 @@ describe("prefab", () => {
   describe("keys", () => {
     it("returns the keys of the known config", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       expect(prefab.keys()).toStrictEqual([
         "basic.value",
@@ -283,11 +309,11 @@ describe("prefab", () => {
     it("returns a raw config", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
 
-      prefab.setConfig([], projectEnvIdUnderTest);
+      prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
       expect(prefab.raw("basic.value")).toBeUndefined();
 
-      prefab.setConfig(configs, projectEnvIdUnderTest);
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       expect(JSON.stringify(prefab.raw("basic.value"))).toStrictEqual(
         '{"id":{"low":999,"high":0,"unsigned":false},"projectId":{"low":-1,"high":0,"unsigned":false},"key":"basic.value","rows":[{"properties":{},"values":[{"criteria":[],"value":{"int":{"low":42,"high":0,"unsigned":false}}}]}],"allowableValues":[],"configType":1,"draftId":{"low":-1,"high":0,"unsigned":false}}'
@@ -300,7 +326,11 @@ describe("prefab", () => {
       const loggerName = "a.b.c.d";
 
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig([levelAt(loggerName, "info")], projectEnvIdUnderTest);
+      prefab.setConfig(
+        [levelAt(loggerName, "info")],
+        projectEnvIdUnderTest,
+        new Map()
+      );
 
       expect(
         prefab.shouldLog({
@@ -320,7 +350,11 @@ describe("prefab", () => {
       const loggerName = "a.b.c.d";
 
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig([levelAt(loggerName, "info")], projectEnvIdUnderTest);
+      prefab.setConfig(
+        [levelAt(loggerName, "info")],
+        projectEnvIdUnderTest,
+        new Map()
+      );
 
       expect(
         prefab.shouldLog({
@@ -341,7 +375,11 @@ describe("prefab", () => {
       const loggerName = "a.b.c.d";
 
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig([levelAt(loggerName, "trace")], projectEnvIdUnderTest);
+      prefab.setConfig(
+        [levelAt(loggerName, "trace")],
+        projectEnvIdUnderTest,
+        new Map()
+      );
 
       expect(
         prefab.shouldLog({
@@ -363,7 +401,7 @@ describe("prefab", () => {
       const loggerName = "a.b.c.d";
 
       const prefab = new Prefab({ apiKey: irrelevant });
-      prefab.setConfig([], projectEnvIdUnderTest);
+      prefab.setConfig([], projectEnvIdUnderTest, new Map());
 
       expect(
         prefab.shouldLog({
@@ -454,7 +492,11 @@ describe("prefab", () => {
         apiKey: irrelevant,
         collectLoggerCounts: false,
       });
-      prefab.setConfig([levelAt(loggerName, "info")], projectEnvIdUnderTest);
+      prefab.setConfig(
+        [levelAt(loggerName, "info")],
+        projectEnvIdUnderTest,
+        new Map()
+      );
 
       expect(
         prefab.shouldLog({
@@ -465,5 +507,34 @@ describe("prefab", () => {
 
       expect(prefab.telemetry.knownLoggers.data).toStrictEqual({});
     });
+  });
+
+  it("can fire onUpdate when the resolver sets config", async () => {
+    const validApiKey = process.env["PREFAB_TEST_API_KEY"];
+
+    if (validApiKey === undefined) {
+      throw new Error(
+        "You must set the PREFAB_TEST_API_KEY environment variable to run this test."
+      );
+    }
+
+    const mock = jest.fn();
+
+    const prefab = new Prefab({
+      apiKey: validApiKey,
+      collectLoggerCounts: false,
+      contextUploadMode: "none",
+      onUpdate: mock,
+    });
+
+    await prefab.init();
+
+    expect(prefab.get("abc")).toEqual(true);
+
+    while (mock.mock.calls.length === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+
+    expect(mock).toHaveBeenCalled();
   });
 });
