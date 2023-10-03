@@ -38,7 +38,7 @@ class Resolver implements PrefabInterface {
   private parentContext?: Contexts;
   private readonly telemetry: Telemetry | undefined;
   private readonly onUpdate: (configs: Config[]) => void;
-  private readonly defaultContext?: Contexts;
+  public readonly defaultContext?: Contexts;
 
   constructor(
     configs: Config[] | Map<string, Config>,
