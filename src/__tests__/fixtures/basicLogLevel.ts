@@ -23,7 +23,7 @@ const config: Config = {
   ],
   allowableValues: [],
   configType: ConfigType.LOG_LEVEL,
-  draftId: irrelevantLong,
+  valueType: 9,
 };
 
 export default config;

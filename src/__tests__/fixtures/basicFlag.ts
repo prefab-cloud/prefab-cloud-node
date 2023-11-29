@@ -22,7 +22,7 @@ const config: Config = {
   ],
   allowableValues: [{ bool: true }, { bool: false }],
   configType: ConfigType.FEATURE_FLAG,
-  draftId: irrelevantLong,
+  valueType: 5,
 };
 
 export default config;

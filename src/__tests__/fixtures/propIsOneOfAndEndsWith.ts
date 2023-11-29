@@ -68,6 +68,6 @@ const config: Config = {
     },
   ],
   configType: ConfigType.CONFIG,
-  draftId: irrelevantLong,
+  valueType: 10,
 };
 export default config;

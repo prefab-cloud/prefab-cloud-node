@@ -23,7 +23,7 @@ const config: Config = {
   ],
   allowableValues: [],
   configType: ConfigType.CONFIG,
-  draftId: irrelevantLong,
+  valueType: 1,
 };
 
 export default config;

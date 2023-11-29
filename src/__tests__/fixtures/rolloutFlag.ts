@@ -58,7 +58,7 @@ const config: Config = {
     },
   ],
   configType: ConfigType.FEATURE_FLAG,
-  draftId: irrelevantLong,
+  valueType: 5,
 };
 
 export default config;

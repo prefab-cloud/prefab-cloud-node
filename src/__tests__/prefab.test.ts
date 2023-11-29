@@ -316,7 +316,7 @@ describe("prefab", () => {
       prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       expect(JSON.stringify(prefab.raw("basic.value"))).toStrictEqual(
-        '{"id":{"low":999,"high":0,"unsigned":false},"projectId":{"low":-1,"high":0,"unsigned":false},"key":"basic.value","rows":[{"properties":{},"values":[{"criteria":[],"value":{"int":{"low":42,"high":0,"unsigned":false}}}]}],"allowableValues":[],"configType":1,"draftId":{"low":-1,"high":0,"unsigned":false}}'
+        '{"id":{"low":999,"high":0,"unsigned":false},"projectId":{"low":-1,"high":0,"unsigned":false},"key":"basic.value","rows":[{"properties":{},"values":[{"criteria":[],"value":{"int":{"low":42,"high":0,"unsigned":false}}}]}],"allowableValues":[],"configType":1,"valueType":1}'
       );
     });
   });
