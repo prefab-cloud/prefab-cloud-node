@@ -35,7 +35,18 @@
                 "limitDefinition",
                 "logLevel",
                 "stringList",
-                "intRange"
+                "intRange",
+                "provided"
+              ]
+            },
+            "_confidential": {
+              "oneof": [
+                "confidential"
+              ]
+            },
+            "_decryptWith": {
+              "oneof": [
+                "decryptWith"
               ]
             }
           },
@@ -79,7 +90,61 @@
             "intRange": {
               "type": "IntRange",
               "id": 11
+            },
+            "provided": {
+              "type": "Provided",
+              "id": 12
+            },
+            "confidential": {
+              "type": "bool",
+              "id": 13,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "decryptWith": {
+              "type": "string",
+              "id": 14,
+              "options": {
+                "proto3_optional": true
+              }
             }
+          }
+        },
+        "Provided": {
+          "oneofs": {
+            "_source": {
+              "oneof": [
+                "source"
+              ]
+            },
+            "_lookup": {
+              "oneof": [
+                "lookup"
+              ]
+            }
+          },
+          "fields": {
+            "source": {
+              "type": "ProvidedSource",
+              "id": 1,
+              "options": {
+                "proto3_optional": true
+              }
+            },
+            "lookup": {
+              "type": "string",
+              "id": 2,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "ProvidedSource": {
+          "values": {
+            "PROVIDED_SOURCE_NOT_SET": 0,
+            "ENV_VAR": 1
           }
         },
         "IntRange": {
@@ -203,6 +268,11 @@
               "oneof": [
                 "defaultContext"
               ]
+            },
+            "_keepAlive": {
+              "oneof": [
+                "keepAlive"
+              ]
             }
           },
           "fields": {
@@ -228,6 +298,13 @@
               "options": {
                 "proto3_optional": true
               }
+            },
+            "keepAlive": {
+              "type": "bool",
+              "id": 5,
+              "options": {
+                "proto3_optional": true
+              }
             }
           }
         },
@@ -238,7 +315,8 @@
             "FEATURE_FLAG": 2,
             "LOG_LEVEL": 3,
             "SEGMENT": 4,
-            "LIMIT_DEFINITION": 5
+            "LIMIT_DEFINITION": 5,
+            "DELETED": 6
           }
         },
         "Config": {
@@ -285,6 +363,26 @@
               "id": 8,
               "options": {
                 "proto3_optional": true
+              }
+            },
+            "valueType": {
+              "type": "ValueType",
+              "id": 9
+            }
+          },
+          "nested": {
+            "ValueType": {
+              "values": {
+                "NOT_SET_VALUE_TYPE": 0,
+                "INT": 1,
+                "STRING": 2,
+                "BYTES": 3,
+                "DOUBLE": 4,
+                "BOOL": 5,
+                "LIMIT_DEFINITION": 7,
+                "LOG_LEVEL": 9,
+                "STRING_LIST": 10,
+                "INT_RANGE": 11
               }
             }
           }
@@ -662,66 +760,113 @@
             }
           }
         },
-        "ClientConfigValue": {
+        "ConfigEvaluationMetaData": {
           "oneofs": {
-            "_int": {
+            "_configRowIndex": {
               "oneof": [
-                "int"
+                "configRowIndex"
               ]
             },
-            "_string": {
+            "_conditionalValueIndex": {
               "oneof": [
-                "string"
+                "conditionalValueIndex"
               ]
             },
-            "_double": {
+            "_weightedValueIndex": {
               "oneof": [
-                "double"
+                "weightedValueIndex"
               ]
             },
-            "_bool": {
+            "_type": {
               "oneof": [
-                "bool"
+                "type"
               ]
             },
-            "_logLevel": {
+            "_id": {
               "oneof": [
-                "logLevel"
+                "id"
               ]
             }
           },
           "fields": {
-            "int": {
+            "configRowIndex": {
               "type": "int64",
               "id": 1,
               "options": {
                 "proto3_optional": true
               }
             },
-            "string": {
-              "type": "string",
+            "conditionalValueIndex": {
+              "type": "int64",
               "id": 2,
               "options": {
                 "proto3_optional": true
               }
             },
-            "double": {
-              "type": "double",
+            "weightedValueIndex": {
+              "type": "int64",
               "id": 3,
               "options": {
                 "proto3_optional": true
               }
             },
-            "bool": {
-              "type": "bool",
+            "type": {
+              "type": "ConfigType",
               "id": 4,
               "options": {
                 "proto3_optional": true
               }
             },
+            "id": {
+              "type": "int64",
+              "id": 5,
+              "options": {
+                "proto3_optional": true
+              }
+            }
+          }
+        },
+        "ClientConfigValue": {
+          "oneofs": {
+            "type": {
+              "oneof": [
+                "int",
+                "string",
+                "double",
+                "bool",
+                "logLevel"
+              ]
+            },
+            "_configEvaluationMetadata": {
+              "oneof": [
+                "configEvaluationMetadata"
+              ]
+            }
+          },
+          "fields": {
+            "int": {
+              "type": "int64",
+              "id": 1
+            },
+            "string": {
+              "type": "string",
+              "id": 2
+            },
+            "double": {
+              "type": "double",
+              "id": 3
+            },
+            "bool": {
+              "type": "bool",
+              "id": 4
+            },
             "logLevel": {
               "type": "LogLevel",
-              "id": 5,
+              "id": 5
+            },
+            "configEvaluationMetadata": {
+              "type": "ConfigEvaluationMetaData",
+              "id": 6,
               "options": {
                 "proto3_optional": true
               }
@@ -1194,7 +1339,8 @@
                 "summaries",
                 "exampleContexts",
                 "clientStats",
-                "loggers"
+                "loggers",
+                "contextShapes"
               ]
             }
           },
@@ -1214,6 +1360,10 @@
             "loggers": {
               "type": "LoggersTelemetryEvent",
               "id": 5
+            },
+            "contextShapes": {
+              "type": "ContextShapes",
+              "id": 6
             }
           }
         },

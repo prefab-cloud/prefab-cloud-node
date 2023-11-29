@@ -4,6 +4,12 @@ import _m0 from "protobufjs/minimal.js";
 
 export const protobufPackage = "prefab";
 
+export enum ProvidedSource {
+  PROVIDED_SOURCE_NOT_SET = 0,
+  ENV_VAR = 1,
+  UNRECOGNIZED = -1,
+}
+
 export enum ConfigType {
   /** NOT_SET_CONFIG_TYPE - proto null */
   NOT_SET_CONFIG_TYPE = 0,
@@ -12,6 +18,7 @@ export enum ConfigType {
   LOG_LEVEL = 3,
   SEGMENT = 4,
   LIMIT_DEFINITION = 5,
+  DELETED = 6,
   UNRECOGNIZED = -1,
 }
 
@@ -56,6 +63,23 @@ export interface ConfigValue {
   logLevel?: LogLevel | undefined;
   stringList?: StringList | undefined;
   intRange?: IntRange | undefined;
+  provided?:
+    | Provided
+    | undefined;
+  /** don't log or telemetry this value */
+  confidential?:
+    | boolean
+    | undefined;
+  /** key name to decrypt with */
+  decryptWith?: string | undefined;
+}
+
+export interface Provided {
+  source?:
+    | ProvidedSource
+    | undefined;
+  /** eg MY_ENV_VAR */
+  lookup?: string | undefined;
 }
 
 export interface IntRange {
@@ -96,6 +120,7 @@ export interface Configs {
   configServicePointer: ConfigServicePointer | undefined;
   apikeyMetadata?: ApiKeyMetadata | undefined;
   defaultContext?: ContextSet | undefined;
+  keepAlive?: boolean | undefined;
 }
 
 export interface Config {
@@ -107,6 +132,22 @@ export interface Config {
   allowableValues: ConfigValue[];
   configType: ConfigType;
   draftId?: Long | undefined;
+  valueType: Config_ValueType;
+}
+
+export enum Config_ValueType {
+  /** NOT_SET_VALUE_TYPE - proto null */
+  NOT_SET_VALUE_TYPE = 0,
+  INT = 1,
+  STRING = 2,
+  BYTES = 3,
+  DOUBLE = 4,
+  BOOL = 5,
+  LIMIT_DEFINITION = 7,
+  LOG_LEVEL = 9,
+  STRING_LIST = 10,
+  INT_RANGE = 11,
+  UNRECOGNIZED = -1,
 }
 
 export interface ChangedBy {
@@ -249,12 +290,21 @@ export interface Identity_AttributesEntry {
   value: string;
 }
 
+export interface ConfigEvaluationMetaData {
+  configRowIndex?: Long | undefined;
+  conditionalValueIndex?: Long | undefined;
+  weightedValueIndex?: Long | undefined;
+  type?: ConfigType | undefined;
+  id?: Long | undefined;
+}
+
 export interface ClientConfigValue {
   int?: Long | undefined;
   string?: string | undefined;
   double?: number | undefined;
   bool?: boolean | undefined;
   logLevel?: LogLevel | undefined;
+  configEvaluationMetadata?: ConfigEvaluationMetaData | undefined;
 }
 
 export interface ConfigEvaluations {
@@ -418,6 +468,7 @@ export interface TelemetryEvent {
   exampleContexts?: ExampleContexts | undefined;
   clientStats?: ClientStats | undefined;
   loggers?: LoggersTelemetryEvent | undefined;
+  contextShapes?: ContextShapes | undefined;
 }
 
 export interface TelemetryEvents {

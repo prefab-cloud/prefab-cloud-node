@@ -55,7 +55,7 @@ const config: Config = {
     },
   ],
   configType: ConfigType.CONFIG,
-  draftId: irrelevantLong,
   allowableValues: [],
+  valueType: 10,
 };
 export default config;
