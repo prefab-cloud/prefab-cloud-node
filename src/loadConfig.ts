@@ -3,7 +3,7 @@ import type { Config, Configs } from "./proto";
 import { maxLong } from "./maxLong";
 import type { ApiClient } from "./apiClient";
 
-import { unwrap } from "./unwrap";
+import { unwrapPrimitive } from "./unwrap";
 import type { Contexts, ProjectEnvId } from "./types";
 import { parseConfigs } from "./parseProto";
 
@@ -41,7 +41,7 @@ const extractDefaultContext = (
       const values = new Map<string, unknown>();
 
       for (const key of Object.keys(context.values ?? {})) {
-        const [value] = unwrap(key, context.values[key], undefined);
+        const [value] = unwrapPrimitive(key, context.values[key]);
         values.set(key, value);
       }
 
