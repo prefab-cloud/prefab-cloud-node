@@ -178,11 +178,12 @@ export const evaluate = ({
       resolver
     );
 
-  const [unwrappedValue, weightedValueIndex] = unwrap(
-    config.key,
-    selectedValue,
-    getHashByPropertyValue(selectedValue, contexts)
-  );
+  const [unwrappedValue, weightedValueIndex] = unwrap({
+    key: config.key,
+    config,
+    value: selectedValue,
+    hashByPropertyValue: getHashByPropertyValue(selectedValue, contexts),
+  });
 
   return {
     configKey: config.key,

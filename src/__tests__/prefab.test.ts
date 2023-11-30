@@ -63,6 +63,26 @@ describe("prefab", () => {
 
       expect(console.warn).toHaveBeenCalled();
     });
+
+    it("can get a provided value", async () => {
+      if (validApiKey === undefined) {
+        throw new Error(
+          "You must set the PREFAB_TEST_API_KEY environment variable to run this test."
+        );
+      }
+
+      process.env["MY_ENV_VAR"] = "EXAMPLE";
+
+      const prefab = new Prefab({
+        apiKey: validApiKey,
+        collectLoggerCounts: false,
+        contextUploadMode: "none",
+      });
+
+      await prefab.init();
+
+      expect(prefab.get("basic.provided")).toEqual("EXAMPLE");
+    });
   });
 
   // While the evaluation logic is best tested in evaluate.test.ts,
