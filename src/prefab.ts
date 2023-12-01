@@ -4,9 +4,15 @@ import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
 import { Resolver } from "./resolver";
 import type { Contexts, Fetch, OnNoDefault, ProjectEnvId } from "./types";
-
-import { LogLevel } from "./proto";
-import type { Config, ConfigType } from "./proto";
+import { LogLevel, ProvidedSource } from "./proto";
+import type {
+  ConditionalValue,
+  Config,
+  ConfigValue,
+  ConfigRow,
+  ConfigType,
+  Provided,
+} from "./proto";
 import { shouldLog, wordLevelToNumber, parseLevel } from "./logger";
 import type { ValidLogLevelName, ValidLogLevel } from "./logger";
 import type { GetValue } from "./unwrap";
@@ -300,4 +306,9 @@ export {
   type ConfigType,
   type ValidLogLevelName,
   type ValidLogLevel,
+  type Provided,
+  type ConfigValue,
+  type ConditionalValue,
+  type ConfigRow,
+  ProvidedSource,
 };
