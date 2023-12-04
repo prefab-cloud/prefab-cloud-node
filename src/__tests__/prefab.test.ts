@@ -8,6 +8,10 @@ import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
 import { Prefab } from "../prefab";
 import type { Contexts } from "../types";
 import { LogLevel } from "../proto";
+import type { Config } from "../proto";
+import { encrypt, generateNewHexKey } from "../../src/encryption";
+import secretConfig from "./fixtures/secretConfig";
+import decryptionKeyConfig from "./fixtures/decryptionKeyConfig";
 
 import {
   nTimes,
@@ -228,6 +232,24 @@ describe("prefab", () => {
           ])
         )
       ).toEqual("context-override");
+    });
+
+    it("returns a decrypted secret", () => {
+      const decryptionKey = generateNewHexKey();
+      const clearText = "very secret stuff";
+
+      const encrypted = encrypt(clearText, decryptionKey);
+
+      const secret: Config = secretConfig(encrypted);
+
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig(
+        [secret, decryptionKeyConfig(secret, decryptionKey)],
+        projectEnvIdUnderTest,
+        new Map()
+      );
+
+      expect(prefab.get(secret.key)).toEqual(clearText);
     });
   });
 

@@ -23,3 +23,7 @@ export type FetchResult = Promise<{
 }>;
 
 export type Fetch = (resource: any, options?: any) => FetchResult;
+
+export const isNonNullable = <T>(value: T): value is NonNullable<T> => {
+  return value !== null && value !== undefined;
+};

@@ -79,6 +79,6 @@ const config: Config = {
     },
   ],
   configType: ConfigType.CONFIG,
-  valueType: 10,
+  valueType: 2,
 };
 export default config;
