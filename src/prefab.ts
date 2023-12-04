@@ -4,13 +4,17 @@ import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
 import { Resolver } from "./resolver";
 import type { Contexts, Fetch, OnNoDefault, ProjectEnvId } from "./types";
-import { LogLevel, ProvidedSource } from "./proto";
+import {
+  ConfigType,
+  Config_ValueType as ConfigValueType,
+  LogLevel,
+  ProvidedSource,
+} from "./proto";
 import type {
   ConditionalValue,
   Config,
   ConfigValue,
   ConfigRow,
-  ConfigType,
   Provided,
 } from "./proto";
 import { shouldLog, wordLevelToNumber, parseLevel } from "./logger";
@@ -24,6 +28,7 @@ import { knownLoggers } from "./telemetry/knownLoggers";
 import { contextShapes } from "./telemetry/contextShapes";
 import { exampleContexts } from "./telemetry/exampleContexts";
 import { evaluationSummaries } from "./telemetry/evaluationSummaries";
+import { encrypt, generateNewHexKey } from "./encryption";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
 const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
@@ -298,17 +303,24 @@ class Prefab implements PrefabInterface {
   }
 }
 
+const encryption = {
+  encrypt,
+  generateNewHexKey,
+};
+
 export {
-  Prefab,
+  ConfigType,
+  ConfigValueType,
   LogLevel,
-  wordLevelToNumber,
-  type Contexts,
-  type ConfigType,
-  type ValidLogLevelName,
-  type ValidLogLevel,
-  type Provided,
-  type ConfigValue,
+  Prefab,
+  ProvidedSource,
+  encryption,
   type ConditionalValue,
   type ConfigRow,
-  ProvidedSource,
+  type ConfigValue,
+  type Contexts,
+  type Provided,
+  type ValidLogLevel,
+  type ValidLogLevelName,
+  wordLevelToNumber,
 };
