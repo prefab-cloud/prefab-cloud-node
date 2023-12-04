@@ -183,6 +183,7 @@ export const evaluate = ({
     config,
     value: selectedValue,
     hashByPropertyValue: getHashByPropertyValue(selectedValue, contexts),
+    resolver,
   });
 
   return {

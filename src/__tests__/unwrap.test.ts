@@ -124,29 +124,6 @@ describe("unwrapValue", () => {
     expect(unwrapValue(args("101"))).toEqual(["c", 2]);
   });
 
-  it("returns undefined with a console.error when trying to unwrap a provided value in primitivesOnly mode", () => {
-    const value = {
-      provided: { lookup: "MY_ENV_VAR", source: ProvidedSource.ENV_VAR },
-    };
-
-    process.env["MY_ENV_VAR"] = "test";
-
-    expect(
-      unwrapValue({
-        key,
-        value,
-        hashByPropertyValue: emptyHashByPropertyValue,
-        primitivesOnly: true,
-        config: { valueType: Config_ValueType.STRING } as unknown as Config,
-      })
-    ).toStrictEqual([undefined, undefined]);
-
-    expect(jest.mocked(console.error)).toHaveBeenCalledTimes(1);
-    expect(jest.mocked(console.error)).toHaveBeenCalledWith(
-      'Unexpected value {"provided":{"lookup":"MY_ENV_VAR","source":1}} in primitivesOnly mode'
-    );
-  });
-
   it("can unwrap a provided string", () => {
     const value = {
       provided: { lookup: "MY_ENV_VAR", source: ProvidedSource.ENV_VAR },

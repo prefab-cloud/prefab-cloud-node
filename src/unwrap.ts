@@ -1,6 +1,9 @@
 import type { Config, ConfigValue, Provided, WeightedValue } from "./proto";
 import { Config_ValueType, ProvidedSource } from "./proto";
 import type { HashByPropertyValue } from "./types";
+import { isNonNullable } from "./types";
+import type { Resolver } from "./resolver";
+import { decrypt } from "./encryption";
 
 import murmurhash from "murmurhash";
 
@@ -97,6 +100,29 @@ const providedValue = (
 
 export const TRUE_VALUES = new Set(["true", "1", "t", "yes"]);
 
+const configValueTypeToString = (
+  valueType: Config_ValueType | undefined
+): keyof ConfigValue | undefined => {
+  switch (valueType) {
+    case Config_ValueType.STRING:
+      return "string";
+    case Config_ValueType.INT:
+      return "int";
+    case Config_ValueType.DOUBLE:
+      return "double";
+    case Config_ValueType.BOOL:
+      return "bool";
+    case Config_ValueType.STRING_LIST:
+      return "stringList";
+    case Config_ValueType.LOG_LEVEL:
+      return "logLevel";
+    case Config_ValueType.INT_RANGE:
+      return "intRange";
+    default:
+      return undefined;
+  }
+};
+
 const coerceIntoType = (config: Config, value: string): GetValue => {
   switch (config.valueType) {
     case Config_ValueType.STRING:
@@ -123,14 +149,60 @@ export const unwrapValue = ({
   hashByPropertyValue,
   primitivesOnly,
   config,
+  resolver,
 }: {
   key: string;
   value: ConfigValue;
   hashByPropertyValue: HashByPropertyValue;
   primitivesOnly: boolean;
   config?: Config;
+  resolver?: Resolver;
 }): GetValueWithWeightedValueIndex => {
-  const kind = Object.keys(value)[0];
+  const kind: keyof ConfigValue | undefined =
+    configValueTypeToString(config?.valueType) ??
+    (Object.keys(value)[0] as keyof ConfigValue);
+
+  if (kind === undefined) {
+    throw new Error(`Unexpected value ${JSON.stringify(value)}`);
+  }
+
+  if (primitivesOnly) {
+    if (isNonNullable(value.provided) || isNonNullable(value.decryptWith)) {
+      console.error(
+        `Unexpected value ${JSON.stringify(value)} in primitivesOnly mode`
+      );
+      return [undefined, undefined];
+    }
+  } else {
+    if (isNonNullable(value.decryptWith)) {
+      if (resolver === undefined) {
+        throw new Error("Resolver must be provided to unwrap encrypted values");
+      }
+
+      const key = resolver.get(value.decryptWith);
+
+      if (key === undefined) {
+        throw new Error(`Key ${value.decryptWith} not found`);
+      }
+
+      return [decrypt(value[kind] as string, key as string), undefined];
+    }
+
+    if (value.provided != null) {
+      if (config == null) {
+        throw new Error(
+          `Unexpected value ${JSON.stringify(
+            value
+          )} in provided mode without config`
+        );
+      }
+      return [providedValue(config, value.provided), undefined];
+    }
+  }
+
+  if (value.weightedValues != null) {
+    return unwrapWeightedValues(key, value, hashByPropertyValue);
+  }
 
   switch (kind) {
     case "string":
@@ -145,29 +217,8 @@ export const unwrapValue = ({
       return [value.double, undefined];
     case "logLevel":
       return [value.logLevel, undefined];
-    case "weightedValues":
-      return unwrapWeightedValues(key, value, hashByPropertyValue);
-  }
-
-  if (primitivesOnly) {
-    console.error(
-      `Unexpected value ${JSON.stringify(value)} in primitivesOnly mode`
-    );
-    return [undefined, undefined];
-  } else {
-    switch (kind) {
-      case "provided":
-        if (config == null) {
-          throw new Error(
-            `Unexpected value ${JSON.stringify(
-              value
-            )} in provided mode without config`
-          );
-        }
-        return [providedValue(config, value.provided), undefined];
-      default:
-        throw new Error(`Unexpected value ${JSON.stringify(value)}`);
-    }
+    default:
+      throw new Error(`Unexpected value ${JSON.stringify(value)}`);
   }
 };
 
@@ -177,12 +228,14 @@ export const unwrap = ({
   hashByPropertyValue,
   primitivesOnly = false,
   config,
+  resolver,
 }: {
   key: string;
   value: ConfigValue | undefined;
   hashByPropertyValue?: HashByPropertyValue;
   primitivesOnly?: boolean;
   config?: Config;
+  resolver?: Resolver;
 }): GetValueWithWeightedValueIndex => {
   if (value === undefined) {
     return [undefined, undefined];
@@ -194,6 +247,7 @@ export const unwrap = ({
     hashByPropertyValue,
     primitivesOnly,
     config,
+    resolver,
   });
 };
 

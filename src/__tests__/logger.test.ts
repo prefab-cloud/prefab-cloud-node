@@ -178,7 +178,7 @@ describe("shouldLog", () => {
       ],
       allowableValues: [],
       configType: ConfigType.LOG_LEVEL,
-      valueType: 10,
+      valueType: 3,
     };
 
     const resolver = getResolver([config]);

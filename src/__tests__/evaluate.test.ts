@@ -14,6 +14,12 @@ import type { EvaluateArgs } from "../evaluate";
 import type { Contexts } from "../types";
 import { evaluate } from "../evaluate";
 import { emptyContexts, projectEnvIdUnderTest } from "./testHelpers";
+import { encrypt, generateNewHexKey } from "../../src/encryption";
+import secretConfig from "./fixtures/secretConfig";
+import decryptionKeyConfig, {
+  decryptionKeyForSecret,
+} from "./fixtures/decryptionKeyConfig";
+import type { Config } from "../proto";
 
 const noNamespace = undefined;
 
@@ -528,5 +534,67 @@ describe("evaluate", () => {
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
+  });
+
+  it("returns an evaluation for a secret when the key is found", () => {
+    const decryptionKey = generateNewHexKey();
+    const clearText = "very secret stuff";
+
+    const encrypted = encrypt(clearText, decryptionKey);
+
+    const secret: Config = secretConfig(encrypted);
+
+    const decryptionConfig = decryptionKeyConfig(secret, decryptionKey);
+
+    const resolver = new Resolver(
+      [decryptionConfig],
+      projectEnvIdUnderTest,
+      noNamespace,
+      "error"
+    );
+
+    expect(
+      evaluate({
+        config: secret,
+        projectEnvId: projectEnvIdUnderTest,
+        namespace: noNamespace,
+        contexts: emptyContexts,
+        resolver,
+      })
+    ).toStrictEqual({
+      configId: secret.id,
+      configKey: secret.key,
+      configType: secret.configType,
+      configRowIndex: 0,
+      unwrappedValue: clearText,
+      conditionalValueIndex: 0,
+      selectedValue: {
+        confidential: true,
+        decryptWith: decryptionConfig.key,
+        string: encrypted,
+      },
+      weightedValueIndex: undefined,
+    });
+  });
+
+  it("throws for a secret when the key cannot be found", () => {
+    const decryptionKey = generateNewHexKey();
+    const clearText = "very secret stuff";
+
+    const encrypted = encrypt(clearText, decryptionKey);
+
+    const secret: Config = secretConfig(encrypted);
+
+    expect(() => {
+      evaluate({
+        config: secret,
+        projectEnvId: projectEnvIdUnderTest,
+        namespace: noNamespace,
+        contexts: emptyContexts,
+        resolver: emptyResolver,
+      });
+    }).toThrowError(
+      `No value found for key '${decryptionKeyForSecret(secret)}'`
+    );
   });
 });
