@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import type Long from "long";
 import type { Config, Configs } from "./proto";
 import { maxLong } from "./maxLong";
@@ -5,11 +6,19 @@ import type { ApiClient } from "./apiClient";
 
 import { unwrapPrimitive } from "./unwrap";
 import type { Contexts, ProjectEnvId } from "./types";
-import { parseConfigs } from "./parseProto";
+import { parseConfigs, parseConfigsFromJSON } from "./parseProto";
+
+interface Result {
+  configs: Config[];
+  projectEnvId: ProjectEnvId;
+  startAtId: Long;
+  defaultContext: Contexts;
+}
 
 export async function loadConfig({
   cdnUrl,
   apiUrl,
+  datafile,
   startAtId,
   apiClient,
 }: {
@@ -17,12 +26,15 @@ export async function loadConfig({
   apiUrl: string;
   startAtId?: Long;
   apiClient: ApiClient;
-}): Promise<{
-  configs: Config[];
-  projectEnvId: ProjectEnvId;
-  startAtId: Long;
-  defaultContext: Contexts;
-}> {
+  datafile?: string;
+}): Promise<Result> {
+  if (datafile !== undefined) {
+    // Read from file instead of API
+    const buffer = fs.readFileSync(datafile);
+    const parsed = parseConfigsFromJSON(buffer.toString("utf-8"));
+    return await Promise.resolve(parse(parsed));
+  }
+
   try {
     return await loadConfigFromUrl({ url: cdnUrl, startAtId, apiClient });
   } catch (e) {
@@ -73,22 +85,25 @@ const loadConfigFromUrl = async ({
     const buffer = await response.arrayBuffer();
 
     const parsed = parseConfigs(buffer);
-
-    if (parsed.configServicePointer?.projectEnvId === undefined) {
-      throw new Error("No projectEnvId found in config.");
-    }
-
-    const configs = parsed.configs ?? [];
-
-    const defaultContext = extractDefaultContext(parsed.defaultContext);
-
-    return {
-      configs,
-      projectEnvId: parsed.configServicePointer.projectEnvId,
-      startAtId: maxLong(configs.map((c) => c.id)),
-      defaultContext,
-    };
+    return parse(parsed);
   }
 
   throw new Error(`Something went wrong talking to ${url}. ${response.status}`);
+};
+
+const parse = (parsed: Configs): Result => {
+  if (parsed.configServicePointer?.projectEnvId === undefined) {
+    throw new Error("No projectEnvId found in config.");
+  }
+
+  const configs = parsed.configs ?? [];
+
+  const defaultContext = extractDefaultContext(parsed.defaultContext);
+
+  return {
+    configs,
+    projectEnvId: parsed.configServicePointer.projectEnvId,
+    startAtId: maxLong(configs.map((c) => c.id)),
+    defaultContext,
+  };
 };
