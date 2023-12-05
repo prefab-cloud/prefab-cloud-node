@@ -7,6 +7,13 @@ export const parseConfigs = (input: ArrayBuffer | string): Configs => {
   return decode<Configs>("Configs", input);
 };
 
+export const parseConfigsFromJSON = (input: string): Configs => {
+  const json = JSON.parse(input);
+  return root
+    .lookupType("prefab.Configs")
+    .fromObject(json) as unknown as Configs;
+};
+
 export const decode = <T>(type: string, input: ArrayBuffer | string): T => {
   const buffer =
     typeof input === "string"

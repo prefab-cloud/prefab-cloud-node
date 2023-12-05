@@ -57,6 +57,7 @@ interface ConstructorProps {
   apiKey: string;
   apiUrl?: string;
   cdnUrl?: string;
+  datafile?: string;
   enablePolling?: boolean;
   enableSSE?: boolean;
   namespace?: string;
@@ -74,6 +75,7 @@ class Prefab implements PrefabInterface {
   private readonly apiKey: string;
   private readonly apiUrl: string;
   private readonly cdnUrl: string;
+  private readonly datafile?: string;
   private readonly enableSSE: boolean;
   private readonly enablePolling: boolean;
   private readonly namespace?: string;
@@ -91,6 +93,7 @@ class Prefab implements PrefabInterface {
     apiUrl,
     namespace,
     cdnUrl,
+    datafile,
     onNoDefault,
     enableSSE,
     enablePolling,
@@ -105,6 +108,7 @@ class Prefab implements PrefabInterface {
     this.apiKey = apiKey;
     this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
     this.cdnUrl = cdnUrl ?? "https://api-prefab-cloud.global.ssl.fastly.net";
+    this.datafile = datafile;
     this.enablePolling = enablePolling ?? false;
     this.enableSSE = enableSSE ?? true;
     this.namespace = namespace;
@@ -152,6 +156,7 @@ class Prefab implements PrefabInterface {
         apiUrl: this.apiUrl,
         apiClient: this.apiClient,
         cdnUrl: this.cdnUrl,
+        datafile: this.datafile,
       });
 
     this.setConfig(configs, projectEnvId, defaultContext);

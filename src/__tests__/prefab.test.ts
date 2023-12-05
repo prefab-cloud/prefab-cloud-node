@@ -1,3 +1,5 @@
+import * as path from "path";
+
 import basicConfig from "./fixtures/basicConfig";
 import basicFlag from "./fixtures/basicFlag";
 import rolloutFlag from "./fixtures/rolloutFlag";
@@ -250,6 +252,17 @@ describe("prefab", () => {
       );
 
       expect(prefab.get(secret.key)).toEqual(clearText);
+    });
+
+    it("can load from a datafile", async () => {
+      const prefab = new Prefab({
+        apiKey: irrelevant,
+        datafile: path.resolve("./src/__tests__/fixtures/datafile.json"),
+      });
+
+      await prefab.init();
+
+      expect(prefab.get("from.the.datafile")).toEqual("it.works");
     });
   });
 
