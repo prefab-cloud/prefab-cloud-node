@@ -1,8 +1,14 @@
 import type { Config } from "./proto";
-import type { Context, Contexts, OnNoDefault, ProjectEnvId } from "./types";
+import type {
+  ContextObj,
+  Context,
+  Contexts,
+  OnNoDefault,
+  ProjectEnvId,
+} from "./types";
 import type { PrefabInterface, Telemetry } from "./prefab";
 
-import { mergeContexts } from "./mergeContexts";
+import { mergeContexts, contextObjToMap } from "./mergeContexts";
 
 import type { GetValue } from "./unwrap";
 import { evaluate } from "./evaluate";
@@ -12,16 +18,19 @@ const emptyContexts: Contexts = new Map<string, Context>();
 export const NOT_PROVIDED = Symbol("NOT_PROVIDED");
 
 const mergeDefaultContexts = (
-  contexts: Contexts,
+  contexts: Contexts | ContextObj,
   defaultContext: Contexts
 ): Contexts => {
-  const mergedContexts: Contexts = contexts;
+  const localContexts =
+    contexts instanceof Map ? contexts : contextObjToMap(contexts);
+
+  const mergedContexts: Contexts = localContexts;
 
   for (const type of defaultContext.keys()) {
     mergedContexts.set(
       type,
       new Map(
-        ...(contexts.get(type) ?? new Map()),
+        ...(localContexts.get(type) ?? new Map()),
         defaultContext.get(type) ?? new Map()
       )
     );
@@ -46,7 +55,7 @@ class Resolver implements PrefabInterface {
     namespace: string | undefined,
     onNoDefault: OnNoDefault,
     telemetry?: Telemetry,
-    contexts?: Contexts,
+    contexts?: Contexts | ContextObj,
     onUpdate?: (configs: Config[]) => void,
     defaultContext?: Contexts
   ) {
@@ -65,7 +74,7 @@ class Resolver implements PrefabInterface {
     this.onUpdate = onUpdate ?? (() => {});
   }
 
-  cloneWithContext(contexts: Contexts): Resolver {
+  cloneWithContext(contexts: Contexts | ContextObj): Resolver {
     return new Resolver(
       this.config,
       this.projectEnvId,
@@ -99,7 +108,7 @@ class Resolver implements PrefabInterface {
 
   get(
     key: string,
-    contexts?: Contexts,
+    contexts?: Contexts | ContextObj,
     defaultValue: GetValue | symbol = NOT_PROVIDED,
     onNoDefault: OnNoDefault = this.onNoDefault
   ): GetValue {
@@ -146,7 +155,7 @@ class Resolver implements PrefabInterface {
     return evaluation.unwrappedValue;
   }
 
-  isFeatureEnabled(key: string, contexts?: Contexts): boolean {
+  isFeatureEnabled(key: string, contexts?: Contexts | ContextObj): boolean {
     const value = this.get(key, contexts);
 
     if (typeof value === "boolean") {

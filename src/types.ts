@@ -10,6 +10,8 @@ export type Context = Map<ContextKey, ContextValue>;
 
 export type Contexts = Map<ContextName, Context>;
 
+export type ContextObj = Record<string, Record<string, unknown>>;
+
 export type ProjectEnvId = Long;
 
 export type HashByPropertyValue = string | undefined;

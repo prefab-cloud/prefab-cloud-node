@@ -1,4 +1,4 @@
-import type { Contexts } from "./types";
+import type { ContextObj, Contexts } from "./types";
 import { type Resolver } from "./resolver";
 
 export const PREFIX = "log-level.";
@@ -53,7 +53,7 @@ export const shouldLog = ({
   desiredLevel: ValidLogLevel;
   defaultLevel: ValidLogLevel;
   resolver: Resolver;
-  contexts?: Contexts;
+  contexts?: Contexts | ContextObj;
 }): boolean => {
   let loggerNameWithPrefix = PREFIX + loggerName;
 

@@ -3,7 +3,13 @@ import type Long from "long";
 import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
 import { Resolver } from "./resolver";
-import type { Contexts, Fetch, OnNoDefault, ProjectEnvId } from "./types";
+import type {
+  ContextObj,
+  Contexts,
+  Fetch,
+  OnNoDefault,
+  ProjectEnvId,
+} from "./types";
 import {
   ConfigType,
   Config_ValueType as ConfigValueType,
@@ -42,8 +48,12 @@ function requireResolver(
 }
 
 export interface PrefabInterface {
-  get: (key: string, contexts?: Contexts, defaultValue?: GetValue) => GetValue;
-  isFeatureEnabled: (key: string, contexts?: Contexts) => boolean;
+  get: (
+    key: string,
+    contexts?: Contexts | ContextObj,
+    defaultValue?: GetValue
+  ) => GetValue;
+  isFeatureEnabled: (key: string, contexts?: Contexts | ContextObj) => boolean;
 }
 
 export interface Telemetry {
@@ -229,13 +239,20 @@ class Prefab implements PrefabInterface {
     poll();
   }
 
-  inContext(contexts: Contexts, func: (prefab: Resolver) => void): void {
+  inContext(
+    contexts: Contexts | ContextObj,
+    func: (prefab: Resolver) => void
+  ): void {
     requireResolver(this.resolver);
 
     func(this.resolver.cloneWithContext(contexts));
   }
 
-  get(key: string, contexts?: Contexts, defaultValue?: GetValue): GetValue {
+  get(
+    key: string,
+    contexts?: Contexts | ContextObj,
+    defaultValue?: GetValue
+  ): GetValue {
     requireResolver(this.resolver);
 
     return this.resolver.get(key, contexts, defaultValue);
@@ -250,7 +267,7 @@ class Prefab implements PrefabInterface {
     loggerName: string;
     desiredLevel: ValidLogLevel | ValidLogLevelName;
     defaultLevel?: ValidLogLevel | ValidLogLevelName;
-    contexts?: Contexts;
+    contexts?: Contexts | ContextObj;
   }): boolean {
     const numericDesiredLevel = parseLevel(desiredLevel);
 
@@ -283,7 +300,7 @@ class Prefab implements PrefabInterface {
     );
   }
 
-  isFeatureEnabled(key: string, contexts?: Contexts): boolean {
+  isFeatureEnabled(key: string, contexts?: Contexts | ContextObj): boolean {
     requireResolver(this.resolver);
 
     return this.resolver.isFeatureEnabled(key, contexts);
@@ -301,7 +318,7 @@ class Prefab implements PrefabInterface {
     return this.resolver.keys();
   }
 
-  defaultContext(): Contexts | undefined {
+  defaultContext(): Contexts | ContextObj | undefined {
     requireResolver(this.resolver);
 
     return this.resolver.defaultContext;

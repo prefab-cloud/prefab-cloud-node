@@ -236,6 +236,17 @@ describe("prefab", () => {
       ).toEqual("context-override");
     });
 
+    it("can use a Context object instead of a Context map", () => {
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
+
+      expect(
+        prefab.get("prop.is.one.of", {
+          user: { country: "US", "user-id": "5" },
+        })
+      ).toEqual("correct");
+    });
+
     it("returns a decrypted secret", () => {
       const decryptionKey = generateNewHexKey();
       const clearText = "very secret stuff";
