@@ -318,7 +318,7 @@ class Prefab implements PrefabInterface {
     return this.resolver.keys();
   }
 
-  defaultContext(): Contexts | ContextObj | undefined {
+  defaultContext(): Contexts | undefined {
     requireResolver(this.resolver);
 
     return this.resolver.defaultContext;
