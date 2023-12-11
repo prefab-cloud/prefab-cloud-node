@@ -72,6 +72,21 @@ prefab.inContext(context, (pf) => {
 })
 ```
 
+Note that you can also provide Context as an object instead of a Map, e.g.:
+
+```javascript
+{
+  user: {
+    key: "some-unique-identifier",
+    country: "US"
+  },
+  subscription: {
+    key: "pro-sub",
+    plan: "pro"
+  }
+}
+```
+
 #### Option Definitions
 
 Besides `apiKey`, you can initialize `new Prefab(...)` with the following options
