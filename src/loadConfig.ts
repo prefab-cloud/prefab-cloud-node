@@ -53,7 +53,7 @@ const extractDefaultContext = (
       const values = new Map<string, unknown>();
 
       for (const key of Object.keys(context.values ?? {})) {
-        const [value] = unwrapPrimitive(key, context.values[key]);
+        const { value } = unwrapPrimitive(key, context.values[key]);
         values.set(key, value);
       }
 
