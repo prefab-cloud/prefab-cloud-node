@@ -7,7 +7,7 @@ import envConfig from "./fixtures/envConfig";
 import namespaceConfig from "./fixtures/namespaceConfig";
 import propIsOneOf from "./fixtures/propIsOneOf";
 import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
-import { Prefab } from "../prefab";
+import { Prefab, MULTIPLE_INIT_WARNING } from "../prefab";
 import type { Contexts } from "../types";
 import { LogLevel } from "../proto";
 import type { Config } from "../proto";
@@ -36,18 +36,19 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+const validApiKey = process.env["PREFAB_TEST_API_KEY"];
+
+if (validApiKey === undefined) {
+  throw new Error(
+    "You must set the PREFAB_TEST_API_KEY environment variable to run these tests."
+  );
+}
+
 describe("prefab", () => {
   describe("init", () => {
     const invalidApiKey = "this won't work";
-    const validApiKey = process.env["PREFAB_TEST_API_KEY"];
 
     it("can parse config from the CDN", async () => {
-      if (validApiKey === undefined) {
-        throw new Error(
-          "You must set the PREFAB_TEST_API_KEY environment variable to run this test."
-        );
-      }
-
       const prefab = new Prefab({
         apiKey: validApiKey,
         collectLoggerCounts: false,
@@ -70,13 +71,49 @@ describe("prefab", () => {
       expect(console.warn).toHaveBeenCalled();
     });
 
-    it("can get a provided value", async () => {
-      if (validApiKey === undefined) {
-        throw new Error(
-          "You must set the PREFAB_TEST_API_KEY environment variable to run this test."
-        );
-      }
+    it("warns when called multiple times if enablePolling is set", async () => {
+      const prefab = new Prefab({ apiKey: validApiKey, enablePolling: true });
 
+      const mock = jest.spyOn(console, "warn").mockImplementation();
+
+      await prefab.init();
+      expect(mock).not.toHaveBeenCalled();
+
+      await prefab.init();
+      expect(mock).toHaveBeenCalled();
+      expect(mock.mock.calls).toStrictEqual([[MULTIPLE_INIT_WARNING]]);
+    });
+
+    it("warns when called multiple times if enableSSE is set", async () => {
+      const prefab = new Prefab({ apiKey: validApiKey, enableSSE: true });
+
+      const mock = jest.spyOn(console, "warn").mockImplementation();
+
+      await prefab.init();
+      expect(mock).not.toHaveBeenCalled();
+
+      await prefab.init();
+      expect(mock).toHaveBeenCalled();
+      expect(mock.mock.calls).toStrictEqual([[MULTIPLE_INIT_WARNING]]);
+    });
+
+    it("does not warn when init is called multiple times if enableSSE and enablePolling are false", async () => {
+      const prefab = new Prefab({
+        apiKey: validApiKey,
+        enableSSE: false,
+        enablePolling: false,
+      });
+
+      const mock = jest.spyOn(console, "warn").mockImplementation();
+
+      await prefab.init();
+      expect(mock).not.toHaveBeenCalled();
+
+      await prefab.init();
+      expect(mock).not.toHaveBeenCalled();
+    });
+
+    it("loads remote config so Prefab can provided value", async () => {
       process.env["MY_ENV_VAR"] = "EXAMPLE";
 
       const prefab = new Prefab({
@@ -576,14 +613,6 @@ describe("prefab", () => {
   });
 
   it("can fire onUpdate when the resolver sets config", async () => {
-    const validApiKey = process.env["PREFAB_TEST_API_KEY"];
-
-    if (validApiKey === undefined) {
-      throw new Error(
-        "You must set the PREFAB_TEST_API_KEY environment variable to run this test."
-      );
-    }
-
     const mock = jest.fn();
 
     const prefab = new Prefab({

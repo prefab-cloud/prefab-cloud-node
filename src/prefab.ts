@@ -38,6 +38,8 @@ import { encrypt, generateNewHexKey } from "./encryption";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
 const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
+export const MULTIPLE_INIT_WARNING =
+  "[prefab] init() called multiple times. This is generally not recommended as it can lead to multiple concurrent SSE connections and/or redundant polling. A Prefab instance is typically meant to be long-lived and exist outside of your request/response life-cycle. If you're using `init()` to change context, you're better off using `inContext` or setting per-request context to pass to your `get`/etc. calls.";
 
 function requireResolver(
   resolver: Resolver | undefined
@@ -96,6 +98,7 @@ class Prefab implements PrefabInterface {
   private readonly defaultLogLevel: ValidLogLevel;
   private readonly instanceHash: string;
   private readonly onUpdate: (configs: Config[]) => void;
+  private initCount: number = 0;
   readonly telemetry: Telemetry;
 
   constructor({
@@ -161,6 +164,12 @@ class Prefab implements PrefabInterface {
   }
 
   async init(): Promise<void> {
+    this.initCount += 1;
+
+    if (this.initCount > 1 && (this.enableSSE || this.enablePolling)) {
+      console.warn(MULTIPLE_INIT_WARNING);
+    }
+
     const { configs, projectEnvId, startAtId, defaultContext } =
       await loadConfig({
         apiUrl: this.apiUrl,
