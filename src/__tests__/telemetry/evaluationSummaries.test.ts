@@ -3,6 +3,8 @@ import { Prefab } from "../../prefab";
 import { evaluationSummaries, stub } from "../../telemetry/evaluationSummaries";
 import { Resolver } from "../../resolver";
 import type { Config } from "../../proto";
+import { contextObjToMap } from "../../mergeContexts";
+import type { Contexts } from "../../types";
 
 import {
   emptyContexts,
@@ -13,60 +15,46 @@ import {
 
 import { evaluate, type Evaluation } from "../../evaluate";
 import propIsOneOf from "../fixtures/propIsOneOf";
+import secretKeyConfig from "../fixtures/secretKeyConfig";
 import basicConfig from "../fixtures/basicConfig";
 import basicLogLevel from "../fixtures/basicLogLevel";
 import rolloutFlag from "../fixtures/rolloutFlag";
 
 const instanceHash = "instance-hash";
 
-const usContexts = new Map([
-  [
-    "user",
-    new Map([
-      ["trackingId", "abc"],
-      ["country", "US"],
-    ]),
-  ],
-]);
-const ukContexts = new Map([
-  [
-    "user",
-    new Map([
-      ["trackingId", "123"],
-      ["country", "UK"],
-    ]),
-  ],
-]);
-const frContexts = new Map([
-  [
-    "user",
-    new Map([
-      ["trackingId", "xyz"],
-      ["country", "FR"],
-    ]),
-  ],
-]);
+const usContexts = contextObjToMap({
+  user: { trackingId: "abc", country: "US" },
+});
+const ukContexts = contextObjToMap({
+  user: { trackingId: "123", country: "UK" },
+});
+const frContexts = contextObjToMap({
+  user: { trackingId: "xyz", country: "FR" },
+});
+const secretContexts = contextObjToMap({
+  user: { trackingId: "SECRET" },
+});
+const confidentialContexts = contextObjToMap({
+  user: { trackingId: "CONFIDENTIAL" },
+});
 
 const noNamespace = undefined;
 
-// the Resolver is only used to back-reference Segments (which we test in the integration tests) so we can use a stand-in here.
-const emptyResolver = new Resolver(
-  [],
+// the Resolver is only used to back-reference Segments (which we test in the integration tests) and get secret keys so we can use a stand-in here.
+const simpleResolver = new Resolver(
+  [secretKeyConfig],
   projectEnvIdUnderTest,
   noNamespace,
   "error"
 );
 
-const evaluationFor = (
-  config: Config,
-  contexts: Map<string, Map<string, string>>
-): Evaluation => {
+const evaluationFor = (config: Config, contexts: Contexts): Evaluation => {
   return evaluate({
     config,
     projectEnvId: projectEnvIdUnderTest,
     namespace: noNamespace,
     contexts,
-    resolver: emptyResolver,
+    resolver: simpleResolver,
   });
 };
 
@@ -89,6 +77,9 @@ describe("evaluationSummaries", () => {
     aggregator.push(evaluationFor(propIsOneOf, usContexts));
     aggregator.push(evaluationFor(propIsOneOf, ukContexts));
     aggregator.push(evaluationFor(propIsOneOf, frContexts));
+    aggregator.push(evaluationFor(propIsOneOf, secretContexts));
+    aggregator.push(evaluationFor(propIsOneOf, secretContexts));
+    aggregator.push(evaluationFor(propIsOneOf, confidentialContexts));
     aggregator.push(evaluationFor(propIsOneOf, emptyContexts));
     aggregator.push(evaluationFor(propIsOneOf, emptyContexts));
 
@@ -98,7 +89,9 @@ describe("evaluationSummaries", () => {
           '["prop.is.one.of","1"]',
           new Map([
             ['["991",1,0,"string","correct",null]', 2],
-            ['["991",2,0,"string","default",null]', 3],
+            ['["991",4,0,"string","default",null]', 3],
+            ['["991",3,0,"string","*****cda9e",null]', 2],
+            ['["991",2,0,"string","*****b9002",null]', 1],
           ]),
         ],
       ])
@@ -106,6 +99,7 @@ describe("evaluationSummaries", () => {
 
     aggregator.push(evaluationFor(propIsOneOf, emptyContexts));
     aggregator.push(evaluationFor(basicConfig, usContexts));
+    aggregator.push(evaluationFor(propIsOneOf, secretContexts));
 
     // Log level doesn't show up below because we don't report them
     aggregator.push(evaluationFor(basicLogLevel, usContexts));
@@ -117,7 +111,9 @@ describe("evaluationSummaries", () => {
           '["prop.is.one.of","1"]',
           new Map([
             ['["991",1,0,"string","correct",null]', 2],
-            ['["991",2,0,"string","default",null]', 4],
+            ['["991",4,0,"string","default",null]', 4],
+            ['["991",3,0,"string","*****cda9e",null]', 3],
+            ['["991",2,0,"string","*****b9002",null]', 1],
           ]),
         ],
         ['["basic.value","1"]', new Map([['["999",0,0,"int",42,null]', 1]])],
@@ -198,7 +194,7 @@ describe("evaluationSummaries", () => {
                   },
                   {
                     configId: Long.fromNumber(991),
-                    conditionalValueIndex: 2,
+                    conditionalValueIndex: 4,
                     configRowIndex: 0,
                     selectedValue: {
                       string: "default",

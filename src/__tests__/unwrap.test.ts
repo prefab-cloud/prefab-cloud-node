@@ -1,4 +1,10 @@
-import { unwrap, unwrapPrimitive, unwrapValue, TRUE_VALUES } from "../unwrap";
+import {
+  unwrap,
+  unwrapPrimitive,
+  unwrapValue,
+  NULL_UNWRAPPED_VALUE,
+  TRUE_VALUES,
+} from "../unwrap";
 import { Config_ValueType, ProvidedSource } from "../proto";
 import type { ConfigValue, Config } from "../proto";
 import Long from "long";
@@ -21,11 +27,12 @@ describe("unwrapValue", () => {
       expect(
         unwrapValue({
           key,
+          kind: "string",
           value,
           hashByPropertyValue: emptyHashByPropertyValue,
           primitivesOnly,
         })
-      ).toStrictEqual(["test", undefined]);
+      ).toStrictEqual({ value: "test" });
     });
   });
 
@@ -35,11 +42,12 @@ describe("unwrapValue", () => {
       expect(
         unwrapValue({
           key,
+          kind: "int",
           value,
           hashByPropertyValue: emptyHashByPropertyValue,
           primitivesOnly,
         })
-      ).toStrictEqual([42, undefined]);
+      ).toStrictEqual({ value: 42 });
     });
   });
 
@@ -49,11 +57,12 @@ describe("unwrapValue", () => {
       expect(
         unwrapValue({
           key,
+          kind: "bool",
           value,
           hashByPropertyValue: emptyHashByPropertyValue,
           primitivesOnly,
         })
-      ).toStrictEqual([true, undefined]);
+      ).toStrictEqual({ value: true });
     });
   });
 
@@ -63,11 +72,12 @@ describe("unwrapValue", () => {
       expect(
         unwrapValue({
           key,
+          kind: "stringList",
           value,
           hashByPropertyValue: emptyHashByPropertyValue,
           primitivesOnly,
         })
-      ).toStrictEqual([["a", "b", "c"], undefined]);
+      ).toStrictEqual({ value: ["a", "b", "c"] });
     });
   });
 
@@ -84,19 +94,20 @@ describe("unwrapValue", () => {
 
     const args = {
       key,
+      kind: "string" as const,
       value,
       hashByPropertyValue: emptyHashByPropertyValue,
       primitivesOnly: false,
     };
 
     jest.spyOn(global.Math, "random").mockReturnValue(0.5);
-    expect(unwrapValue(args)).toEqual(["b", 1]);
+    expect(unwrapValue(args)).toEqual({ value: "b", index: 1 });
 
     jest.spyOn(global.Math, "random").mockReturnValue(0.1);
-    expect(unwrapValue(args)).toEqual(["a", 0]);
+    expect(unwrapValue(args)).toEqual({ value: "a", index: 0 });
 
     jest.spyOn(global.Math, "random").mockReturnValue(0.8);
-    expect(unwrapValue(args)).toEqual(["c", 2]);
+    expect(unwrapValue(args)).toEqual({ value: "c", index: 2 });
   });
 
   it("should return a consistent weighted value with context", () => {
@@ -114,14 +125,15 @@ describe("unwrapValue", () => {
       hashByPropertyValue: string
     ): Parameters<typeof unwrapValue>[0] => ({
       key,
+      kind: "string" as const,
       value,
       hashByPropertyValue,
       primitivesOnly: false,
     });
 
-    expect(unwrapValue(args("100"))).toEqual(["a", 0]);
-    expect(unwrapValue(args("110"))).toEqual(["b", 1]);
-    expect(unwrapValue(args("101"))).toEqual(["c", 2]);
+    expect(unwrapValue(args("100"))).toEqual({ value: "a", index: 0 });
+    expect(unwrapValue(args("110"))).toEqual({ value: "b", index: 1 });
+    expect(unwrapValue(args("101"))).toEqual({ value: "c", index: 2 });
   });
 
   it("can unwrap a provided string", () => {
@@ -134,12 +146,13 @@ describe("unwrapValue", () => {
     expect(
       unwrapValue({
         key,
+        kind: "string",
         value,
         hashByPropertyValue: emptyHashByPropertyValue,
         primitivesOnly: false,
         config: { valueType: Config_ValueType.STRING } as unknown as Config,
       })
-    ).toStrictEqual(["test", undefined]);
+    ).toStrictEqual({ value: "test" });
   });
 
   it("can unwrap a provided int", () => {
@@ -152,12 +165,13 @@ describe("unwrapValue", () => {
     expect(
       unwrapValue({
         key,
+        kind: "string",
         value,
         hashByPropertyValue: emptyHashByPropertyValue,
         primitivesOnly: false,
         config: { valueType: Config_ValueType.INT } as unknown as Config,
       })
-    ).toStrictEqual([90210, undefined]);
+    ).toStrictEqual({ value: 90210 });
   });
 
   it("can unwrap a provided double", () => {
@@ -170,12 +184,13 @@ describe("unwrapValue", () => {
     expect(
       unwrapValue({
         key,
+        kind: "string",
         value,
         hashByPropertyValue: emptyHashByPropertyValue,
         primitivesOnly: false,
         config: { valueType: Config_ValueType.DOUBLE } as unknown as Config,
       })
-    ).toStrictEqual([3.14159265359, undefined]);
+    ).toStrictEqual({ value: 3.14159265359 });
   });
 
   it("can unwrap a provided bool", () => {
@@ -189,12 +204,13 @@ describe("unwrapValue", () => {
       expect(
         unwrapValue({
           key,
+          kind: "string",
           value,
           hashByPropertyValue: emptyHashByPropertyValue,
           primitivesOnly: false,
           config: { valueType: Config_ValueType.BOOL } as unknown as Config,
         })
-      ).toStrictEqual([true, undefined]);
+      ).toStrictEqual({ value: true });
     });
 
     ["false", "0", "f", "no", "🤡"].forEach((falseValue) => {
@@ -203,12 +219,13 @@ describe("unwrapValue", () => {
       expect(
         unwrapValue({
           key,
+          kind: "string",
           value,
           hashByPropertyValue: emptyHashByPropertyValue,
           primitivesOnly: false,
           config: { valueType: Config_ValueType.BOOL } as unknown as Config,
         })
-      ).toStrictEqual([false, undefined]);
+      ).toStrictEqual({ value: false });
     });
   });
 
@@ -223,6 +240,7 @@ describe("unwrapValue", () => {
       expect(
         unwrapValue({
           key,
+          kind: "string",
           value,
           hashByPropertyValue: emptyHashByPropertyValue,
           primitivesOnly: false,
@@ -230,35 +248,34 @@ describe("unwrapValue", () => {
             valueType: Config_ValueType.STRING_LIST,
           } as unknown as Config,
         })
-      ).toStrictEqual([["a", "b", "c"], undefined]);
+      ).toStrictEqual({ value: ["a", "b", "c"] });
     });
     process.env["MY_ENV_VAR"] = "test";
 
     expect(
       unwrapValue({
         key,
+        kind: "string",
         value,
         hashByPropertyValue: emptyHashByPropertyValue,
         primitivesOnly: false,
         config: { valueType: Config_ValueType.STRING } as unknown as Config,
       })
-    ).toStrictEqual(["test", undefined]);
-  });
-
-  it("should throw an error for unexpected values", () => {
-    const value: ConfigValue = { bytes: Buffer.from("test") };
-    expect(() =>
-      unwrapValue({
-        key,
-        value,
-        hashByPropertyValue: emptyHashByPropertyValue,
-        primitivesOnly: false,
-      })
-    ).toThrowError("Unexpected value");
+    ).toStrictEqual({ value: "test" });
   });
 });
 
 describe("unwrap", () => {
+  it("should throw an error for unexpected values", () => {
+    const value: ConfigValue = { bytes: Buffer.from("test") };
+    expect(() =>
+      unwrap({
+        key,
+        value,
+      })
+    ).toThrowError("Unexpected value");
+  });
+
   it("should return undefined for undefined input", () => {
     expect(
       unwrap({
@@ -266,14 +283,14 @@ describe("unwrap", () => {
         value: undefined,
         hashByPropertyValue: emptyHashByPropertyValue,
       })
-    ).toStrictEqual([undefined, undefined]);
+    ).toStrictEqual(NULL_UNWRAPPED_VALUE);
   });
 
   it("should return the value from unwrapValue for non-undefined input", () => {
     const value: ConfigValue = { string: "test" };
     expect(
       unwrap({ key, value, hashByPropertyValue: emptyHashByPropertyValue })
-    ).toStrictEqual(["test", undefined]);
+    ).toStrictEqual({ value: "test", reportableValue: undefined });
   });
 });
 
@@ -287,15 +304,15 @@ describe("unwrapPrimitive", () => {
   });
 
   it("should return undefined for undefined input", () => {
-    expect(unwrapPrimitive(key, undefined)).toStrictEqual([
-      undefined,
-      undefined,
-    ]);
+    expect(unwrapPrimitive(key, undefined)).toStrictEqual(NULL_UNWRAPPED_VALUE);
   });
 
   it("should return the value from unwrapValue for non-undefined input", () => {
     const value: ConfigValue = { string: "test" };
-    expect(unwrapPrimitive(key, value)).toStrictEqual(["test", undefined]);
+    expect(unwrapPrimitive(key, value)).toStrictEqual({
+      value: "test",
+      reportableValue: undefined,
+    });
   });
 
   it("should return undefined from unwrapValue for non-primitive input", () => {
@@ -305,7 +322,7 @@ describe("unwrapPrimitive", () => {
         source: ProvidedSource.ENV_VAR,
       },
     };
-    expect(unwrapPrimitive(key, value)).toStrictEqual([undefined, undefined]);
+    expect(unwrapPrimitive(key, value)).toStrictEqual(NULL_UNWRAPPED_VALUE);
 
     expect(jest.mocked(console.error)).toHaveBeenCalledTimes(1);
     expect(jest.mocked(console.error)).toHaveBeenCalledWith(

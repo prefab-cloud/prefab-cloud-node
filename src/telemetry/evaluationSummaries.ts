@@ -74,7 +74,7 @@ export const evaluationSummaries = (
       startAt = startAt ?? now();
 
       if (
-        evaluation.selectedValue === undefined ||
+        evaluation.unwrappedValue === undefined ||
         evaluation.configType === ConfigType.LOG_LEVEL
       ) {
         return;
@@ -90,7 +90,7 @@ export const evaluationSummaries = (
         evaluation.conditionalValueIndex,
         evaluation.configRowIndex,
         valueType(evaluation.unwrappedValue),
-        evaluation.unwrappedValue,
+        evaluation.reportableValue ?? evaluation.unwrappedValue,
         evaluation.weightedValueIndex,
       ]);
 

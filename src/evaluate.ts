@@ -155,8 +155,8 @@ export interface Evaluation {
   configId: Long;
   configKey: string;
   configType: number;
-  selectedValue?: ConfigValue;
   unwrappedValue: GetValue;
+  reportableValue: GetValue;
   conditionalValueIndex: number;
   configRowIndex: number;
   weightedValueIndex?: number;
@@ -178,7 +178,11 @@ export const evaluate = ({
       resolver
     );
 
-  const [unwrappedValue, weightedValueIndex] = unwrap({
+  const {
+    value: unwrappedValue,
+    reportableValue,
+    index: weightedValueIndex,
+  } = unwrap({
     key: config.key,
     config,
     value: selectedValue,
@@ -190,10 +194,10 @@ export const evaluate = ({
     configKey: config.key,
     configId: config.id,
     configType: config.configType,
-    selectedValue,
     conditionalValueIndex,
     configRowIndex,
     unwrappedValue,
     weightedValueIndex,
+    reportableValue,
   };
 };

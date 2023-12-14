@@ -1,4 +1,3 @@
-import Long from "long";
 import basicConfig from "./fixtures/basicConfig";
 import basicLogLevel from "./fixtures/basicLogLevel";
 import envConfig from "./fixtures/envConfig";
@@ -16,16 +15,19 @@ import { evaluate } from "../evaluate";
 import { emptyContexts, projectEnvIdUnderTest } from "./testHelpers";
 import { encrypt, generateNewHexKey } from "../../src/encryption";
 import secretConfig from "./fixtures/secretConfig";
+import secretKeyConfig from "./fixtures/secretKeyConfig";
 import decryptionKeyConfig, {
   decryptionKeyForSecret,
 } from "./fixtures/decryptionKeyConfig";
 import type { Config } from "../proto";
+import { makeConfidential } from "../unwrap";
+import { contextObjToMap } from "../mergeContexts";
 
 const noNamespace = undefined;
 
-// the Resolver is only used to back-reference Segments (which we test in the integration tests) so we can use a stand-in here.
-const emptyResolver = new Resolver(
-  [],
+// the Resolver is only used to back-reference Segments (which we test in the integration tests) and get secret keys so we can use a stand-in here.
+const simpleResolver = new Resolver(
+  [secretKeyConfig],
   projectEnvIdUnderTest,
   noNamespace,
   "error"
@@ -61,6 +63,13 @@ const hotmailEmailContexts = new Map([
   ["user", new Map([["email", "@hotmail.com"]])],
 ]);
 
+const secretContexts = contextObjToMap({
+  user: { trackingId: "SECRET" },
+});
+const confidentialContexts = contextObjToMap({
+  user: { trackingId: "CONFIDENTIAL" },
+});
+
 describe("evaluate", () => {
   it("returns an evaluation with no rules", () => {
     expect(
@@ -69,7 +78,7 @@ describe("evaluate", () => {
         projectEnvId: projectEnvIdUnderTest,
         namespace: noNamespace,
         contexts: emptyContexts,
-        resolver: emptyResolver,
+        resolver: simpleResolver,
       })
     ).toStrictEqual({
       configId: basicConfig.id,
@@ -77,8 +86,8 @@ describe("evaluate", () => {
       configType: basicConfig.configType,
       configRowIndex: 0,
       unwrappedValue: 42,
+      reportableValue: undefined,
       conditionalValueIndex: 0,
-      selectedValue: { int: new Long(42) },
       weightedValueIndex: undefined,
     });
   });
@@ -90,7 +99,7 @@ describe("evaluate", () => {
         projectEnvId: projectEnvIdUnderTest,
         namespace: noNamespace,
         contexts: emptyContexts,
-        resolver: emptyResolver,
+        resolver: simpleResolver,
       })
     ).toStrictEqual({
       configId: basicLogLevel.id,
@@ -99,7 +108,7 @@ describe("evaluate", () => {
       configRowIndex: 0,
       conditionalValueIndex: 0,
       unwrappedValue: 3,
-      selectedValue: { logLevel: 3 },
+      reportableValue: undefined,
       weightedValueIndex: undefined,
     });
   });
@@ -111,7 +120,7 @@ describe("evaluate", () => {
         projectEnvId: projectEnvIdUnderTest,
         namespace: noNamespace,
         contexts: emptyContexts,
-        resolver: emptyResolver,
+        resolver: simpleResolver,
       })
     ).toStrictEqual({
       configId: envConfig.id,
@@ -119,8 +128,8 @@ describe("evaluate", () => {
       configType: envConfig.configType,
       configRowIndex: 0,
       unwrappedValue: ["a", "b", "c", "d"],
+      reportableValue: undefined,
       conditionalValueIndex: 0,
-      selectedValue: { stringList: { values: ["a", "b", "c", "d"] } },
       weightedValueIndex: undefined,
     });
   });
@@ -131,7 +140,7 @@ describe("evaluate", () => {
       namespace: undefined,
       projectEnvId: projectEnvIdUnderTest,
       contexts,
-      resolver: emptyResolver,
+      resolver: simpleResolver,
     });
 
     expect(evaluate(args(ukContexts))).toStrictEqual({
@@ -140,16 +149,8 @@ describe("evaluate", () => {
       conditionalValueIndex: 0,
       configRowIndex: 0,
       configType: 2,
-      selectedValue: {
-        weightedValues: {
-          hashByPropertyName: "user.trackingId",
-          weightedValues: [
-            { value: { bool: false }, weight: 90 },
-            { value: { bool: true }, weight: 10 },
-          ],
-        },
-      },
       unwrappedValue: true,
+      reportableValue: undefined,
       weightedValueIndex: 1,
     });
 
@@ -159,16 +160,8 @@ describe("evaluate", () => {
       conditionalValueIndex: 0,
       configRowIndex: 0,
       configType: 2,
-      selectedValue: {
-        weightedValues: {
-          hashByPropertyName: "user.trackingId",
-          weightedValues: [
-            { value: { bool: false }, weight: 90 },
-            { value: { bool: true }, weight: 10 },
-          ],
-        },
-      },
       unwrappedValue: false,
+      reportableValue: undefined,
       weightedValueIndex: 0,
     });
   });
@@ -179,7 +172,7 @@ describe("evaluate", () => {
       projectEnvId: projectEnvIdUnderTest,
       namespace,
       contexts: emptyContexts,
-      resolver: emptyResolver,
+      resolver: simpleResolver,
     });
 
     expect(evaluate(args("my-namespace"))).toStrictEqual({
@@ -187,9 +180,9 @@ describe("evaluate", () => {
       configType: namespaceConfig.configType,
       configKey: namespaceConfig.key,
       unwrappedValue: ["in-namespace"],
+      reportableValue: undefined,
       configRowIndex: 0,
       conditionalValueIndex: 1,
-      selectedValue: { stringList: { values: ["in-namespace"] } },
       weightedValueIndex: undefined,
     });
 
@@ -198,9 +191,9 @@ describe("evaluate", () => {
       configKey: namespaceConfig.key,
       configType: namespaceConfig.configType,
       unwrappedValue: ["wrong-namespace"],
+      reportableValue: undefined,
       configRowIndex: 0,
       conditionalValueIndex: 0,
-      selectedValue: { stringList: { values: ["wrong-namespace"] } },
       weightedValueIndex: undefined,
     });
 
@@ -209,9 +202,9 @@ describe("evaluate", () => {
       configKey: namespaceConfig.key,
       configType: namespaceConfig.configType,
       unwrappedValue: ["not-in-namespace"],
+      reportableValue: undefined,
       configRowIndex: 0,
       conditionalValueIndex: 2,
-      selectedValue: { stringList: { values: ["not-in-namespace"] } },
       weightedValueIndex: undefined,
     });
 
@@ -220,22 +213,20 @@ describe("evaluate", () => {
       configKey: namespaceConfig.key,
       configType: namespaceConfig.configType,
       unwrappedValue: ["not-in-namespace"],
+      reportableValue: undefined,
       configRowIndex: 0,
       conditionalValueIndex: 2,
-      selectedValue: { stringList: { values: ["not-in-namespace"] } },
       weightedValueIndex: undefined,
     });
   });
 
   it("returns an evaluation for a PROP_IS_ONE_OF match", () => {
-    const args = (
-      contexts: Map<string, Map<string, string>>
-    ): EvaluateArgs => ({
+    const args = (contexts: Contexts): EvaluateArgs => ({
       config: propIsOneOf,
       projectEnvId: projectEnvIdUnderTest,
       namespace: noNamespace,
       contexts,
-      resolver: emptyResolver,
+      resolver: simpleResolver,
     });
 
     expect(evaluate(args(emptyContexts))).toStrictEqual({
@@ -243,9 +234,9 @@ describe("evaluate", () => {
       configKey: propIsOneOf.key,
       configType: propIsOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
-      conditionalValueIndex: 2,
+      conditionalValueIndex: 4,
       weightedValueIndex: undefined,
     });
 
@@ -254,8 +245,8 @@ describe("evaluate", () => {
       configKey: propIsOneOf.key,
       configType: propIsOneOf.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -265,8 +256,8 @@ describe("evaluate", () => {
       configKey: propIsOneOf.key,
       configType: propIsOneOf.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -276,22 +267,42 @@ describe("evaluate", () => {
       configKey: propIsOneOf.key,
       configType: propIsOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
+      conditionalValueIndex: 4,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(secretContexts))).toStrictEqual({
+      configId: propIsOneOf.id,
+      configKey: propIsOneOf.key,
+      configType: propIsOneOf.configType,
+      unwrappedValue: "some-secret",
+      reportableValue: "*****cda9e",
+      configRowIndex: 0,
+      conditionalValueIndex: 3,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(confidentialContexts))).toStrictEqual({
+      configId: propIsOneOf.id,
+      configKey: propIsOneOf.key,
+      configType: propIsOneOf.configType,
+      unwrappedValue: "For British Eyes Only",
+      reportableValue: "*****b9002",
+      configRowIndex: 0,
       conditionalValueIndex: 2,
       weightedValueIndex: undefined,
     });
   });
 
   it("returns an evaluation for a PROP_IS_NOT_ONE_OF match", () => {
-    const args = (
-      contexts: Map<string, Map<string, string>>
-    ): EvaluateArgs => ({
+    const args = (contexts: Contexts): EvaluateArgs => ({
       config: propIsNotOneOf,
       projectEnvId: projectEnvIdUnderTest,
       namespace: noNamespace,
       contexts,
-      resolver: emptyResolver,
+      resolver: simpleResolver,
     });
 
     expect(evaluate(args(emptyContexts))).toStrictEqual({
@@ -299,8 +310,8 @@ describe("evaluate", () => {
       configKey: propIsNotOneOf.key,
       configType: propIsNotOneOf.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
@@ -310,8 +321,8 @@ describe("evaluate", () => {
       configKey: propIsNotOneOf.key,
       configType: propIsNotOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -321,8 +332,8 @@ describe("evaluate", () => {
       configKey: propIsNotOneOf.key,
       configType: propIsNotOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -333,21 +344,19 @@ describe("evaluate", () => {
       configType: propIsNotOneOf.configType,
       configRowIndex: 0,
       unwrappedValue: "correct",
-      selectedValue: { string: "correct" },
+      reportableValue: undefined,
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
   });
 
   it("returns an evaluation for a PROP_ENDS_WITH_ONE_OF match", () => {
-    const args = (
-      contexts: Map<string, Map<string, string>>
-    ): EvaluateArgs => ({
+    const args = (contexts: Contexts): EvaluateArgs => ({
       config: propEndsWithOneOf,
       projectEnvId: projectEnvIdUnderTest,
       namespace: noNamespace,
       contexts,
-      resolver: emptyResolver,
+      resolver: simpleResolver,
     });
 
     expect(evaluate(args(emptyContexts))).toStrictEqual({
@@ -355,8 +364,8 @@ describe("evaluate", () => {
       configKey: propEndsWithOneOf.key,
       configType: propEndsWithOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -366,8 +375,8 @@ describe("evaluate", () => {
       configKey: propEndsWithOneOf.key,
       configType: propEndsWithOneOf.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
@@ -377,8 +386,8 @@ describe("evaluate", () => {
       configKey: propEndsWithOneOf.key,
       configType: propEndsWithOneOf.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
@@ -388,22 +397,20 @@ describe("evaluate", () => {
       configKey: propEndsWithOneOf.key,
       configType: propEndsWithOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
   });
 
   it("returns an evaluation for a PROP_DOES_NOT_END_WITH_ONE_OF match", () => {
-    const args = (
-      contexts: Map<string, Map<string, string>>
-    ): EvaluateArgs => ({
+    const args = (contexts: Contexts): EvaluateArgs => ({
       config: propDoesNotEndWithOneOf,
       projectEnvId: projectEnvIdUnderTest,
       namespace: noNamespace,
       contexts,
-      resolver: emptyResolver,
+      resolver: simpleResolver,
     });
 
     expect(evaluate(args(emptyContexts))).toStrictEqual({
@@ -411,8 +418,8 @@ describe("evaluate", () => {
       configKey: propDoesNotEndWithOneOf.key,
       configType: propDoesNotEndWithOneOf.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
@@ -422,8 +429,8 @@ describe("evaluate", () => {
       configKey: propDoesNotEndWithOneOf.key,
       configType: propDoesNotEndWithOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -433,8 +440,8 @@ describe("evaluate", () => {
       configKey: propDoesNotEndWithOneOf.key,
       configType: propDoesNotEndWithOneOf.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -444,22 +451,20 @@ describe("evaluate", () => {
       configKey: propDoesNotEndWithOneOf.key,
       configType: propDoesNotEndWithOneOf.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
   });
 
   it("returns an evaluation for a PROP_IS_ONE_OF and PROP_ENDS_WITH_ONE_OF match", () => {
-    const args = (
-      contexts: Map<string, Map<string, string>>
-    ): EvaluateArgs => ({
+    const args = (contexts: Contexts): EvaluateArgs => ({
       config: propIsOneOfAndEndsWith,
       projectEnvId: projectEnvIdUnderTest,
       namespace: noNamespace,
       contexts,
-      resolver: emptyResolver,
+      resolver: simpleResolver,
     });
 
     expect(evaluate(args(emptyContexts))).toStrictEqual({
@@ -467,8 +472,8 @@ describe("evaluate", () => {
       configKey: propIsOneOfAndEndsWith.key,
       configType: propIsOneOfAndEndsWith.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -478,8 +483,8 @@ describe("evaluate", () => {
       configKey: propIsOneOfAndEndsWith.key,
       configType: propIsOneOfAndEndsWith.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -489,8 +494,8 @@ describe("evaluate", () => {
       configKey: propIsOneOfAndEndsWith.key,
       configType: propIsOneOfAndEndsWith.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -509,8 +514,8 @@ describe("evaluate", () => {
       configKey: propIsOneOfAndEndsWith.key,
       configType: propIsOneOfAndEndsWith.configType,
       unwrappedValue: "default",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "default" },
       conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
@@ -529,8 +534,8 @@ describe("evaluate", () => {
       configKey: propIsOneOfAndEndsWith.key,
       configType: propIsOneOfAndEndsWith.configType,
       unwrappedValue: "correct",
+      reportableValue: undefined,
       configRowIndex: 0,
-      selectedValue: { string: "correct" },
       conditionalValueIndex: 0,
       weightedValueIndex: undefined,
     });
@@ -565,14 +570,10 @@ describe("evaluate", () => {
       configId: secret.id,
       configKey: secret.key,
       configType: secret.configType,
+      reportableValue: makeConfidential(encrypted),
       configRowIndex: 0,
       unwrappedValue: clearText,
       conditionalValueIndex: 0,
-      selectedValue: {
-        confidential: true,
-        decryptWith: decryptionConfig.key,
-        string: encrypted,
-      },
       weightedValueIndex: undefined,
     });
   });
@@ -584,6 +585,13 @@ describe("evaluate", () => {
     const encrypted = encrypt(clearText, decryptionKey);
 
     const secret: Config = secretConfig(encrypted);
+
+    const emptyResolver = new Resolver(
+      [],
+      projectEnvIdUnderTest,
+      noNamespace,
+      "error"
+    );
 
     expect(() => {
       evaluate({
