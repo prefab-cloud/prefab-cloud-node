@@ -67,6 +67,10 @@ export const evaluationSummaries = (
     timeout: undefined,
 
     push(evaluation: Evaluation): void {
+      if (evaluation.configId === undefined) {
+        return;
+      }
+
       if (data.size >= maxDataSize) {
         return;
       }

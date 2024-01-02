@@ -1,13 +1,12 @@
 import type Long from "long";
 import type {
   ConditionalValue,
-  Config,
   ConfigRow,
   ConfigValue,
   Criterion,
 } from "./proto";
 import { Criterion_CriterionOperator } from "./proto";
-import type { Resolver } from "./resolver";
+import type { Resolver, MinimumConfig } from "./resolver";
 import type { Contexts, HashByPropertyValue, ProjectEnvId } from "./types";
 import type { GetValue } from "./unwrap";
 import { unwrap } from "./unwrap";
@@ -144,7 +143,7 @@ const matchingConfigValue = (
 };
 
 export interface EvaluateArgs {
-  config: Config;
+  config: MinimumConfig;
   projectEnvId: ProjectEnvId;
   namespace: string | undefined;
   contexts: Contexts;
@@ -152,7 +151,7 @@ export interface EvaluateArgs {
 }
 
 export interface Evaluation {
-  configId: Long;
+  configId: Long | undefined;
   configKey: string;
   configType: number;
   unwrappedValue: GetValue;

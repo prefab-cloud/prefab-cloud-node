@@ -1,4 +1,5 @@
 import * as path from "path";
+import Long from "long";
 
 import basicConfig from "./fixtures/basicConfig";
 import basicFlag from "./fixtures/basicFlag";
@@ -125,6 +126,18 @@ describe("prefab", () => {
       await prefab.init();
 
       expect(prefab.get("basic.provided")).toEqual("EXAMPLE");
+    });
+
+    it("allows setting a run-time config", async () => {
+      const prefab = new Prefab({
+        apiKey: validApiKey,
+        collectLoggerCounts: false,
+        contextUploadMode: "none",
+      });
+
+      await prefab.init([["hello", { int: new Long(19) }]]);
+
+      expect(prefab.get("hello")).toEqual(19);
     });
   });
 
@@ -311,6 +324,18 @@ describe("prefab", () => {
       await prefab.init();
 
       expect(prefab.get("from.the.datafile")).toEqual("it.works");
+    });
+
+    it("can use a datafile and a run-time config", async () => {
+      const prefab = new Prefab({
+        apiKey: irrelevant,
+        datafile: path.resolve("./src/__tests__/fixtures/datafile.json"),
+      });
+
+      await prefab.init([["example", { string: "ok" }]]);
+
+      expect(prefab.get("from.the.datafile")).toEqual("it.works");
+      expect(prefab.get("example")).toEqual("ok");
     });
   });
 
@@ -631,5 +656,26 @@ describe("prefab", () => {
     }
 
     expect(mock).toHaveBeenCalled();
+  });
+
+  describe("set", () => {
+    it("allows setting a run-time config value for a secret lookup", () => {
+      const decryptionKey = generateNewHexKey();
+      const clearText = "very secret stuff";
+
+      const encrypted = encrypt(clearText, decryptionKey);
+
+      const secret: Config = secretConfig(encrypted);
+
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig([secret], projectEnvIdUnderTest, new Map());
+
+      prefab.set("prefab.secrets.encryption.key", { string: decryptionKey });
+
+      expect(prefab.get("prefab.secrets.encryption.key")).toStrictEqual(
+        decryptionKey
+      );
+      expect(prefab.get(secret.key)).toEqual(clearText);
+    });
   });
 });
