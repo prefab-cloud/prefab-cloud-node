@@ -1,4 +1,5 @@
 import type { ConfigValue, StringList } from "./proto";
+import { Config_ValueType } from "./proto";
 
 type ConfigValueKey = keyof ConfigValue;
 
@@ -41,4 +42,27 @@ export const wrap = (value: unknown): Record<string, ConfigValue> => {
   return {
     [valueType(value)]: value as ConfigValue,
   };
+};
+
+export const configValueType = (
+  value: ConfigValue
+): Config_ValueType | undefined => {
+  switch (Object.keys(value)[0]) {
+    case "string":
+      return Config_ValueType.STRING;
+    case "int":
+      return Config_ValueType.INT;
+    case "double":
+      return Config_ValueType.DOUBLE;
+    case "bool":
+      return Config_ValueType.BOOL;
+    case "stringList":
+      return Config_ValueType.STRING_LIST;
+    case "logLevel":
+      return Config_ValueType.LOG_LEVEL;
+    case "intRange":
+      return Config_ValueType.INT_RANGE;
+    default:
+      return undefined;
+  }
 };

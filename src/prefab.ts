@@ -2,7 +2,7 @@ import crypto from "crypto";
 import type Long from "long";
 import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
-import { Resolver } from "./resolver";
+import { Resolver, type MinimumConfig } from "./resolver";
 import type {
   ContextObj,
   Contexts,
@@ -163,7 +163,9 @@ class Prefab implements PrefabInterface {
     };
   }
 
-  async init(): Promise<void> {
+  async init(
+    runtimeConfig: Array<[key: string, value: ConfigValue]> = []
+  ): Promise<void> {
     this.initCount += 1;
 
     if (this.initCount > 1 && (this.enableSSE || this.enablePolling)) {
@@ -179,6 +181,10 @@ class Prefab implements PrefabInterface {
       });
 
     this.setConfig(configs, projectEnvId, defaultContext);
+
+    runtimeConfig.forEach(([key, value]) => {
+      this.set(key, value);
+    });
 
     if (this.enableSSE) {
       this.startSSE(startAtId);
@@ -315,7 +321,7 @@ class Prefab implements PrefabInterface {
     return this.resolver.isFeatureEnabled(key, contexts);
   }
 
-  raw(key: string): Config | undefined {
+  raw(key: string): MinimumConfig | undefined {
     requireResolver(this.resolver);
 
     return this.resolver.raw(key);
@@ -331,6 +337,12 @@ class Prefab implements PrefabInterface {
     requireResolver(this.resolver);
 
     return this.resolver.defaultContext;
+  }
+
+  set(key: string, value: ConfigValue): void {
+    requireResolver(this.resolver);
+
+    this.resolver.set(key, value);
   }
 }
 

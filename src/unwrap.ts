@@ -1,9 +1,9 @@
 import { createHash } from "crypto";
-import type { Config, ConfigValue, Provided, WeightedValue } from "./proto";
+import type { ConfigValue, Provided, WeightedValue } from "./proto";
 import { Config_ValueType, ProvidedSource } from "./proto";
 import type { HashByPropertyValue } from "./types";
 import { isNonNullable } from "./types";
-import type { Resolver } from "./resolver";
+import type { MinimumConfig, Resolver } from "./resolver";
 import { decrypt } from "./encryption";
 
 import murmurhash from "murmurhash";
@@ -32,7 +32,7 @@ export const NULL_UNWRAPPED_VALUE: UnwrappedValue = {
 };
 
 const kindOf = (
-  config: Config | undefined,
+  config: MinimumConfig | undefined,
   value: ConfigValue
 ): keyof ConfigValue | undefined => {
   const kind: keyof ConfigValue | undefined =
@@ -98,7 +98,7 @@ const unwrapWeightedValues = (
 };
 
 const providedValue = (
-  config: Config,
+  config: MinimumConfig,
   provided: Provided | undefined
 ): GetValue => {
   if (provided == null) {
@@ -149,7 +149,7 @@ const configValueTypeToString = (
   }
 };
 
-const coerceIntoType = (config: Config, value: string): GetValue => {
+const coerceIntoType = (config: MinimumConfig, value: string): GetValue => {
   switch (config.valueType) {
     case Config_ValueType.STRING:
       return value;
@@ -183,7 +183,7 @@ export const unwrapValue = ({
   value: ConfigValue;
   hashByPropertyValue: HashByPropertyValue;
   primitivesOnly: boolean;
-  config?: Config;
+  config?: MinimumConfig;
   resolver?: Resolver;
 }): Omit<UnwrappedValue, "reportableValue"> => {
   if (primitivesOnly) {
@@ -241,7 +241,11 @@ export const unwrapValue = ({
     case "logLevel":
       return { value: value.logLevel };
     default:
-      throw new Error(`Unexpected value ${JSON.stringify(value)}`);
+      throw new Error(
+        `Unexpected value ${JSON.stringify(value)} | kind=${JSON.stringify(
+          kind
+        )}`
+      );
   }
 };
 
@@ -257,7 +261,7 @@ export const unwrap = ({
   value: ConfigValue | undefined;
   hashByPropertyValue?: HashByPropertyValue;
   primitivesOnly?: boolean;
-  config?: Config;
+  config?: MinimumConfig;
   resolver?: Resolver;
 }): UnwrappedValue => {
   if (value === undefined) {
