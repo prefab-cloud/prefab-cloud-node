@@ -1,4 +1,6 @@
 import type { Config, ConfigValue } from "./proto";
+import { shouldLog, makeLogger, parseLevel } from "./logger";
+import type { ValidLogLevelName, ValidLogLevel } from "./logger";
 import { ConfigType } from "./proto";
 import type {
   ContextObj,
@@ -8,6 +10,7 @@ import type {
   ProjectEnvId,
 } from "./types";
 import type { PrefabInterface, Telemetry } from "./prefab";
+import { PREFAB_DEFAULT_LOG_LEVEL } from "./prefab";
 
 import { mergeContexts, contextObjToMap } from "./mergeContexts";
 
@@ -51,14 +54,17 @@ const mergeDefaultContexts = (
   return mergedContexts;
 };
 
+let id = 0;
+
 class Resolver implements PrefabInterface {
   private readonly config: Map<string, MinimumConfig>;
   private readonly projectEnvId: ProjectEnvId;
   private readonly namespace: string | undefined;
   private readonly onNoDefault: OnNoDefault;
-  private parentContext?: Contexts;
-  private readonly telemetry: Telemetry | undefined;
+  public contexts?: Contexts;
+  readonly telemetry: Telemetry | undefined;
   private readonly onUpdate: (configs: Config[]) => void;
+  public id: number;
   public readonly defaultContext?: Contexts;
 
   constructor(
@@ -71,6 +77,8 @@ class Resolver implements PrefabInterface {
     onUpdate?: (configs: Config[]) => void,
     defaultContext?: Contexts
   ) {
+    id += 1;
+    this.id = id;
     this.config = Array.isArray(configs)
       ? new Map(configs.map((config) => [config.key, config]))
       : configs;
@@ -78,7 +86,7 @@ class Resolver implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
     this.defaultContext = defaultContext ?? new Map();
-    this.parentContext = mergeDefaultContexts(
+    this.contexts = mergeDefaultContexts(
       contexts ?? new Map(),
       defaultContext ?? new Map()
     );
@@ -105,8 +113,8 @@ class Resolver implements PrefabInterface {
     }
 
     if (defaultContext !== undefined) {
-      this.parentContext = mergeDefaultContexts(
-        this.parentContext ?? new Map(),
+      this.contexts = mergeDefaultContexts(
+        this.contexts ?? new Map(),
         defaultContext
       );
     }
@@ -141,7 +149,7 @@ class Resolver implements PrefabInterface {
 
   get(
     key: string,
-    contexts?: Contexts | ContextObj,
+    localContexts?: Contexts | ContextObj,
     defaultValue: GetValue | symbol = NOT_PROVIDED,
     onNoDefault: OnNoDefault = this.onNoDefault
   ): GetValue {
@@ -164,8 +172,8 @@ class Resolver implements PrefabInterface {
     }
 
     const mergedContexts = mergeContexts(
-      this.parentContext,
-      contexts ?? emptyContexts
+      this.contexts,
+      localContexts ?? emptyContexts
     );
 
     if (this.telemetry !== undefined && config.id !== undefined) {
@@ -207,6 +215,59 @@ class Resolver implements PrefabInterface {
 
   keys(): string[] {
     return Array.from(this.config.keys());
+  }
+
+  logger(
+    loggerName: string,
+    defaultLevel: ValidLogLevelName | ValidLogLevel,
+    contexts?: Contexts | ContextObj
+  ): ReturnType<typeof makeLogger> {
+    const parsedDefaultLevel = parseLevel(defaultLevel);
+
+    if (parsedDefaultLevel === undefined) {
+      throw new Error(`Invalid default level: ${defaultLevel}`);
+    }
+
+    return makeLogger({
+      loggerName,
+      defaultLevel: parsedDefaultLevel,
+      contexts: contexts ?? this.contexts,
+      resolver: this,
+    });
+  }
+
+  shouldLog({
+    loggerName,
+    desiredLevel,
+    defaultLevel,
+    contexts,
+  }: {
+    loggerName: string;
+    desiredLevel: ValidLogLevel | ValidLogLevelName;
+    defaultLevel?: ValidLogLevel | ValidLogLevelName;
+    contexts?: Contexts | ContextObj;
+  }): boolean {
+    const numericDesiredLevel = parseLevel(desiredLevel);
+
+    if (numericDesiredLevel === undefined) {
+      console.warn(
+        `[prefab]: Invalid desiredLevel \`${desiredLevel}\` provided to shouldLog. Returning \`true\``
+      );
+
+      return true;
+    }
+
+    if (this.telemetry != null) {
+      this.telemetry.knownLoggers.push(loggerName, numericDesiredLevel);
+    }
+
+    return shouldLog({
+      loggerName,
+      desiredLevel: numericDesiredLevel,
+      contexts: contexts ?? this.contexts,
+      defaultLevel: parseLevel(defaultLevel) ?? PREFAB_DEFAULT_LOG_LEVEL,
+      resolver: this,
+    });
   }
 }
 

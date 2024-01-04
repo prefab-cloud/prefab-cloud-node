@@ -10,11 +10,12 @@ import propIsOneOf from "./fixtures/propIsOneOf";
 import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
 import { Prefab, MULTIPLE_INIT_WARNING } from "../prefab";
 import type { Contexts } from "../types";
-import { LogLevel } from "../proto";
+import { LogLevel, Criterion_CriterionOperator } from "../proto";
 import type { Config } from "../proto";
 import { encrypt, generateNewHexKey } from "../../src/encryption";
 import secretConfig from "./fixtures/secretConfig";
 import decryptionKeyConfig from "./fixtures/decryptionKeyConfig";
+import { wordLevelToNumber } from "../logger";
 
 import {
   nTimes,
@@ -735,6 +736,152 @@ describe("prefab", () => {
         ["WARN  a.b.c.d: test"],
         ["ERROR a.b.c.d: test"],
         ["FATAL a.b.c.d: test"],
+      ]);
+    });
+
+    it("can use the JIT context when initializing the logger", () => {
+      const spy = jest.spyOn(console, "log").mockImplementation();
+
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({
+        apiKey: irrelevant,
+        collectLoggerCounts: false,
+      });
+
+      const levelAtWithRule = levelAt(loggerName, "info");
+
+      levelAtWithRule.rows.unshift({
+        properties: {},
+        values: [
+          {
+            criteria: [
+              {
+                propertyName: "user.country",
+                operator: Criterion_CriterionOperator.PROP_IS_ONE_OF,
+                valueToMatch: { stringList: { values: ["US"] } },
+              },
+            ],
+            value: { logLevel: wordLevelToNumber("debug" as const) },
+          },
+        ],
+      });
+
+      prefab.setConfig([levelAtWithRule], projectEnvIdUnderTest, new Map());
+
+      // we initialize outside the inContext block and provide JIT context
+      const logger = prefab.logger(loggerName, "info", {
+        user: { country: "US" },
+      });
+
+      // but evaluate inside the context
+      prefab.inContext({ user: { country: "FR" } }, (pf) => {
+        expect(logger.trace("test")).toBeUndefined();
+        expect(logger.debug("test")).toEqual("DEBUG a.b.c.d: test");
+        expect(logger.info("test")).toEqual("INFO  a.b.c.d: test");
+        expect(logger.warn("test")).toEqual("WARN  a.b.c.d: test");
+        expect(logger.error("test")).toEqual("ERROR a.b.c.d: test");
+        expect(logger.fatal("test")).toEqual("FATAL a.b.c.d: test");
+
+        const innerLoggerInheritedContext = pf.logger(loggerName, "info");
+        expect(innerLoggerInheritedContext.trace("ilic")).toBeUndefined();
+        expect(innerLoggerInheritedContext.debug("ilic")).toBeUndefined();
+        expect(innerLoggerInheritedContext.info("ilic")).toEqual(
+          "INFO  a.b.c.d: ilic"
+        );
+
+        const innerLoggerJITContext = prefab.logger(loggerName, "info", {
+          user: { country: "US" },
+        });
+        expect(innerLoggerJITContext.trace("iljc")).toBeUndefined();
+        expect(innerLoggerJITContext.debug("iljc")).toEqual(
+          "DEBUG a.b.c.d: iljc"
+        );
+        expect(innerLoggerJITContext.info("iljc")).toEqual(
+          "INFO  a.b.c.d: iljc"
+        );
+      });
+
+      expect(console.log).toHaveBeenCalledTimes(8);
+      expect(spy.mock.calls).toEqual([
+        ["DEBUG a.b.c.d: test"],
+        ["INFO  a.b.c.d: test"],
+        ["WARN  a.b.c.d: test"],
+        ["ERROR a.b.c.d: test"],
+        ["FATAL a.b.c.d: test"],
+        ["INFO  a.b.c.d: ilic"],
+        ["DEBUG a.b.c.d: iljc"],
+        ["INFO  a.b.c.d: iljc"],
+      ]);
+    });
+
+    it("uses the context it is initialized in by default", () => {
+      const spy = jest.spyOn(console, "log").mockImplementation();
+
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({
+        apiKey: irrelevant,
+        collectLoggerCounts: false,
+      });
+
+      const levelAtWithRule = levelAt(loggerName, "info");
+
+      levelAtWithRule.rows.unshift({
+        properties: {},
+        values: [
+          {
+            criteria: [
+              {
+                propertyName: "user.country",
+                operator: Criterion_CriterionOperator.PROP_IS_ONE_OF,
+                valueToMatch: {
+                  stringList: {
+                    values: ["US"],
+                  },
+                },
+              },
+            ],
+            value: {
+              logLevel: wordLevelToNumber("debug" as const),
+            },
+          },
+        ],
+      });
+
+      prefab.setConfig([levelAtWithRule], projectEnvIdUnderTest, new Map());
+
+      const result = prefab.inContext({ user: { country: "US" } }, (pf) => {
+        // we initialize inside the context
+        const logger = pf.logger(loggerName, "info");
+
+        expect(logger.trace("test")).toBeUndefined();
+        expect(logger.debug("test")).toEqual("DEBUG a.b.c.d: test");
+        expect(logger.info("test")).toEqual("INFO  a.b.c.d: test");
+        expect(logger.warn("test")).toEqual("WARN  a.b.c.d: test");
+        expect(logger.error("test")).toEqual("ERROR a.b.c.d: test");
+        expect(logger.fatal("test")).toEqual("FATAL a.b.c.d: test");
+
+        // Providing a context should result in that context being used
+        const jitLogger = pf.logger(loggerName, "info", {
+          user: { country: "FR" },
+        });
+        expect(jitLogger.debug("jitlogger")).toBeUndefined();
+        expect(jitLogger.info("jitlogger")).toEqual("INFO  a.b.c.d: jitlogger");
+
+        return "via inContext";
+      });
+
+      expect(result).toEqual("via inContext");
+
+      expect(console.log).toHaveBeenCalledTimes(6);
+      expect(spy.mock.calls).toEqual([
+        ["DEBUG a.b.c.d: test"],
+        ["INFO  a.b.c.d: test"],
+        ["WARN  a.b.c.d: test"],
+        ["ERROR a.b.c.d: test"],
+        ["FATAL a.b.c.d: test"],
+        ["INFO  a.b.c.d: jitlogger"],
       ]);
     });
   });

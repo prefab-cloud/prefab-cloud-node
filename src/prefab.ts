@@ -23,8 +23,8 @@ import type {
   ConfigRow,
   Provided,
 } from "./proto";
-import { makeLogger, shouldLog, wordLevelToNumber, parseLevel } from "./logger";
-import type { ValidLogLevelName, ValidLogLevel } from "./logger";
+import { wordLevelToNumber, parseLevel } from "./logger";
+import type { ValidLogLevelName, ValidLogLevel, makeLogger } from "./logger";
 import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
 import { TelemetryReporter } from "./telemetry/reporter";
@@ -37,7 +37,7 @@ import { evaluationSummaries } from "./telemetry/evaluationSummaries";
 import { encrypt, generateNewHexKey } from "./encryption";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
-const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
+export const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
 export const MULTIPLE_INIT_WARNING =
   "[prefab] init() called multiple times. This is generally not recommended as it can lead to multiple concurrent SSE connections and/or redundant polling. A Prefab instance is typically meant to be long-lived and exist outside of your request/response life-cycle. If you're using `init()` to change context, you're better off using `inContext` or setting per-request context to pass to your `get`/etc. calls.";
 
@@ -56,6 +56,22 @@ export interface PrefabInterface {
     defaultValue?: GetValue
   ) => GetValue;
   isFeatureEnabled: (key: string, contexts?: Contexts | ContextObj) => boolean;
+  logger: (
+    loggerName: string,
+    defaultLevel: ValidLogLevelName
+  ) => ReturnType<typeof makeLogger>;
+  shouldLog: ({
+    loggerName,
+    desiredLevel,
+    defaultLevel,
+    contexts,
+  }: {
+    loggerName: string;
+    desiredLevel: ValidLogLevel | ValidLogLevelName;
+    defaultLevel?: ValidLogLevel | ValidLogLevelName;
+    contexts?: Contexts | ContextObj;
+  }) => boolean;
+  telemetry?: Telemetry;
 }
 
 export interface Telemetry {
@@ -203,21 +219,16 @@ class Prefab implements PrefabInterface {
 
   logger(
     loggerName: string,
-    defaultLevel?: ValidLogLevelName
+    defaultLevel?: ValidLogLevelName,
+    contexts?: Contexts | ContextObj
   ): ReturnType<typeof makeLogger> {
     requireResolver(this.resolver);
 
-    const parsedDefaultLevel = parseLevel(defaultLevel);
-
-    if (parsedDefaultLevel === undefined && defaultLevel !== undefined) {
-      throw new Error(`Invalid default level: ${defaultLevel}`);
-    }
-
-    return makeLogger({
+    return this.resolver.logger(
       loggerName,
-      defaultLevel: parsedDefaultLevel ?? this.defaultLogLevel,
-      resolver: this.resolver,
-    });
+      defaultLevel ?? this.defaultLogLevel,
+      contexts
+    );
   }
 
   /* eslint-disable-next-line @typescript-eslint/promise-function-async */
@@ -318,6 +329,15 @@ class Prefab implements PrefabInterface {
     defaultLevel?: ValidLogLevel | ValidLogLevelName;
     contexts?: Contexts | ContextObj;
   }): boolean {
+    if (this.resolver != null) {
+      return this.resolver.shouldLog({
+        loggerName,
+        desiredLevel,
+        defaultLevel,
+        contexts,
+      });
+    }
+
     const numericDesiredLevel = parseLevel(desiredLevel);
 
     if (numericDesiredLevel === undefined) {
@@ -328,21 +348,11 @@ class Prefab implements PrefabInterface {
       return true;
     }
 
-    this.telemetry.knownLoggers.push(loggerName, numericDesiredLevel);
-
-    if (this.resolver !== undefined) {
-      return shouldLog({
-        loggerName,
-        desiredLevel: numericDesiredLevel,
-        contexts,
-        resolver: this.resolver,
-        defaultLevel: parseLevel(defaultLevel) ?? PREFAB_DEFAULT_LOG_LEVEL,
-      });
-    }
-
     console.warn(
       `[prefab] Still initializing... Comparing against defaultLogLevel setting: ${this.defaultLogLevel}`
     );
+
+    this.telemetry.knownLoggers.push(loggerName, numericDesiredLevel);
 
     return (
       (parseLevel(defaultLevel) ?? this.defaultLogLevel) <= numericDesiredLevel
