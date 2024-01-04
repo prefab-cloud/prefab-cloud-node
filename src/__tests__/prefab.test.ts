@@ -703,6 +703,42 @@ describe("prefab", () => {
     });
   });
 
+  describe("logger", () => {
+    it("creates a logger from a path and defaultLevel", () => {
+      const spy = jest.spyOn(console, "log").mockImplementation();
+
+      const loggerName = "a.b.c.d";
+
+      const prefab = new Prefab({
+        apiKey: irrelevant,
+        collectLoggerCounts: false,
+      });
+
+      prefab.setConfig(
+        [levelAt(loggerName, "info")],
+        projectEnvIdUnderTest,
+        new Map()
+      );
+
+      const logger = prefab.logger(loggerName, "info");
+
+      expect(logger.trace("test")).toBeUndefined();
+      expect(logger.debug("test")).toBeUndefined();
+      expect(logger.info("test")).toEqual("INFO  a.b.c.d: test");
+      expect(logger.warn("test")).toEqual("WARN  a.b.c.d: test");
+      expect(logger.error("test")).toEqual("ERROR a.b.c.d: test");
+      expect(logger.fatal("test")).toEqual("FATAL a.b.c.d: test");
+
+      expect(console.log).toHaveBeenCalledTimes(4);
+      expect(spy.mock.calls).toEqual([
+        ["INFO  a.b.c.d: test"],
+        ["WARN  a.b.c.d: test"],
+        ["ERROR a.b.c.d: test"],
+        ["FATAL a.b.c.d: test"],
+      ]);
+    });
+  });
+
   it("can fire onUpdate when the resolver sets config", async () => {
     const mock = jest.fn();
 

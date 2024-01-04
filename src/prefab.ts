@@ -23,7 +23,7 @@ import type {
   ConfigRow,
   Provided,
 } from "./proto";
-import { shouldLog, wordLevelToNumber, parseLevel } from "./logger";
+import { makeLogger, shouldLog, wordLevelToNumber, parseLevel } from "./logger";
 import type { ValidLogLevelName, ValidLogLevel } from "./logger";
 import type { GetValue } from "./unwrap";
 import { SSEConnection } from "./sseConnection";
@@ -198,6 +198,25 @@ class Prefab implements PrefabInterface {
 
     setTimeout(() => {
       TelemetryReporter.start(Object.values(this.telemetry));
+    });
+  }
+
+  logger(
+    loggerName: string,
+    defaultLevel?: ValidLogLevelName
+  ): ReturnType<typeof makeLogger> {
+    requireResolver(this.resolver);
+
+    const parsedDefaultLevel = parseLevel(defaultLevel);
+
+    if (parsedDefaultLevel === undefined && defaultLevel !== undefined) {
+      throw new Error(`Invalid default level: ${defaultLevel}`);
+    }
+
+    return makeLogger({
+      loggerName,
+      defaultLevel: parsedDefaultLevel ?? this.defaultLogLevel,
+      resolver: this.resolver,
     });
   }
 
