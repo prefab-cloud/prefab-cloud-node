@@ -93,10 +93,12 @@ export const makeLogger = ({
   loggerName,
   defaultLevel,
   resolver,
+  contexts: makeLoggerLevelContexts,
 }: {
   loggerName: string;
   defaultLevel: ValidLogLevel;
   resolver: Resolver;
+  contexts?: Contexts | ContextObj;
 }): MadeLogger => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
   const logger = {} as MadeLogger;
@@ -112,17 +114,13 @@ export const makeLogger = ({
       levelName + " ".repeat(5 - levelName.length)
     ).toUpperCase();
 
-    logger[levelName] = (
-      message: unknown,
-      contexts?: Contexts | ContextObj | undefined
-    ) => {
+    logger[levelName] = (message: unknown) => {
       if (
-        shouldLog({
+        resolver.shouldLog({
           loggerName,
           desiredLevel,
           defaultLevel,
-          resolver,
-          contexts,
+          contexts: makeLoggerLevelContexts,
         })
       ) {
         const printableMessage =
