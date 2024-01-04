@@ -45,15 +45,20 @@ if (validApiKey === undefined) {
   );
 }
 
+const defaultOptions = {
+  collectLoggerCounts: false,
+  contextUploadMode: "none" as const,
+  collectEvaluationSummaries: false,
+};
+
 describe("prefab", () => {
   describe("init", () => {
     const invalidApiKey = "this won't work";
 
     it("can parse config from the CDN", async () => {
       const prefab = new Prefab({
+        ...defaultOptions,
         apiKey: validApiKey,
-        collectLoggerCounts: false,
-        contextUploadMode: "none",
       });
       await prefab.init();
 
@@ -77,6 +82,7 @@ describe("prefab", () => {
 
       const pollPromise = new Promise((resolve) => {
         const prefab = new Prefab({
+          ...defaultOptions,
           apiKey: validApiKey,
           enablePolling: true,
           pollInterval: 10,
@@ -102,7 +108,11 @@ describe("prefab", () => {
     });
 
     it("warns when called multiple times if enablePolling is set", async () => {
-      const prefab = new Prefab({ apiKey: validApiKey, enablePolling: true });
+      const prefab = new Prefab({
+        ...defaultOptions,
+        apiKey: validApiKey,
+        enablePolling: true,
+      });
 
       const mock = jest.spyOn(console, "warn").mockImplementation();
 
@@ -115,7 +125,11 @@ describe("prefab", () => {
     });
 
     it("warns when called multiple times if enableSSE is set", async () => {
-      const prefab = new Prefab({ apiKey: validApiKey, enableSSE: true });
+      const prefab = new Prefab({
+        ...defaultOptions,
+        apiKey: validApiKey,
+        enableSSE: true,
+      });
 
       const mock = jest.spyOn(console, "warn").mockImplementation();
 

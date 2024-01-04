@@ -29,6 +29,12 @@ const SKIPPED = [
   "get_or_raise.yaml - get_or_raise can raise an error if the client does not initialize in time",
 ];
 
+const defaultOptions = {
+  collectLoggerCounts: false,
+  contextUploadMode: "none" as const,
+  collectEvaluationSummaries: false,
+};
+
 describe("integration tests", () => {
   const { inputOutputTests, telemetryTests } = tests();
 
@@ -44,6 +50,7 @@ describe("integration tests", () => {
       }
 
       const options: ConstructorParameters<typeof Prefab>[0] = {
+        ...defaultOptions,
         apiKey,
         cdnUrl,
         namespace: test.client_overrides?.namespace,
