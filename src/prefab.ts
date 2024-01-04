@@ -201,6 +201,21 @@ class Prefab implements PrefabInterface {
     });
   }
 
+  /* eslint-disable-next-line @typescript-eslint/promise-function-async */
+  updateNow(): Promise<void> {
+    requireResolver(this.resolver);
+
+    return loadConfig({
+      cdnUrl: this.cdnUrl,
+      apiUrl: this.apiUrl,
+      apiClient: this.apiClient,
+    }).then(({ configs, defaultContext }) => {
+      if (configs.length > 0) {
+        this.resolver?.update(configs, defaultContext);
+      }
+    });
+  }
+
   setConfig(
     config: Config[],
     projectEnvId: ProjectEnvId,
@@ -237,16 +252,7 @@ class Prefab implements PrefabInterface {
         return;
       }
 
-      loadConfig({
-        cdnUrl: this.cdnUrl,
-        apiUrl: this.apiUrl,
-        apiClient: this.apiClient,
-      })
-        .then(({ configs, defaultContext }) => {
-          if (configs.length > 0) {
-            this.resolver?.update(configs, defaultContext);
-          }
-        })
+      this.updateNow()
         .catch((err) => {
           console.error(err);
         })
