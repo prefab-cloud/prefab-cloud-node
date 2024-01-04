@@ -89,7 +89,7 @@ class Prefab implements PrefabInterface {
   private readonly cdnUrl: string;
   private readonly datafile?: string;
   private readonly enableSSE: boolean;
-  private readonly enablePolling: boolean;
+  private enablePolling: boolean;
   private readonly namespace?: string;
   private readonly onNoDefault: "error" | "warn" | "ignore";
   private readonly pollInterval: number;
@@ -233,6 +233,10 @@ class Prefab implements PrefabInterface {
     requireResolver(this.resolver);
 
     const poll = (): void => {
+      if (!this.enablePolling) {
+        return;
+      }
+
       loadConfig({
         cdnUrl: this.cdnUrl,
         apiUrl: this.apiUrl,
@@ -252,6 +256,11 @@ class Prefab implements PrefabInterface {
     };
 
     poll();
+  }
+
+  stopPolling(): void {
+    this.enablePolling = false;
+    clearTimeout(this.pollInterval);
   }
 
   inContext(

@@ -34,16 +34,18 @@ const mergeDefaultContexts = (
   const localContexts =
     contexts instanceof Map ? contexts : contextObjToMap(contexts);
 
-  const mergedContexts: Contexts = localContexts;
+  const mergedContexts: Contexts = new Map(localContexts);
 
   for (const type of defaultContext.keys()) {
-    mergedContexts.set(
-      type,
-      new Map(
-        ...(localContexts.get(type) ?? new Map()),
-        defaultContext.get(type) ?? new Map()
-      )
-    );
+    const defaultSingleContext: Context = defaultContext.get(type) ?? new Map();
+
+    const mergedContext = new Map(localContexts.get(type) ?? new Map());
+
+    defaultSingleContext.forEach((value, key) => {
+      mergedContext.set(key, value);
+    });
+
+    mergedContexts.set(type, mergedContext);
   }
 
   return mergedContexts;
