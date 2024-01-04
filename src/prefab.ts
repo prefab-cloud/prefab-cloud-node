@@ -288,13 +288,13 @@ class Prefab implements PrefabInterface {
     clearTimeout(this.pollInterval);
   }
 
-  inContext(
+  inContext<T>(
     contexts: Contexts | ContextObj,
-    func: (prefab: Resolver) => void
-  ): void {
+    func: (prefab: Resolver) => T
+  ): T {
     requireResolver(this.resolver);
 
-    func(this.resolver.cloneWithContext(contexts));
+    return func(this.resolver.cloneWithContext(contexts));
   }
 
   get(
