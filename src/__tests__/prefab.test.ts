@@ -184,6 +184,29 @@ describe("prefab", () => {
     });
   });
 
+  describe("updateNow", () => {
+    it("immediately fetches new config", async () => {
+      const updatePromise = new Promise((resolve) => {
+        const prefab = new Prefab({
+          ...defaultOptions,
+          apiKey: validApiKey,
+          enablePolling: false,
+          onUpdate: () => {
+            resolve("updated");
+          },
+        });
+
+        prefab.init().catch((e) => {
+          console.error(e);
+        });
+      });
+
+      const result = await updatePromise;
+
+      expect(result).toEqual("updated");
+    });
+  });
+
   // While the evaluation logic is best tested in evaluate.test.ts,
   // these serve as more integration-like tests for happy paths.
   describe("get", () => {
