@@ -72,6 +72,35 @@ describe("prefab", () => {
       expect(console.warn).toHaveBeenCalled();
     });
 
+    it("allows for polling", async () => {
+      let updateCount = 0;
+
+      const pollPromise = new Promise((resolve) => {
+        const prefab = new Prefab({
+          apiKey: validApiKey,
+          enablePolling: true,
+          pollInterval: 10,
+          onUpdate: () => {
+            updateCount++;
+
+            if (updateCount > 2) {
+              prefab.stopPolling();
+              resolve("onUpdate fired");
+            }
+          },
+        });
+
+        prefab.init().catch((e) => {
+          console.error(e);
+        });
+      });
+
+      const result = await pollPromise;
+
+      expect(result).toEqual("onUpdate fired");
+      expect(updateCount).toBeGreaterThan(2);
+    });
+
     it("warns when called multiple times if enablePolling is set", async () => {
       const prefab = new Prefab({ apiKey: validApiKey, enablePolling: true });
 
