@@ -45,7 +45,8 @@ const simpleResolver = new Resolver(
   [secretKeyConfig],
   projectEnvIdUnderTest,
   noNamespace,
-  "error"
+  "error",
+  () => undefined
 );
 
 const evaluationFor = (config: Config, contexts: Contexts): Evaluation => {

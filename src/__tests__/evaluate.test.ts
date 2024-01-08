@@ -30,7 +30,8 @@ const simpleResolver = new Resolver(
   [secretKeyConfig],
   projectEnvIdUnderTest,
   noNamespace,
-  "error"
+  "error",
+  () => undefined
 );
 
 const usContexts = new Map([
@@ -555,7 +556,8 @@ describe("evaluate", () => {
       [decryptionConfig],
       projectEnvIdUnderTest,
       noNamespace,
-      "error"
+      "error",
+      () => undefined
     );
 
     expect(
@@ -590,7 +592,8 @@ describe("evaluate", () => {
       [],
       projectEnvIdUnderTest,
       noNamespace,
-      "error"
+      "error",
+      () => undefined
     );
 
     expect(() => {

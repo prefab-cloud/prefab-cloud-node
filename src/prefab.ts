@@ -72,6 +72,7 @@ export interface PrefabInterface {
     contexts?: Contexts | ContextObj;
   }) => boolean;
   telemetry?: Telemetry;
+  updateIfStalerThan: (durationInMs: number) => Promise<void> | undefined;
 }
 
 export interface Telemetry {
@@ -181,9 +182,11 @@ class Prefab implements PrefabInterface {
     };
   }
 
-  async init(
-    runtimeConfig: Array<[key: string, value: ConfigValue]> = []
-  ): Promise<void> {
+  async init({
+    runtimeConfig = [],
+  }: {
+    runtimeConfig?: Array<[key: string, value: ConfigValue]>;
+  } = {}): Promise<void> {
     this.initCount += 1;
     this.loading = true;
 
@@ -274,6 +277,7 @@ class Prefab implements PrefabInterface {
       projectEnvId,
       this.namespace,
       this.onNoDefault,
+      this.updateIfStalerThan.bind(this),
       this.telemetry,
       undefined,
       this.onUpdate,
