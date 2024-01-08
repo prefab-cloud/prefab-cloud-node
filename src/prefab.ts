@@ -115,6 +115,8 @@ class Prefab implements PrefabInterface {
   private readonly instanceHash: string;
   private readonly onUpdate: (configs: Config[]) => void;
   private initCount: number = 0;
+  private lastUpdatedAt: number = 0;
+  private loading: boolean = false;
   readonly telemetry: Telemetry;
 
   constructor({
@@ -183,6 +185,7 @@ class Prefab implements PrefabInterface {
     runtimeConfig: Array<[key: string, value: ConfigValue]> = []
   ): Promise<void> {
     this.initCount += 1;
+    this.loading = true;
 
     if (this.initCount > 1 && (this.enableSSE || this.enablePolling)) {
       console.warn(MULTIPLE_INIT_WARNING);
@@ -197,6 +200,8 @@ class Prefab implements PrefabInterface {
       });
 
     this.setConfig(configs, projectEnvId, defaultContext);
+
+    this.loadingComplete();
 
     runtimeConfig.forEach(([key, value]) => {
       this.set(key, value);
@@ -231,9 +236,20 @@ class Prefab implements PrefabInterface {
     );
   }
 
+  updateIfStalerThan(durationInMs: number): Promise<void> | undefined {
+    requireResolver(this.resolver);
+
+    if (!this.loading && this.lastUpdatedAt + durationInMs < Date.now()) {
+      return this.updateNow();
+    }
+
+    return undefined;
+  }
+
   /* eslint-disable-next-line @typescript-eslint/promise-function-async */
   updateNow(): Promise<void> {
     requireResolver(this.resolver);
+    this.loading = true;
 
     return loadConfig({
       cdnUrl: this.cdnUrl,
@@ -243,6 +259,8 @@ class Prefab implements PrefabInterface {
       if (configs.length > 0) {
         this.resolver?.update(configs, defaultContext);
       }
+
+      this.loadingComplete();
     });
   }
 
@@ -387,6 +405,11 @@ class Prefab implements PrefabInterface {
     requireResolver(this.resolver);
 
     this.resolver.set(key, value);
+  }
+
+  private loadingComplete(): void {
+    this.lastUpdatedAt = Date.now();
+    this.loading = false;
   }
 }
 
