@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## 0.1.15 - 2024-01-08
 
 - `updateIfStalerThan(someNumberofMs)` updates if no update has happened in someNumberofMs ms (#60)
 - `logger()` should inherit context (#59)
