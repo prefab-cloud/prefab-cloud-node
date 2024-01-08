@@ -66,12 +66,16 @@ class Resolver implements PrefabInterface {
   private readonly onUpdate: (configs: Config[]) => void;
   public id: number;
   public readonly defaultContext?: Contexts;
+  public updateIfStalerThan: (
+    durationInMs: number
+  ) => Promise<void> | undefined;
 
   constructor(
     configs: Config[] | Map<string, MinimumConfig>,
     projectEnvId: ProjectEnvId,
     namespace: string | undefined,
     onNoDefault: OnNoDefault,
+    updateIfStalerThan: (durationInMs: number) => Promise<void> | undefined,
     telemetry?: Telemetry,
     contexts?: Contexts | ContextObj,
     onUpdate?: (configs: Config[]) => void,
@@ -92,6 +96,7 @@ class Resolver implements PrefabInterface {
     );
     this.telemetry = telemetry;
     this.onUpdate = onUpdate ?? (() => {});
+    this.updateIfStalerThan = updateIfStalerThan;
   }
 
   cloneWithContext(contexts: Contexts | ContextObj): Resolver {
@@ -100,6 +105,7 @@ class Resolver implements PrefabInterface {
       this.projectEnvId,
       this.namespace,
       this.onNoDefault,
+      this.updateIfStalerThan,
       this.telemetry,
       contexts,
       this.onUpdate,

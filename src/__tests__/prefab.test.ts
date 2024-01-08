@@ -183,7 +183,7 @@ describe("prefab", () => {
         contextUploadMode: "none",
       });
 
-      await prefab.init([["hello", { int: new Long(19) }]]);
+      await prefab.init({ runtimeConfig: [["hello", { int: new Long(19) }]] });
 
       expect(prefab.get("hello")).toEqual(19);
     });
@@ -298,6 +298,67 @@ describe("prefab", () => {
 
       const updateResult = await updatePromise;
       expect(updateResult).toEqual("updated");
+    });
+
+    it("works in inContext", async () => {
+      let prefab: Prefab | undefined;
+
+      let updatePromise: Promise<string> | undefined;
+
+      const initPromise = new Promise((resolveInit) => {
+        updatePromise = new Promise((resolveUpdate) => {
+          prefab = new Prefab({
+            ...defaultOptions,
+            apiKey: validApiKey,
+            enablePolling: false,
+            enableSSE: false,
+            onUpdate: () => {
+              resolveUpdate("updated");
+            },
+          });
+
+          prefab
+            .init()
+            .then(() => {
+              resolveInit("init");
+            })
+            .catch((e) => {
+              console.error(e);
+            });
+        });
+      });
+
+      await initPromise;
+
+      if (prefab === undefined) {
+        throw new Error("prefab is undefined");
+      }
+
+      if (updatePromise === undefined) {
+        throw new Error("updatePromise is undefined");
+      }
+
+      await prefab.inContext({ user: { country: "US" } }, async (pf) => {
+        expect(pf.updateIfStalerThan(1000)).toBeUndefined();
+
+        // move a little into the future but not far enough to trigger an update
+        jest.setSystemTime(jest.now() + 900);
+
+        expect(pf.updateIfStalerThan(1000)).toBeUndefined();
+
+        // move far enough into the future to trigger an update
+        jest.setSystemTime(jest.now() + 101);
+
+        const promiseResult = pf.updateIfStalerThan(1000);
+        expect(typeof promiseResult).toEqual("object");
+
+        // Immediately calling updateIfStalerThan again should return undefined because
+        // the update is already in progress
+        expect(pf.updateIfStalerThan(1000)).toBeUndefined();
+
+        const updateResult = await updatePromise;
+        expect(updateResult).toEqual("updated");
+      });
     });
   });
 
@@ -492,7 +553,7 @@ describe("prefab", () => {
         datafile: path.resolve("./src/__tests__/fixtures/datafile.json"),
       });
 
-      await prefab.init([["example", { string: "ok" }]]);
+      await prefab.init({ runtimeConfig: [["example", { string: "ok" }]] });
 
       expect(prefab.get("from.the.datafile")).toEqual("it.works");
       expect(prefab.get("example")).toEqual("ok");

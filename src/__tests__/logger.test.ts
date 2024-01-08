@@ -15,7 +15,8 @@ const getResolver = (configs: Config[]): Resolver => {
     configs,
     projectEnvIdUnderTest,
     "some-namespace",
-    "error"
+    "error",
+    () => undefined
   );
 };
 
