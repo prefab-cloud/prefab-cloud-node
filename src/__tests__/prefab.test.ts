@@ -53,6 +53,10 @@ const defaultOptions = {
 };
 
 describe("prefab", () => {
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   describe("init", () => {
     const invalidApiKey = "this won't work";
 
@@ -187,24 +191,113 @@ describe("prefab", () => {
 
   describe("updateNow", () => {
     it("immediately fetches new config", async () => {
-      const updatePromise = new Promise((resolve) => {
-        const prefab = new Prefab({
-          ...defaultOptions,
-          apiKey: validApiKey,
-          enablePolling: false,
-          onUpdate: () => {
-            resolve("updated");
-          },
-        });
+      let prefab: Prefab | undefined;
 
-        prefab.init().catch((e) => {
-          console.error(e);
+      let updatePromise: Promise<string> | undefined;
+
+      const initPromise = new Promise((resolveInit) => {
+        updatePromise = new Promise((resolveUpdate) => {
+          prefab = new Prefab({
+            ...defaultOptions,
+            apiKey: validApiKey,
+            enablePolling: false,
+            enableSSE: false,
+            onUpdate: () => {
+              resolveUpdate("updated");
+            },
+          });
+
+          prefab
+            .init()
+            .then(() => {
+              resolveInit("init");
+            })
+            .catch((e) => {
+              console.error(e);
+            });
         });
       });
+
+      await initPromise;
+
+      if (prefab === undefined) {
+        throw new Error("prefab is undefined");
+      }
+
+      await prefab.updateNow();
+
+      if (updatePromise === undefined) {
+        throw new Error("updatePromise is undefined");
+      }
 
       const result = await updatePromise;
 
       expect(result).toEqual("updated");
+    });
+  });
+
+  describe("updateIfStalerThan", () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    it("fetches new config if the last update was longer than X ms ago", async () => {
+      let prefab: Prefab | undefined;
+
+      let updatePromise: Promise<string> | undefined;
+
+      const initPromise = new Promise((resolveInit) => {
+        updatePromise = new Promise((resolveUpdate) => {
+          prefab = new Prefab({
+            ...defaultOptions,
+            apiKey: validApiKey,
+            enablePolling: false,
+            enableSSE: false,
+            onUpdate: () => {
+              resolveUpdate("updated");
+            },
+          });
+
+          prefab
+            .init()
+            .then(() => {
+              resolveInit("init");
+            })
+            .catch((e) => {
+              console.error(e);
+            });
+        });
+      });
+
+      await initPromise;
+
+      if (prefab === undefined) {
+        throw new Error("prefab is undefined");
+      }
+
+      if (updatePromise === undefined) {
+        throw new Error("updatePromise is undefined");
+      }
+
+      expect(prefab.updateIfStalerThan(1000)).toBeUndefined();
+
+      // move a little into the future but not far enough to trigger an update
+      jest.setSystemTime(jest.now() + 900);
+
+      expect(prefab.updateIfStalerThan(1000)).toBeUndefined();
+
+      // move far enough into the future to trigger an update
+      jest.setSystemTime(jest.now() + 101);
+
+      const promiseResult = prefab.updateIfStalerThan(1000);
+      expect(typeof promiseResult).toEqual("object");
+
+      // Immediately calling updateIfStalerThan again should return undefined because
+      // the update is already in progress
+      expect(prefab.updateIfStalerThan(1000)).toBeUndefined();
+
+      const updateResult = await updatePromise;
+      expect(updateResult).toEqual("updated");
     });
   });
 
