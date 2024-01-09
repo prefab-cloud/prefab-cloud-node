@@ -75,6 +75,27 @@ const inSegment = (
   return segment;
 };
 
+const inIntRange = (criterion: Criterion, contexts: Contexts): boolean => {
+  const contextsWithCurrentTime = new Map(contexts);
+  const prefabContext = contextsWithCurrentTime.get("prefab") ?? new Map();
+  prefabContext.set("current-time", +new Date());
+  contextsWithCurrentTime.set("prefab", prefabContext);
+
+  const start = criterion.valueToMatch?.intRange?.start;
+  const end = criterion.valueToMatch?.intRange?.end;
+
+  const comparable = contextLookup(
+    contextsWithCurrentTime,
+    criterion.propertyName
+  );
+
+  if (start === undefined || end === undefined || comparable === undefined) {
+    return false;
+  }
+
+  return start.lte(comparable as number) && end.gte(comparable as number);
+};
+
 const allCriteriaMatch = (
   value: ConditionalValue,
   namespace: string | undefined,
@@ -101,6 +122,8 @@ const allCriteriaMatch = (
         return inSegment(criterion, contexts, resolver);
       case Criterion_CriterionOperator.NOT_IN_SEG:
         return !inSegment(criterion, contexts, resolver);
+      case Criterion_CriterionOperator.IN_INT_RANGE:
+        return inIntRange(criterion, contexts);
       default:
         throw new Error(
           `Unexpected criteria ${JSON.stringify(criterion.operator)}`

@@ -113,7 +113,7 @@ describe("exampleContexts", () => {
           exampleContexts: {
             examples: [
               {
-                timestamp: new Long(Date.now()),
+                timestamp: Long.fromNumber(Date.now()),
                 contextSet: {
                   contexts: [
                     {

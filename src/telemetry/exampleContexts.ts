@@ -103,7 +103,7 @@ export const exampleContexts = (
 
       const examples: ExampleContext[] = data.map(([timestamp, contexts]) => {
         return {
-          timestamp: new Long(timestamp),
+          timestamp: Long.fromNumber(timestamp),
           contextSet: {
             contexts: contextsToProto(contexts),
           },

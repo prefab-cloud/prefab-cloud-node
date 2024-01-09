@@ -90,7 +90,7 @@ export const knownLoggers = (
             NUMBER_LEVEL_LOOKUP[severity];
 
           if (key !== undefined) {
-            logger[key] = new Long(record[severity] ?? 0);
+            logger[key] = Long.fromNumber(record[severity] ?? 0);
           }
         });
 
@@ -99,7 +99,7 @@ export const knownLoggers = (
 
       const apiData: Loggers = {
         loggers,
-        startAt: startAt ?? new Long(Date.now()),
+        startAt: startAt ?? Long.fromNumber(Date.now()),
         endAt: now(),
         instanceHash,
       };
