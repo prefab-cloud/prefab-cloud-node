@@ -8,6 +8,7 @@ import propIsNotOneOf from "./fixtures/propIsNotOneOf";
 import propIsOneOf from "./fixtures/propIsOneOf";
 import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
 import rolloutFlag from "./fixtures/rolloutFlag";
+import mkTimedLogLevel from "./fixtures/timedLogLevel";
 import { Resolver } from "../resolver";
 import type { EvaluateArgs } from "../evaluate";
 import type { Contexts } from "../types";
@@ -20,6 +21,7 @@ import decryptionKeyConfig, {
   decryptionKeyForSecret,
 } from "./fixtures/decryptionKeyConfig";
 import type { Config } from "../proto";
+import { LogLevel } from "../proto";
 import { makeConfidential } from "../unwrap";
 import { contextObjToMap } from "../mergeContexts";
 
@@ -576,6 +578,53 @@ describe("evaluate", () => {
       configRowIndex: 0,
       unwrappedValue: clearText,
       conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+  });
+
+  it("can return an evaluation for a timed log level", () => {
+    const timedLogLevel = mkTimedLogLevel(0, 1000);
+
+    expect(
+      evaluate({
+        config: timedLogLevel,
+        projectEnvId: projectEnvIdUnderTest,
+        namespace: noNamespace,
+        contexts: emptyContexts,
+        resolver: simpleResolver,
+      })
+    ).toStrictEqual({
+      configId: timedLogLevel.id,
+      configKey: timedLogLevel.key,
+      configType: timedLogLevel.configType,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      unwrappedValue: LogLevel.INFO,
+      reportableValue: undefined,
+      weightedValueIndex: undefined,
+    });
+
+    const currentTimedLogLevel = mkTimedLogLevel(
+      +new Date(),
+      +new Date() + 1000
+    );
+
+    expect(
+      evaluate({
+        config: currentTimedLogLevel,
+        projectEnvId: projectEnvIdUnderTest,
+        namespace: noNamespace,
+        contexts: emptyContexts,
+        resolver: simpleResolver,
+      })
+    ).toStrictEqual({
+      configId: currentTimedLogLevel.id,
+      configKey: currentTimedLogLevel.key,
+      configType: currentTimedLogLevel.configType,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      unwrappedValue: LogLevel.DEBUG,
+      reportableValue: undefined,
       weightedValueIndex: undefined,
     });
   });

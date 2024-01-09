@@ -124,7 +124,7 @@ export const evaluationSummaries = (
           ] = JSON.parse(counterJSON);
 
           const counter: ConfigEvaluationCounter = {
-            configId: new Long(configId),
+            configId: Long.fromNumber(configId),
             conditionalValueIndex,
             configRowIndex,
             selectedValue: { [valueType]: unwrappedValue },
@@ -152,7 +152,7 @@ export const evaluationSummaries = (
 
       const event: TelemetryEvent = {
         summaries: {
-          start: startAt ?? new Long(Date.now()),
+          start: startAt ?? Long.fromNumber(Date.now()),
           end: now(),
           summaries,
         },
