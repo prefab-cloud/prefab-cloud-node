@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.16 - 2024-01-09
+
+- Support timed loggers (#62)
+
 ## 0.1.15 - 2024-01-08
 
 - `updateIfStalerThan(someNumberofMs)` updates if no update has happened in someNumberofMs ms (#60)
