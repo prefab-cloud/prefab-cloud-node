@@ -112,10 +112,7 @@ const providedValue = (
     const envVar = process.env[provided.lookup];
 
     if (envVar === undefined) {
-      console.error(
-        `ENV Variable ${provided.lookup} not found. Using empty string.`
-      );
-      return "";
+      throw new Error(`Environment variable ${provided.lookup} not found`);
     }
 
     return coerceIntoType(config, envVar);
@@ -154,7 +151,10 @@ const coerceIntoType = (config: MinimumConfig, value: string): GetValue => {
     case Config_ValueType.STRING:
       return value;
     case Config_ValueType.INT:
-      return parseInt(value);
+      if (!Number.isInteger(parseInt(value, 10))) {
+        throw new Error(`Expected integer, got ${value}`);
+      }
+      return parseInt(value, 10);
     case Config_ValueType.DOUBLE:
       return parseFloat(value);
     case Config_ValueType.BOOL:
@@ -233,6 +233,11 @@ export const unwrapValue = ({
     case "stringList":
       return { value: value.stringList?.values };
     case "int":
+      if (Number.isInteger(value.int)) {
+        const val = value.int as unknown as number;
+        return { value: val };
+      }
+
       return { value: value.int?.toInt() };
     case "bool":
       return { value: value.bool };

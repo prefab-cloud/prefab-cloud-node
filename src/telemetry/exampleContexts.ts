@@ -90,6 +90,10 @@ export const exampleContexts = (
 
       const key = groupedKey(contexts);
 
+      if (key.length === 0) {
+        return;
+      }
+
       if (!cache.isFresh(key)) {
         data.push([Date.now(), contexts]);
         cache.set(key);
