@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Don't report empty contexts with empty keys. Throw if required environment variable is absent. Throw if we can't parse an environment variable correctly. (#63)
+
 ## 0.1.16 - 2024-01-09
 
 - Support timed loggers (#62)

@@ -6,8 +6,15 @@ import type { ContextShapes, Logger, Loggers, TelemetryEvents } from "../proto";
 import type { knownLoggers, LoggerLevelName } from "../telemetry/knownLoggers";
 import type { contextShapes } from "../telemetry/contextShapes";
 import type { exampleContexts } from "../telemetry/exampleContexts";
+import { unwrapPrimitive } from "../unwrap";
 import fs from "fs";
-import { PREFIX } from "../logger";
+import { type ValidLogLevelName, PREFIX } from "../logger";
+
+process.env[
+  `PREFAB_INTEGRATION_TEST_ENCRYPTION_KEY`
+] = `c87ba22d8662282abe8a0e4651327b579cb64a454ab0f4c170b45b15f049a221`;
+process.env[`NOT_A_NUMBER`] = `not a number`;
+process.env[`IS_A_NUMBER`] = "1234";
 
 const IGNORED_CLIENT_OVERRIDES_FOR_INPUT_OUTPUT_TESTS = [
   "initialization_timeout_sec",
@@ -270,14 +277,13 @@ const aggregatorSpecificLogic = {
                 throw new Error("context.type is undefined");
               }
 
-              result[context.type] = Object.entries(context.values)
+              const type = context.type;
+
+              Object.entries(context.values)
                 .reverse()
-                .map(([key, value]) => {
-                  return {
-                    key,
-                    value: Object.values(value)[0],
-                    value_type: Object.keys(value)[0],
-                  };
+                .forEach(([key, value]) => {
+                  result[type] = result[type] ?? {};
+                  result[type][key] = unwrapPrimitive(key, value).value;
                 });
             });
 
@@ -339,37 +345,41 @@ const aggregatorSpecificLogic = {
     };
   },
 
-  knownLoggers(testData: Record<string, any>) {
+  knownLoggers(
+    testData: Array<{
+      logger_name: string;
+      counts: Record<string, number>;
+    }>
+  ) {
     return {
       exercise: (aggregator: unknown) => {
-        const severityTranslator = [
-          wordLevelToNumber("debug"),
-          wordLevelToNumber("info"),
-          wordLevelToNumber("warn"),
-          wordLevelToNumber("error"),
-          wordLevelToNumber("fatal"),
-        ];
-
-        // There's only one Record
-        const data = testData[0];
-
-        if (data === undefined) {
+        if (testData === undefined) {
           throw new Error("data is undefined");
         }
 
-        Object.keys(data).forEach((loggerName) => {
-          data[loggerName].forEach((count: number, severityIndex: number) => {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        testData.forEach(({ logger_name, counts }) => {
+          Object.keys(counts).forEach((severityWord: string) => {
+            const nonPluralSeverityWord = severityWord.replace(
+              /s$/,
+              ""
+            ) as ValidLogLevelName;
+
+            const count = counts[severityWord];
+
+            if (count === undefined) {
+              throw new Error(`Unknown count for ${severityWord}`);
+            }
+
             for (let i = 0; i < count; i++) {
-              const severity = severityTranslator[severityIndex];
+              const severity = wordLevelToNumber(nonPluralSeverityWord);
 
               if (severity === undefined) {
-                throw new Error(
-                  `Invalid severity index: ${severityIndex} for ${loggerName}`
-                );
+                throw new Error(`Unknown severity ${severityWord}`);
               }
 
               (aggregator as ReturnType<typeof knownLoggers>).push(
-                loggerName,
+                logger_name,
                 severity
               );
             }

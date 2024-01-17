@@ -128,6 +128,11 @@ describe("integration tests", () => {
 
       const result = await aggregator.sync();
 
+      if (Object.keys(test.expectedTelemetryData).length === 0) {
+        expect(result).toBeUndefined();
+        return;
+      }
+
       if (result == null) {
         throw new Error(
           "Result was unexpectedly void. Maybe `data.size === 0`?"
