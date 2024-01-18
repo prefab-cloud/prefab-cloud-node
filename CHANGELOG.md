@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.17 - 2024-01-18
 
 - Don't report empty contexts with empty keys. Throw if required environment variable is absent. Throw if we can't parse an environment variable correctly. (#63)
 
