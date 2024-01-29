@@ -456,11 +456,15 @@ export const tests = (): {
           }
         });
 
+        const expectedData = Array.isArray(testCase.expected_data)
+          ? testCase.expected_data
+          : [testCase.expected_data];
+
         telemetryTests.push({
           name,
           function: testCase.function,
           data,
-          expectedTelemetryData: testCase.expected_data,
+          expectedTelemetryData: expectedData,
           customOptions:
             testCase.client_overrides?.context_upload_mode === ":shape_only"
               ? {

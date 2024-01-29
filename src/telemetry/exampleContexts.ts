@@ -39,6 +39,7 @@ const groupedKey = (contexts: Contexts): string => {
       const key = context.get("key") ?? context.get("trackingId");
       return typeof key === "string" ? key : JSON.stringify(key);
     })
+    .filter((str) => str?.length > 0)
     .sort()
     .join("|");
 };
