@@ -134,9 +134,15 @@ describe("integration tests", () => {
       }
 
       if (result == null) {
-        throw new Error(
-          "Result was unexpectedly void. Maybe `data.size === 0`?"
-        );
+        if (
+          test.expectedTelemetryData !== null &&
+          JSON.stringify(test.expectedTelemetryData) !== "[null]"
+        ) {
+          throw new Error(
+            "Result was unexpectedly void. Maybe `data.size === 0`?"
+          );
+        }
+        return;
       }
 
       expect(result.status).toBe(200);
