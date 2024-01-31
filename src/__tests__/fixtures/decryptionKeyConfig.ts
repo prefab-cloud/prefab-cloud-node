@@ -37,6 +37,7 @@ const config = (secret: Config, decryptionKey: string): Config => {
     allowableValues: [],
     configType: ConfigType.CONFIG,
     valueType: 2,
+    sendToClientSdk: false,
   };
 };
 

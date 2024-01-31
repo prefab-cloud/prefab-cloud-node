@@ -148,6 +148,7 @@ class Resolver implements PrefabInterface {
       rows: [{ properties: {}, values: [{ value, criteria: [] }] }],
       configType: ConfigType.CONFIG,
       valueType,
+      sendToClientSdk: false,
     };
 
     this.config.set(key, config);

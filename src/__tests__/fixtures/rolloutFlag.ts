@@ -59,6 +59,7 @@ const config: Config = {
   ],
   configType: ConfigType.FEATURE_FLAG,
   valueType: 5,
+  sendToClientSdk: false,
 };
 
 export default config;

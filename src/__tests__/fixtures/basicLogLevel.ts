@@ -24,6 +24,7 @@ const config: Config = {
   allowableValues: [],
   configType: ConfigType.LOG_LEVEL,
   valueType: 9,
+  sendToClientSdk: false,
 };
 
 export default config;
