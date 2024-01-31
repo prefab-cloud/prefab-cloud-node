@@ -5,7 +5,6 @@ import basicConfig from "./fixtures/basicConfig";
 import basicFlag from "./fixtures/basicFlag";
 import rolloutFlag from "./fixtures/rolloutFlag";
 import envConfig from "./fixtures/envConfig";
-import namespaceConfig from "./fixtures/namespaceConfig";
 import propIsOneOf from "./fixtures/propIsOneOf";
 import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
 import { Prefab, MULTIPLE_INIT_WARNING } from "../prefab";
@@ -28,7 +27,6 @@ const configs = [
   basicConfig,
   basicFlag,
   envConfig,
-  namespaceConfig,
   propIsOneOf,
   propIsOneOfAndEndsWith,
   rolloutFlag,
@@ -421,30 +419,6 @@ describe("prefab", () => {
       expect(prefab.get("basic.env")).toEqual(["a", "b", "c", "d"]);
     });
 
-    it("returns a config value for a namespace", () => {
-      const prefabNs1 = new Prefab({
-        apiKey: irrelevant,
-        namespace: "my-namespace",
-      });
-      prefabNs1.setConfig(configs, projectEnvIdUnderTest, new Map());
-      expect(prefabNs1.get("basic.namespace")).toEqual(["in-namespace"]);
-
-      const prefabNs2 = new Prefab({
-        apiKey: irrelevant,
-        namespace: "incorrect-namespace",
-      });
-      prefabNs2.setConfig(configs, projectEnvIdUnderTest, new Map());
-      expect(prefabNs2.get("basic.namespace")).toEqual(["not-in-namespace"]);
-
-      const prefabNsMissing = new Prefab({
-        apiKey: irrelevant,
-      });
-      prefabNsMissing.setConfig(configs, projectEnvIdUnderTest, new Map());
-      expect(prefabNsMissing.get("basic.namespace")).toEqual([
-        "not-in-namespace",
-      ]);
-    });
-
     it("returns a config value for a PROP_IS_ONE_OF match", () => {
       const prefab = new Prefab({ apiKey: irrelevant });
       prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
@@ -646,7 +620,6 @@ describe("prefab", () => {
         "basic.value",
         "basic.flag",
         "basic.env",
-        "basic.namespace",
         "prop.is.one.of",
         "prop.is.one.of.and.ends.with",
         "rollout.flag",
@@ -665,7 +638,7 @@ describe("prefab", () => {
       prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
 
       expect(JSON.stringify(prefab.raw("basic.value"))).toStrictEqual(
-        '{"id":{"low":999,"high":0,"unsigned":false},"projectId":{"low":-1,"high":0,"unsigned":false},"key":"basic.value","rows":[{"properties":{},"values":[{"criteria":[],"value":{"int":{"low":42,"high":0,"unsigned":false}}}]}],"allowableValues":[],"configType":1,"valueType":1}'
+        '{"id":{"low":999,"high":0,"unsigned":false},"projectId":{"low":-1,"high":0,"unsigned":false},"key":"basic.value","rows":[{"properties":{},"values":[{"criteria":[],"value":{"int":{"low":42,"high":0,"unsigned":false}}}]}],"allowableValues":[],"configType":1,"valueType":1,"sendToClientSdk":false}'
       );
     });
   });

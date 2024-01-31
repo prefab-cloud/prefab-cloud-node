@@ -133,6 +133,8 @@ export interface Config {
   configType: ConfigType;
   draftId?: Long | undefined;
   valueType: Config_ValueType;
+  /** default value of a boolean in proto3 is false */
+  sendToClientSdk: boolean;
 }
 
 export enum Config_ValueType {
@@ -296,6 +298,7 @@ export interface ConfigEvaluationMetaData {
   weightedValueIndex?: Long | undefined;
   type?: ConfigType | undefined;
   id?: Long | undefined;
+  valueType?: Config_ValueType | undefined;
 }
 
 export interface ClientConfigValue {
@@ -304,6 +307,8 @@ export interface ClientConfigValue {
   double?: number | undefined;
   bool?: boolean | undefined;
   logLevel?: LogLevel | undefined;
+  stringList?: StringList | undefined;
+  intRange?: IntRange | undefined;
   configEvaluationMetadata?: ConfigEvaluationMetaData | undefined;
 }
 

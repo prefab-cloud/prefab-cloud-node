@@ -368,6 +368,10 @@
             "valueType": {
               "type": "ValueType",
               "id": 9
+            },
+            "sendToClientSdk": {
+              "type": "bool",
+              "id": 10
             }
           },
           "nested": {
@@ -786,6 +790,11 @@
               "oneof": [
                 "id"
               ]
+            },
+            "_valueType": {
+              "oneof": [
+                "valueType"
+              ]
             }
           },
           "fields": {
@@ -823,6 +832,13 @@
               "options": {
                 "proto3_optional": true
               }
+            },
+            "valueType": {
+              "type": "Config.ValueType",
+              "id": 6,
+              "options": {
+                "proto3_optional": true
+              }
             }
           }
         },
@@ -834,7 +850,9 @@
                 "string",
                 "double",
                 "bool",
-                "logLevel"
+                "logLevel",
+                "stringList",
+                "intRange"
               ]
             },
             "_configEvaluationMetadata": {
@@ -863,6 +881,14 @@
             "logLevel": {
               "type": "LogLevel",
               "id": 5
+            },
+            "stringList": {
+              "type": "StringList",
+              "id": 7
+            },
+            "intRange": {
+              "type": "IntRange",
+              "id": 8
             },
             "configEvaluationMetadata": {
               "type": "ConfigEvaluationMetaData",

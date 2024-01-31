@@ -63,5 +63,6 @@ const config: Config = {
   ],
   configType: ConfigType.CONFIG,
   valueType: 2,
+  sendToClientSdk: false,
 };
 export default config;

@@ -180,6 +180,7 @@ describe("shouldLog", () => {
       allowableValues: [],
       configType: ConfigType.LOG_LEVEL,
       valueType: 3,
+      sendToClientSdk: false,
     };
 
     const resolver = getResolver([config]);

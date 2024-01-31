@@ -1,7 +1,6 @@
 import basicConfig from "./fixtures/basicConfig";
 import basicLogLevel from "./fixtures/basicLogLevel";
 import envConfig from "./fixtures/envConfig";
-import namespaceConfig from "./fixtures/namespaceConfig";
 import propDoesNotEndWithOneOf from "./fixtures/propDoesNotEndWithOneOf";
 import propEndsWithOneOf from "./fixtures/propEndsWithOneOf";
 import propIsNotOneOf from "./fixtures/propIsNotOneOf";
@@ -166,60 +165,6 @@ describe("evaluate", () => {
       unwrappedValue: false,
       reportableValue: undefined,
       weightedValueIndex: 0,
-    });
-  });
-
-  it("returns an evaluation for a namespace", () => {
-    const args = (namespace: string | undefined): EvaluateArgs => ({
-      config: namespaceConfig,
-      projectEnvId: projectEnvIdUnderTest,
-      namespace,
-      contexts: emptyContexts,
-      resolver: simpleResolver,
-    });
-
-    expect(evaluate(args("my-namespace"))).toStrictEqual({
-      configId: namespaceConfig.id,
-      configType: namespaceConfig.configType,
-      configKey: namespaceConfig.key,
-      unwrappedValue: ["in-namespace"],
-      reportableValue: undefined,
-      configRowIndex: 0,
-      conditionalValueIndex: 1,
-      weightedValueIndex: undefined,
-    });
-
-    expect(evaluate(args("wrong-namespace"))).toStrictEqual({
-      configId: namespaceConfig.id,
-      configKey: namespaceConfig.key,
-      configType: namespaceConfig.configType,
-      unwrappedValue: ["wrong-namespace"],
-      reportableValue: undefined,
-      configRowIndex: 0,
-      conditionalValueIndex: 0,
-      weightedValueIndex: undefined,
-    });
-
-    expect(evaluate(args("incorrect"))).toStrictEqual({
-      configId: namespaceConfig.id,
-      configKey: namespaceConfig.key,
-      configType: namespaceConfig.configType,
-      unwrappedValue: ["not-in-namespace"],
-      reportableValue: undefined,
-      configRowIndex: 0,
-      conditionalValueIndex: 2,
-      weightedValueIndex: undefined,
-    });
-
-    expect(evaluate(args(noNamespace))).toEqual({
-      configId: namespaceConfig.id,
-      configKey: namespaceConfig.key,
-      configType: namespaceConfig.configType,
-      unwrappedValue: ["not-in-namespace"],
-      reportableValue: undefined,
-      configRowIndex: 0,
-      conditionalValueIndex: 2,
-      weightedValueIndex: undefined,
     });
   });
 

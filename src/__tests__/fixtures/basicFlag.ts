@@ -23,6 +23,7 @@ const config: Config = {
   allowableValues: [{ bool: true }, { bool: false }],
   configType: ConfigType.FEATURE_FLAG,
   valueType: 5,
+  sendToClientSdk: false,
 };
 
 export default config;

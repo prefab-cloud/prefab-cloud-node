@@ -37,6 +37,7 @@ export const levelAt = (path: string, level: string): Config => {
     allowableValues: [],
     configType: ConfigType.LOG_LEVEL,
     valueType: 9,
+    sendToClientSdk: true,
   };
 };
 
