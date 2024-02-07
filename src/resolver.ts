@@ -87,13 +87,13 @@ class Resolver implements PrefabInterface {
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
     this.onUpdate = onUpdate ?? (() => {});
-    this.update(
-      Array.isArray(configs) ? configs : Array.from(configs.values()),
-      defaultContext
-    );
+    this.defaultContext = defaultContext ?? new Map();
     this.contexts = mergeDefaultContexts(
       contexts ?? new Map(),
       defaultContext ?? new Map()
+    );
+    this.update(
+      Array.isArray(configs) ? configs : Array.from(configs.values())
     );
     this.telemetry = telemetry;
     this.updateIfStalerThan = updateIfStalerThan;
