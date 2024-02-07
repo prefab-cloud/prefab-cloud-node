@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.19 - 2024-02-07
+
+- Fix issue with default context introduced in 0.1.18
+
 ## 0.1.18 - 2024-02-07
 
 - Don't include deleted config in `keys()` etc. (#66)
