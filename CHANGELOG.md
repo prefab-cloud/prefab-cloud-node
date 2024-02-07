@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.18 - 2024-02-07
 
-- Don't include deleted config in `keys()` etc.
+- Don't include deleted config in `keys()` etc. (#66)
 
 ## 0.1.17 - 2024-01-18
 
