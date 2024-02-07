@@ -97,7 +97,7 @@ interface ConstructorProps {
   collectLoggerCounts?: boolean;
   contextUploadMode?: ContextUploadMode;
   collectEvaluationSummaries?: boolean;
-  onUpdate?: (configs: Config[]) => void;
+  onUpdate?: (configs: Array<Config | MinimumConfig>) => void;
 }
 
 class Prefab implements PrefabInterface {
@@ -114,7 +114,7 @@ class Prefab implements PrefabInterface {
   private readonly apiClient: ApiClient;
   private readonly defaultLogLevel: ValidLogLevel;
   private readonly instanceHash: string;
-  private readonly onUpdate: (configs: Config[]) => void;
+  private readonly onUpdate: ConstructorProps["onUpdate"];
   private initCount: number = 0;
   private lastUpdatedAt: number = 0;
   private loading: boolean = false;
