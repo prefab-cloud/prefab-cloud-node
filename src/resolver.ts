@@ -57,13 +57,13 @@ const mergeDefaultContexts = (
 let id = 0;
 
 class Resolver implements PrefabInterface {
-  private readonly config: Map<string, MinimumConfig>;
+  private readonly config = new Map<string, MinimumConfig>();
   private readonly projectEnvId: ProjectEnvId;
   private readonly namespace: string | undefined;
   private readonly onNoDefault: OnNoDefault;
   public contexts?: Contexts;
   readonly telemetry: Telemetry | undefined;
-  private readonly onUpdate: (configs: Config[]) => void;
+  private readonly onUpdate: (configs: Array<Config | MinimumConfig>) => void;
   public id: number;
   public readonly defaultContext?: Contexts;
   public updateIfStalerThan: (
@@ -78,24 +78,24 @@ class Resolver implements PrefabInterface {
     updateIfStalerThan: (durationInMs: number) => Promise<void> | undefined,
     telemetry?: Telemetry,
     contexts?: Contexts | ContextObj,
-    onUpdate?: (configs: Config[]) => void,
+    onUpdate?: (configs: Array<Config | MinimumConfig>) => void,
     defaultContext?: Contexts
   ) {
     id += 1;
     this.id = id;
-    this.config = Array.isArray(configs)
-      ? new Map(configs.map((config) => [config.key, config]))
-      : configs;
     this.projectEnvId = projectEnvId;
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
-    this.defaultContext = defaultContext ?? new Map();
+    this.onUpdate = onUpdate ?? (() => {});
+    this.update(
+      Array.isArray(configs) ? configs : Array.from(configs.values()),
+      defaultContext
+    );
     this.contexts = mergeDefaultContexts(
       contexts ?? new Map(),
       defaultContext ?? new Map()
     );
     this.telemetry = telemetry;
-    this.onUpdate = onUpdate ?? (() => {});
     this.updateIfStalerThan = updateIfStalerThan;
   }
 
@@ -113,9 +113,14 @@ class Resolver implements PrefabInterface {
     );
   }
 
-  update(configs: Config[], defaultContext?: Contexts): void {
+  update(
+    configs: Array<Config | MinimumConfig>,
+    defaultContext?: Contexts
+  ): void {
     for (const config of configs) {
-      this.config.set(config.key, config);
+      if (config.configType !== ConfigType.DELETED) {
+        this.config.set(config.key, config);
+      }
     }
 
     if (defaultContext !== undefined) {

@@ -2,6 +2,7 @@ import * as path from "path";
 import Long from "long";
 
 import basicConfig from "./fixtures/basicConfig";
+import deletedConfig from "./fixtures/deletedConfig";
 import basicFlag from "./fixtures/basicFlag";
 import rolloutFlag from "./fixtures/rolloutFlag";
 import envConfig from "./fixtures/envConfig";
@@ -30,6 +31,7 @@ const configs = [
   propIsOneOf,
   propIsOneOfAndEndsWith,
   rolloutFlag,
+  deletedConfig,
 ];
 
 afterEach(() => {
