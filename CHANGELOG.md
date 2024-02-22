@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.20 - 2024-02-22
 
-- Fix: send context shapes by default
+- Fix: send context shapes by default (#68)
 
 ## 0.1.19 - 2024-02-07
 
