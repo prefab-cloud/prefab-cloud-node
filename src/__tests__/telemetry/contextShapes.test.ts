@@ -30,8 +30,9 @@ const contexts: Contexts = new Map([
 ]);
 
 describe("contextShapes", () => {
-  it("returns stub if contextUploadMode is not shapeOnly", () => {
-    expect(contextShapes(mockApiClient, "periodicExample")).toBe(stub);
+  it("returns stub if contextUploadMode is not `none`", () => {
+    expect(contextShapes(mockApiClient, "shapeOnly")).not.toBe(stub);
+    expect(contextShapes(mockApiClient, "periodicExample")).not.toBe(stub);
     expect(contextShapes(mockApiClient, "none")).toBe(stub);
   });
 
@@ -160,7 +161,7 @@ describe("contextShapes", () => {
       );
     });
 
-    it("does not record context shapes by default", () => {
+    it("records context shapes by default", () => {
       const prefabWithoutShapes = new Prefab({
         apiKey: irrelevant,
       });
@@ -173,7 +174,14 @@ describe("contextShapes", () => {
       prefabWithoutShapes.get("basic.value", contexts);
 
       expect(prefabWithoutShapes.telemetry.contextShapes.data).toStrictEqual(
-        new Map()
+        new Map(
+          Object.entries({
+            user: {
+              key: 2,
+              randomNumber: 1,
+            },
+          })
+        )
       );
     });
   });

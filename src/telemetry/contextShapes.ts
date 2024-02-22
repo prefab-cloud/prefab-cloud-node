@@ -47,7 +47,7 @@ export const contextShapes = (
   namespace?: string,
   maxDataSize: number = MAX_DATA_SIZE
 ): ContextShapeTelemetry => {
-  if (contextUploadMode !== "shapeOnly") {
+  if (contextUploadMode === "none") {
     return stub;
   }
 
