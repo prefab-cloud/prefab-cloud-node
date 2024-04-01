@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.0 - 2024-04-10
+
+- Add Duration support (#69)
+
 ## 0.1.20 - 2024-02-22
 
 - Fix: send context shapes by default (#68)

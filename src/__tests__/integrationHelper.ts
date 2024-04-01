@@ -33,9 +33,7 @@ const YAML = require("yaml");
 
 const testDataPath = `./prefab-cloud-integration-test-data`;
 
-const version = fs.readFileSync(`${testDataPath}/version`).toString().trim();
-
-const testsPath = `${testDataPath}/tests/${version}`;
+const testsPath = `${testDataPath}/tests/current`;
 
 const expectedWarnings: Record<string, RegExp> = {
   "always returns false for a non-boolean flag":
@@ -83,6 +81,7 @@ interface RawInputOutputTestCase {
   name: string;
   client: string;
   function: "enabled" | "get" | "get_or_raise";
+  type: string;
   input: {
     key?: string;
     flag?: string;
@@ -93,6 +92,7 @@ interface RawInputOutputTestCase {
     value: any;
     status?: "raise";
     message?: string;
+    millis?: number;
   };
   client_overrides: {
     namespace?: string;
@@ -105,6 +105,7 @@ interface RawTelemetryTestCase {
   name: string;
   client: string;
   function: "post";
+  type: string;
   data: Record<string, any> | Array<Record<string, any>> | string[];
   expected_data: Record<string, any>;
   aggregator: RawAggregator;
@@ -143,6 +144,7 @@ export interface TelemetryTest {
   name: string;
   data: Array<Record<string, any>> | string[];
   function: "post";
+  type: string;
   expectedTelemetryData: Record<string, any>;
   aggregator: Aggregator;
   customOptions: {
@@ -199,6 +201,10 @@ const calcExpectedValue = (
 
   if (key.startsWith(PREFIX)) {
     expectedValue = logLevelLookup[expectedValue];
+  }
+
+  if (testCase.type === "DURATION") {
+    expectedValue = testCase.expected.millis;
   }
 
   return expectedValue;
@@ -464,6 +470,7 @@ export const tests = (): {
           name,
           function: testCase.function,
           data,
+          type: testCase.type,
           expectedTelemetryData: expectedData,
           customOptions:
             testCase.client_overrides?.context_upload_mode === ":shape_only"

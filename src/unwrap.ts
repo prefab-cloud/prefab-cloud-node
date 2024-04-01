@@ -5,6 +5,7 @@ import type { HashByPropertyValue } from "./types";
 import { isNonNullable } from "./types";
 import type { MinimumConfig, Resolver } from "./resolver";
 import { decrypt } from "./encryption";
+import { durationToMilliseconds } from "./duration";
 
 import murmurhash from "murmurhash";
 
@@ -141,6 +142,8 @@ const configValueTypeToString = (
       return "logLevel";
     case Config_ValueType.INT_RANGE:
       return "intRange";
+    case Config_ValueType.DURATION:
+      return "duration";
     default:
       return undefined;
   }
@@ -161,6 +164,8 @@ const coerceIntoType = (config: MinimumConfig, value: string): GetValue => {
       return TRUE_VALUES.has(value.toLowerCase());
     case Config_ValueType.STRING_LIST:
       return value.split(/\s*,\s*/);
+    case Config_ValueType.DURATION:
+      return value;
     default:
       console.error(
         `Unexpected valueType ${config.valueType} for provided ${config.key}`
@@ -245,6 +250,14 @@ export const unwrapValue = ({
       return { value: value.double };
     case "logLevel":
       return { value: value.logLevel };
+    case "duration":
+      if (value.duration?.definition === undefined) {
+        throw new Error(`No duration definition found for ${key}`);
+      }
+
+      return {
+        value: durationToMilliseconds(value.duration.definition),
+      };
     default:
       throw new Error(
         `Unexpected value ${JSON.stringify(value)} | kind=${JSON.stringify(

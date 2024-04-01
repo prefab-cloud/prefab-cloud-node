@@ -3,7 +3,8 @@
     "prefab": {
       "options": {
         "java_package": "cloud.prefab.domain",
-        "java_outer_classname": "Prefab"
+        "java_outer_classname": "Prefab",
+        "go_package": "github.com/prefab-cloud/prefab-cloud-go/proto"
       },
       "nested": {
         "ConfigServicePointer": {
@@ -36,7 +37,8 @@
                 "logLevel",
                 "stringList",
                 "intRange",
-                "provided"
+                "provided",
+                "duration"
               ]
             },
             "_confidential": {
@@ -95,6 +97,10 @@
               "type": "Provided",
               "id": 12
             },
+            "duration": {
+              "type": "IsoDuration",
+              "id": 15
+            },
             "confidential": {
               "type": "bool",
               "id": 13,
@@ -108,6 +114,14 @@
               "options": {
                 "proto3_optional": true
               }
+            }
+          }
+        },
+        "IsoDuration": {
+          "fields": {
+            "definition": {
+              "type": "string",
+              "id": 1
             }
           }
         },
@@ -386,7 +400,8 @@
                 "LIMIT_DEFINITION": 7,
                 "LOG_LEVEL": 9,
                 "STRING_LIST": 10,
-                "INT_RANGE": 11
+                "INT_RANGE": 11,
+                "DURATION": 12
               }
             }
           }
@@ -852,7 +867,8 @@
                 "bool",
                 "logLevel",
                 "stringList",
-                "intRange"
+                "intRange",
+                "duration"
               ]
             },
             "_configEvaluationMetadata": {
@@ -890,12 +906,28 @@
               "type": "IntRange",
               "id": 8
             },
+            "duration": {
+              "type": "ClientDuration",
+              "id": 9
+            },
             "configEvaluationMetadata": {
               "type": "ConfigEvaluationMetaData",
               "id": 6,
               "options": {
                 "proto3_optional": true
               }
+            }
+          }
+        },
+        "ClientDuration": {
+          "fields": {
+            "seconds": {
+              "type": "int64",
+              "id": 1
+            },
+            "nanos": {
+              "type": "int32",
+              "id": 2
             }
           }
         },

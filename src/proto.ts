@@ -63,8 +63,9 @@ export interface ConfigValue {
   logLevel?: LogLevel | undefined;
   stringList?: StringList | undefined;
   intRange?: IntRange | undefined;
-  provided?:
-    | Provided
+  provided?: Provided | undefined;
+  duration?:
+    | IsoDuration
     | undefined;
   /** don't log or telemetry this value */
   confidential?:
@@ -72,6 +73,11 @@ export interface ConfigValue {
     | undefined;
   /** key name to decrypt with */
   decryptWith?: string | undefined;
+}
+
+export interface IsoDuration {
+  /** value is eg P1h30s */
+  definition: string;
 }
 
 export interface Provided {
@@ -149,6 +155,7 @@ export enum Config_ValueType {
   LOG_LEVEL = 9,
   STRING_LIST = 10,
   INT_RANGE = 11,
+  DURATION = 12,
   UNRECOGNIZED = -1,
 }
 
@@ -309,7 +316,14 @@ export interface ClientConfigValue {
   logLevel?: LogLevel | undefined;
   stringList?: StringList | undefined;
   intRange?: IntRange | undefined;
+  duration?: ClientDuration | undefined;
   configEvaluationMetadata?: ConfigEvaluationMetaData | undefined;
+}
+
+export interface ClientDuration {
+  /** the actual time is the sum of these, so 1.5 seconds would be seconds = 1, nanos = 500_000_000 */
+  seconds: Long;
+  nanos: number;
 }
 
 export interface ConfigEvaluations {
