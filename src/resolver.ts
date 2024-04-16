@@ -118,7 +118,12 @@ class Resolver implements PrefabInterface {
     defaultContext?: Contexts
   ): void {
     for (const config of configs) {
-      if (config.configType !== ConfigType.DELETED) {
+      if (
+        config.configType === ConfigType.DELETED ||
+        config.rows.length === 0
+      ) {
+        this.config.delete(config.key);
+      } else {
         this.config.set(config.key, config);
       }
     }
