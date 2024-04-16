@@ -10,7 +10,7 @@ import propIsOneOf from "./fixtures/propIsOneOf";
 import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
 import { Prefab, MULTIPLE_INIT_WARNING } from "../prefab";
 import type { Contexts } from "../types";
-import { LogLevel, Criterion_CriterionOperator } from "../proto";
+import { LogLevel, Criterion_CriterionOperator, ConfigType } from "../proto";
 import type { Config } from "../proto";
 import { encrypt, generateNewHexKey } from "../../src/encryption";
 import secretConfig from "./fixtures/secretConfig";
@@ -22,7 +22,9 @@ import {
   irrelevant,
   projectEnvIdUnderTest,
   levelAt,
+  irrelevantLong,
 } from "./testHelpers";
+import mostlyDeletedConfig from "./fixtures/mostlyDeletedConfig";
 
 const configs = [
   basicConfig,
@@ -80,6 +82,49 @@ describe("prefab", () => {
       );
 
       expect(console.warn).toHaveBeenCalled();
+    });
+
+    [mostlyDeletedConfig, deletedConfig].forEach((deletionConfig) => {
+      it(`clobbers deleted config with ${deletionConfig.key}`, () => {
+        const prefab = new Prefab({
+          apiKey: irrelevant,
+        });
+
+        const missingValue = "_missing_";
+        const presentValue = 42;
+
+        const configToBeDeleted: Config = {
+          id: new Long(999),
+          projectId: irrelevantLong,
+          key: deletionConfig.key,
+          changedBy: undefined,
+          rows: [
+            {
+              properties: {},
+              values: [
+                { criteria: [], value: { int: new Long(presentValue) } },
+              ],
+            },
+          ],
+          allowableValues: [],
+          configType: ConfigType.CONFIG,
+          valueType: 1,
+          sendToClientSdk: false,
+        };
+
+        prefab.setConfig([configToBeDeleted], projectEnvIdUnderTest, new Map());
+
+        expect(prefab.get(deletionConfig.key, new Map(), missingValue)).toEqual(
+          presentValue
+        );
+
+        // `as any` to avoid the fact that resolver is private
+        (prefab as any).resolver.update([deletionConfig]);
+
+        expect(prefab.get(deletionConfig.key, new Map(), missingValue)).toEqual(
+          missingValue
+        );
+      });
     });
 
     it("allows for polling", async () => {
