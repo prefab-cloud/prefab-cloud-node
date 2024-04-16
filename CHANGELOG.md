@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 - 2024-04-16
+
+- Config deletion fix (#70)
+
 ## 0.2.0 - 2024-04-10
 
 - Add Duration support (#69)
