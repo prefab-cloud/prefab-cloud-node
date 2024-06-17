@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 - 2024-06-17
+
+- Update deps for security (#73)
+
 ## 0.2.1 - 2024-04-16
 
 - Config deletion fix (#70)
