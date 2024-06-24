@@ -38,7 +38,8 @@
                 "stringList",
                 "intRange",
                 "provided",
-                "duration"
+                "duration",
+                "json"
               ]
             },
             "_confidential": {
@@ -101,6 +102,10 @@
               "type": "IsoDuration",
               "id": 15
             },
+            "json": {
+              "type": "Json",
+              "id": 16
+            },
             "confidential": {
               "type": "bool",
               "id": 13,
@@ -114,6 +119,14 @@
               "options": {
                 "proto3_optional": true
               }
+            }
+          }
+        },
+        "Json": {
+          "fields": {
+            "json": {
+              "type": "string",
+              "id": 1
             }
           }
         },
@@ -401,7 +414,8 @@
                 "LOG_LEVEL": 9,
                 "STRING_LIST": 10,
                 "INT_RANGE": 11,
-                "DURATION": 12
+                "DURATION": 12,
+                "JSON": 13
               }
             }
           }
@@ -868,7 +882,8 @@
                 "logLevel",
                 "stringList",
                 "intRange",
-                "duration"
+                "duration",
+                "json"
               ]
             },
             "_configEvaluationMetadata": {
@@ -910,6 +925,10 @@
               "type": "ClientDuration",
               "id": 9
             },
+            "json": {
+              "type": "Json",
+              "id": 10
+            },
             "configEvaluationMetadata": {
               "type": "ConfigEvaluationMetaData",
               "id": 6,
@@ -928,6 +947,10 @@
             "nanos": {
               "type": "int32",
               "id": 2
+            },
+            "definition": {
+              "type": "string",
+              "id": 3
             }
           }
         },

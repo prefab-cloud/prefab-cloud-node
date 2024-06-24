@@ -81,6 +81,23 @@ describe("unwrapValue", () => {
     });
   });
 
+  it("should unwrap a json value", () => {
+    [true, false].forEach((primitivesOnly) => {
+      const value: ConfigValue = {
+        json: { json: JSON.stringify({ a: 1, b: 2 }) },
+      };
+      expect(
+        unwrapValue({
+          key,
+          kind: "json",
+          value,
+          hashByPropertyValue: emptyHashByPropertyValue,
+          primitivesOnly,
+        })
+      ).toStrictEqual({ value: { a: 1, b: 2 } });
+    });
+  });
+
   it("should return a random weighted value with no context", () => {
     const value: ConfigValue = {
       weightedValues: {

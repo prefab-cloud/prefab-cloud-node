@@ -250,6 +250,12 @@ export const unwrapValue = ({
       return { value: value.double };
     case "logLevel":
       return { value: value.logLevel };
+    case "json":
+      if (value.json?.json === undefined) {
+        throw new Error(`Invalid json value for ${key}`);
+      }
+
+      return { value: JSON.parse(value.json.json) };
     case "duration":
       if (value.duration?.definition === undefined) {
         throw new Error(`No duration definition found for ${key}`);
