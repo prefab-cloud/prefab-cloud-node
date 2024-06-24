@@ -301,9 +301,10 @@ const aggregatorSpecificLogic = {
   },
 
   evaluationSummaries(data: TelemetryTest["data"]) {
+    const { keys } = data[0] as { keys: string[] };
     return {
       exercise: (_: unknown, prefab: Prefab) => {
-        data.forEach((key: unknown) => {
+        keys.forEach((key: unknown) => {
           prefab.get(key as string);
         });
       },
