@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0 - 2024-06-24
+
+- Support JSON configs (#74)
+
 ## 0.2.2 - 2024-06-17
 
 - Update deps for security (#73)
