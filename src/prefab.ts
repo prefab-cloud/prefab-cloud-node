@@ -89,6 +89,7 @@ interface ConstructorProps {
   datafile?: string;
   enablePolling?: boolean;
   enableSSE?: boolean;
+  globalContext?: Contexts;
   namespace?: string;
   onNoDefault?: OnNoDefault;
   pollInterval?: number;
@@ -118,6 +119,7 @@ class Prefab implements PrefabInterface {
   private initCount: number = 0;
   private lastUpdatedAt: number = 0;
   private loading: boolean = false;
+  private readonly globalContext?: Contexts;
   readonly telemetry: Telemetry;
 
   constructor({
@@ -129,6 +131,7 @@ class Prefab implements PrefabInterface {
     onNoDefault,
     enableSSE,
     enablePolling,
+    globalContext,
     pollInterval,
     fetch = globalThis.fetch,
     defaultLogLevel = PREFAB_DEFAULT_LOG_LEVEL,
@@ -148,6 +151,7 @@ class Prefab implements PrefabInterface {
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
     this.instanceHash = crypto.randomUUID();
     this.onUpdate = onUpdate;
+    this.globalContext = globalContext;
 
     const parsedDefaultLogLevel = parseLevel(defaultLogLevel);
 
@@ -281,7 +285,8 @@ class Prefab implements PrefabInterface {
       this.telemetry,
       undefined,
       this.onUpdate,
-      defaultContext
+      defaultContext,
+      this.globalContext
     );
   }
 

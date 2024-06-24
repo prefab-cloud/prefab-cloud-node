@@ -64,6 +64,7 @@ class Resolver implements PrefabInterface {
   public contexts?: Contexts;
   readonly telemetry: Telemetry | undefined;
   private readonly onUpdate: (configs: Array<Config | MinimumConfig>) => void;
+  private readonly globalContext?: Contexts;
   public id: number;
   public readonly defaultContext?: Contexts;
   public updateIfStalerThan: (
@@ -79,7 +80,8 @@ class Resolver implements PrefabInterface {
     telemetry?: Telemetry,
     contexts?: Contexts | ContextObj,
     onUpdate?: (configs: Array<Config | MinimumConfig>) => void,
-    defaultContext?: Contexts
+    defaultContext?: Contexts,
+    globalContext?: Contexts
   ) {
     id += 1;
     this.id = id;
@@ -88,9 +90,10 @@ class Resolver implements PrefabInterface {
     this.onNoDefault = onNoDefault;
     this.onUpdate = onUpdate ?? (() => {});
     this.defaultContext = defaultContext ?? new Map();
+    this.globalContext = globalContext ?? new Map();
     this.contexts = mergeDefaultContexts(
-      contexts ?? new Map(),
-      defaultContext ?? new Map()
+      this.globalContext,
+      mergeDefaultContexts(contexts ?? new Map(), defaultContext ?? new Map())
     );
     this.update(
       Array.isArray(configs) ? configs : Array.from(configs.values())
@@ -109,7 +112,8 @@ class Resolver implements PrefabInterface {
       this.telemetry,
       contexts,
       this.onUpdate,
-      this.defaultContext
+      this.defaultContext,
+      this.globalContext
     );
   }
 

@@ -55,6 +55,7 @@ describe("integration tests", () => {
         cdnUrl,
         namespace: test.client_overrides?.namespace,
         contextUploadMode: "none",
+        globalContext: test.contexts.global,
       };
 
       if (test.client_overrides?.on_no_default === 2) {
