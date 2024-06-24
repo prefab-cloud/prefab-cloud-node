@@ -66,13 +66,13 @@ describe("integration tests", () => {
       await prefab.init();
 
       const evaluate = (): GetValue => {
-        if (test.parentContext !== undefined) {
+        if (test.contexts.block !== undefined) {
           let returnValue: GetValue | "returnValue was never set";
 
-          prefab.inContext(test.parentContext, (prefabWithContext) => {
+          prefab.inContext(test.contexts.block, (prefabWithContext) => {
             returnValue = func(prefabWithContext, test)(
               test.input.key,
-              test.context,
+              test.contexts.local,
               test.input.default
             );
           });
@@ -81,7 +81,7 @@ describe("integration tests", () => {
         } else {
           return func(prefab, test)(
             test.input.key,
-            test.context,
+            test.contexts.local,
             test.input.default
           );
         }

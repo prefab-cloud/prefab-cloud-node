@@ -77,16 +77,24 @@ interface RawTestSuite {
   cases: Array<RawInputOutputTestCase | RawTelemetryTestCase>;
 }
 
+type ContextTestData = Record<string, any>;
+
+interface ContextsTestData {
+  global: ContextTestData;
+  local: ContextTestData;
+  block: ContextTestData;
+}
+
 interface RawInputOutputTestCase {
   name: string;
   client: string;
   function: "enabled" | "get" | "get_or_raise";
+  contexts: ContextsTestData;
   type: string;
   input: {
     key?: string;
     flag?: string;
     default?: any;
-    context: YAMLContext;
   };
   expected: {
     value: any;
@@ -117,8 +125,11 @@ interface RawTelemetryTestCase {
 
 export interface InputOutputTest {
   name: string;
-  parentContext: Contexts | undefined;
-  context: Contexts | undefined;
+  contexts: {
+    global: Contexts | undefined;
+    local: Contexts | undefined;
+    block: Contexts | undefined;
+  };
   client: string;
   function: string;
   expectedWarning: RegExp | undefined;
@@ -126,7 +137,6 @@ export interface InputOutputTest {
     key?: string;
     flag?: string;
     default?: any;
-    context?: Record<string, Record<string, any>>;
   };
   expected: {
     value: any;
@@ -486,10 +496,6 @@ export const tests = (): {
         return;
       }
 
-      const parentContext = contextMaybe(testSuite.context);
-
-      const context = contextMaybe(testCase.input.context);
-
       const key = testCase.input.key ?? testCase.input.flag ?? "";
 
       const expectedValue = calcExpectedValue(testCase, key);
@@ -510,10 +516,15 @@ export const tests = (): {
         }
       });
 
+      testCase.contexts = testCase.contexts ?? {};
+
       inputOutputTests.push({
         name,
-        parentContext,
-        context,
+        contexts: {
+          global: contextMaybe(testCase.contexts.global),
+          local: contextMaybe(testCase.contexts.local),
+          block: contextMaybe(testCase.contexts.block),
+        },
         expectedWarning,
         client: testCase.client,
         function: testCase.function,
