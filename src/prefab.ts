@@ -3,6 +3,7 @@ import type Long from "long";
 import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
 import { Resolver, type MinimumConfig } from "./resolver";
+import { Sources } from "./sources";
 import type {
   ContextObj,
   Contexts,
@@ -84,8 +85,7 @@ export interface Telemetry {
 
 interface ConstructorProps {
   apiKey: string;
-  apiUrl?: string;
-  cdnUrl?: string;
+  sources?: string[];
   datafile?: string;
   enablePolling?: boolean;
   enableSSE?: boolean;
@@ -103,8 +103,7 @@ interface ConstructorProps {
 
 class Prefab implements PrefabInterface {
   private readonly apiKey: string;
-  private readonly apiUrl: string;
-  private readonly cdnUrl: string;
+  readonly sources: Sources;
   private readonly datafile?: string;
   private readonly enableSSE: boolean;
   private enablePolling: boolean;
@@ -124,9 +123,8 @@ class Prefab implements PrefabInterface {
 
   constructor({
     apiKey,
-    apiUrl,
+    sources,
     namespace,
-    cdnUrl,
     datafile,
     onNoDefault,
     enableSSE,
@@ -141,8 +139,16 @@ class Prefab implements PrefabInterface {
     onUpdate = () => {},
   }: ConstructorProps) {
     this.apiKey = apiKey;
-    this.apiUrl = apiUrl ?? "https://api.prefab.cloud";
-    this.cdnUrl = cdnUrl ?? "https://api-prefab-cloud.global.ssl.fastly.net";
+
+    if (
+      process.env["PREFAB_API_URL_OVERRIDE"] !== undefined &&
+      process.env["PREFAB_API_URL_OVERRIDE"] !== ""
+    ) {
+      this.sources = new Sources([process.env["PREFAB_API_URL_OVERRIDE"]]);
+    } else {
+      this.sources = new Sources(sources);
+    }
+
     this.datafile = datafile;
     this.enablePolling = enablePolling ?? false;
     this.enableSSE = enableSSE ?? true;
@@ -161,25 +167,36 @@ class Prefab implements PrefabInterface {
       );
     }
 
+    if (this.sources.isEmpty()) {
+      throw new Error("At least one source is required");
+    }
+
     this.defaultLogLevel = parsedDefaultLogLevel ?? PREFAB_DEFAULT_LOG_LEVEL;
 
-    this.apiClient = apiClient(this.apiUrl, this.apiKey, fetch);
+    this.apiClient = apiClient(this.apiKey, fetch);
 
     this.telemetry = {
       knownLoggers: knownLoggers(
         this.apiClient,
+        this.sources.telemetrySource,
         this.instanceHash,
         collectLoggerCounts,
         this.namespace
       ),
-      contextShapes: contextShapes(this.apiClient, contextUploadMode),
+      contextShapes: contextShapes(
+        this.apiClient,
+        this.sources.telemetrySource,
+        contextUploadMode
+      ),
       exampleContexts: exampleContexts(
         this.apiClient,
+        this.sources.telemetrySource,
         this.instanceHash,
         contextUploadMode
       ),
       evaluationSummaries: evaluationSummaries(
         this.apiClient,
+        this.sources.telemetrySource,
         this.instanceHash,
         collectEvaluationSummaries
       ),
@@ -200,9 +217,8 @@ class Prefab implements PrefabInterface {
 
     const { configs, projectEnvId, startAtId, defaultContext } =
       await loadConfig({
-        apiUrl: this.apiUrl,
+        sources: this.sources.configSources,
         apiClient: this.apiClient,
-        cdnUrl: this.cdnUrl,
         datafile: this.datafile,
       });
 
@@ -259,8 +275,7 @@ class Prefab implements PrefabInterface {
     this.loading = true;
 
     return loadConfig({
-      cdnUrl: this.cdnUrl,
-      apiUrl: this.apiUrl,
+      sources: this.sources.configSources,
       apiClient: this.apiClient,
     }).then(({ configs, defaultContext }) => {
       if (configs.length > 0) {
@@ -295,7 +310,7 @@ class Prefab implements PrefabInterface {
 
     const connection = new SSEConnection({
       apiKey: this.apiKey,
-      apiUrl: this.apiUrl,
+      sources: this.sources.sseSources,
     });
 
     connection.start(this.resolver, startAtId);

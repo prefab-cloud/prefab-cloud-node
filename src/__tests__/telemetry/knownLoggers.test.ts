@@ -2,14 +2,23 @@ import Long from "long";
 import { knownLoggers, stub } from "../../telemetry/knownLoggers";
 import { mockApiClient } from "../testHelpers";
 
+const telemetrySource = "https://telemetry.example.com";
+
 // NOTE: Integration tests for this function are in the prefab.test.ts file.
 describe("knownLoggers", () => {
   it("returns stub if collectLoggerCounts is false", () => {
-    expect(knownLoggers(mockApiClient, "instanceHash", false)).toBe(stub);
+    expect(
+      knownLoggers(mockApiClient, telemetrySource, "instanceHash", false)
+    ).toBe(stub);
   });
 
   it("should push log entries to the logger", () => {
-    const logger = knownLoggers(mockApiClient, "instanceHash", true);
+    const logger = knownLoggers(
+      mockApiClient,
+      telemetrySource,
+      "instanceHash",
+      true
+    );
     logger.push("loggerName1", 1);
     logger.push("loggerName1", 1);
     logger.push("loggerName2", 2);
@@ -29,7 +38,12 @@ describe("knownLoggers", () => {
     };
     mockApiClient.fetch.mockResolvedValue(mockFetchResult);
 
-    const logger = knownLoggers(mockApiClient, "instanceHash", true);
+    const logger = knownLoggers(
+      mockApiClient,
+      telemetrySource,
+      "instanceHash",
+      true
+    );
     logger.push("loggerName1", 1);
     logger.push("loggerName1", 2);
     logger.push("loggerName1", 1);
@@ -64,6 +78,7 @@ describe("knownLoggers", () => {
   it("won't add data past the maxDataSize", () => {
     const logger = knownLoggers(
       mockApiClient,
+      telemetrySource,
       "instanceHash",
       true,
       undefined,

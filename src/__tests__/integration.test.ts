@@ -18,7 +18,6 @@ const func = (prefab: PrefabInterface, test: InputOutputTest): any => {
 };
 
 const apiKey = process.env["PREFAB_INTEGRATION_TEST_API_KEY"];
-const cdnUrl = "https://api-staging-prefab-cloud.global.ssl.fastly.net";
 
 if (apiKey === undefined || apiKey.length === 0) {
   throw new Error("PREFAB_INTEGRATION_TEST_API_KEY is not set");
@@ -33,6 +32,10 @@ const defaultOptions = {
   collectLoggerCounts: false,
   contextUploadMode: "none" as const,
   collectEvaluationSummaries: false,
+  sources: [
+    "https://belt.staging-prefab.cloud",
+    "https://suspenders.staging-prefab.cloud",
+  ],
 };
 
 describe("integration tests", () => {
@@ -52,8 +55,6 @@ describe("integration tests", () => {
       const options: ConstructorParameters<typeof Prefab>[0] = {
         ...defaultOptions,
         apiKey,
-        cdnUrl,
-        namespace: test.client_overrides?.namespace,
         contextUploadMode: "none",
         globalContext: test.contexts.global,
       };
@@ -106,12 +107,12 @@ describe("integration tests", () => {
 
   telemetryTests.forEach((test) => {
     it(test.name, async () => {
-      const apiUrl = "https://api.staging-prefab.cloud";
-
       const options: ConstructorParameters<typeof Prefab>[0] = {
         apiKey,
-        apiUrl,
-        cdnUrl,
+        sources: [
+          "https://belt.staging-prefab.cloud",
+          "https://suspenders.staging-prefab.cloud",
+        ],
         ...test.customOptions,
       };
 

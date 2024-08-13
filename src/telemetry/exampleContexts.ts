@@ -63,6 +63,7 @@ const contextsToProto = (contexts: Contexts): Context[] => {
 
 export const exampleContexts = (
   apiClient: ApiClient,
+  telemetryHost: string | undefined,
   instanceHash: string,
   contextUploadMode: ContextUploadMode,
   maxDataSize: number = MAX_DATA_SIZE
@@ -85,6 +86,10 @@ export const exampleContexts = (
     cache,
 
     push(contexts: Contexts) {
+      if (telemetryHost === undefined) {
+        return;
+      }
+
       if (data.length >= maxDataSize) {
         return;
       }
@@ -102,7 +107,7 @@ export const exampleContexts = (
     },
 
     async sync(): Promise<SyncResult | undefined> {
-      if (data.length === 0) {
+      if (data.length === 0 || telemetryHost === undefined) {
         return undefined;
       }
 
@@ -132,6 +137,7 @@ export const exampleContexts = (
       const body = encode("TelemetryEvents", apiData);
 
       const result = await apiClient.fetch({
+        source: telemetryHost,
         path: ENDPOINT,
         options: {
           method: "POST",
