@@ -16,14 +16,12 @@ interface Result {
 }
 
 export async function loadConfig({
-  cdnUrl,
-  apiUrl,
+  sources,
   datafile,
   startAtId,
   apiClient,
 }: {
-  cdnUrl: string;
-  apiUrl: string;
+  sources: string[];
   startAtId?: Long;
   apiClient: ApiClient;
   datafile?: string;
@@ -35,12 +33,25 @@ export async function loadConfig({
     return await Promise.resolve(parse(parsed));
   }
 
-  try {
-    return await loadConfigFromUrl({ url: cdnUrl, startAtId, apiClient });
-  } catch (e) {
-    console.warn(e);
-    return await loadConfigFromUrl({ url: apiUrl, startAtId, apiClient });
+  const lastSource = sources[sources.length - 1];
+
+  for (const source of sources.slice(0, -1)) {
+    try {
+      return await loadConfigFromUrl({ source, startAtId, apiClient });
+    } catch (e) {
+      console.warn(e);
+    }
   }
+
+  if (lastSource === undefined) {
+    throw new Error("No sources provided");
+  }
+
+  return await loadConfigFromUrl({
+    source: lastSource,
+    startAtId,
+    apiClient,
+  });
 }
 
 const extractDefaultContext = (
@@ -65,20 +76,21 @@ const extractDefaultContext = (
 };
 
 const loadConfigFromUrl = async ({
-  url,
+  source,
   startAtId,
   apiClient,
 }: {
-  url: string;
+  source: string;
   startAtId?: Long;
   apiClient: ApiClient;
 }): ReturnType<typeof loadConfig> => {
-  const response = await apiClient.fetch({
-    url: `${url}/api/v1/configs/${startAtId?.toString() ?? 0}`,
-  });
+  const path = `/api/v1/configs/${startAtId?.toString() ?? 0}`;
+  const response = await apiClient.fetch({ source, path });
 
   if (response.status === 401) {
-    throw new Error("Unauthorized. Check your Prefab SDK API key.");
+    throw new Error(
+      `Unauthorized. Check your Prefab SDK API key for ${source}${path}`
+    );
   }
 
   if (response.status === 200) {
@@ -88,7 +100,9 @@ const loadConfigFromUrl = async ({
     return parse(parsed);
   }
 
-  throw new Error(`Something went wrong talking to ${url}. ${response.status}`);
+  throw new Error(
+    `Something went wrong talking to ${source}/${path} | ${response.status}`
+  );
 };
 
 const parse = (parsed: Configs): Result => {

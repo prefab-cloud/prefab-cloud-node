@@ -59,6 +59,8 @@ const evaluationFor = (config: Config, contexts: Contexts): Evaluation => {
   });
 };
 
+const telemetrySource = "https://telemetry.example.com";
+
 describe("evaluationSummaries", () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -69,11 +71,18 @@ describe("evaluationSummaries", () => {
   });
 
   it("returns a stub if collectEvaluationSummaries is false", () => {
-    expect(evaluationSummaries(mockApiClient, instanceHash, false)).toBe(stub);
+    expect(
+      evaluationSummaries(mockApiClient, telemetrySource, instanceHash, false)
+    ).toBe(stub);
   });
 
   it("pushes data", () => {
-    const aggregator = evaluationSummaries(mockApiClient, instanceHash, true);
+    const aggregator = evaluationSummaries(
+      mockApiClient,
+      telemetrySource,
+      instanceHash,
+      true
+    );
 
     aggregator.push(evaluationFor(propIsOneOf, usContexts));
     aggregator.push(evaluationFor(propIsOneOf, ukContexts));
@@ -123,7 +132,12 @@ describe("evaluationSummaries", () => {
   });
 
   it("works for weighted values", () => {
-    const aggregator = evaluationSummaries(mockApiClient, instanceHash, true);
+    const aggregator = evaluationSummaries(
+      mockApiClient,
+      telemetrySource,
+      instanceHash,
+      true
+    );
 
     aggregator.push(evaluationFor(rolloutFlag, usContexts));
     aggregator.push(evaluationFor(rolloutFlag, ukContexts));
@@ -143,7 +157,12 @@ describe("evaluationSummaries", () => {
   });
 
   it("should sync to the server", async () => {
-    const aggregator = evaluationSummaries(mockApiClient, instanceHash, true);
+    const aggregator = evaluationSummaries(
+      mockApiClient,
+      telemetrySource,
+      instanceHash,
+      true
+    );
 
     if (!aggregator.enabled) {
       throw new Error("aggregator is not enabled");
@@ -233,6 +252,7 @@ describe("evaluationSummaries", () => {
   it("won't add data past the maxDataSize", () => {
     const aggregator = evaluationSummaries(
       mockApiClient,
+      telemetrySource,
       instanceHash,
       true,
       2

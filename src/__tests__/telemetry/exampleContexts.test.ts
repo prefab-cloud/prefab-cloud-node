@@ -31,6 +31,8 @@ const contexts: Contexts = new Map([
   ["team", teamContext],
 ]);
 
+const telemetrySource = "https://telemetry.example.com";
+
 describe("exampleContexts", () => {
   beforeEach(() => {
     jest.useFakeTimers();
@@ -41,10 +43,12 @@ describe("exampleContexts", () => {
   });
 
   it("returns a stub if contextUploadMode is not periodicExample", () => {
-    expect(exampleContexts(mockApiClient, instanceHash, "shapeOnly")).toBe(
-      stub
-    );
-    expect(exampleContexts(mockApiClient, instanceHash, "none")).toBe(stub);
+    expect(
+      exampleContexts(mockApiClient, telemetrySource, instanceHash, "shapeOnly")
+    ).toBe(stub);
+    expect(
+      exampleContexts(mockApiClient, telemetrySource, instanceHash, "none")
+    ).toBe(stub);
   });
 
   it("pushes data", () => {
@@ -52,6 +56,7 @@ describe("exampleContexts", () => {
 
     const aggregator = exampleContexts(
       mockApiClient,
+      telemetrySource,
       instanceHash,
       "periodicExample"
     );
@@ -88,6 +93,7 @@ describe("exampleContexts", () => {
   it("should sync to the server", async () => {
     const aggregator = exampleContexts(
       mockApiClient,
+      telemetrySource,
       instanceHash,
       "periodicExample"
     );
@@ -170,6 +176,7 @@ describe("exampleContexts", () => {
   it("won't add data past the maxDataSize", () => {
     const aggregator = exampleContexts(
       mockApiClient,
+      telemetrySource,
       instanceHash,
       "periodicExample",
       2

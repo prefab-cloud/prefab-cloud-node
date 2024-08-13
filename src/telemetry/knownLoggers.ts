@@ -38,6 +38,7 @@ const NUMBER_LEVEL_LOOKUP: Record<string, LoggerLevelName> = {
 
 export const knownLoggers = (
   apiClient: ApiClient,
+  telemetryHost: string | undefined,
   instanceHash: string,
   collectLoggerCounts: boolean,
   namespace?: string,
@@ -58,6 +59,10 @@ export const knownLoggers = (
     timeout: undefined,
 
     push(loggerName: string, severity: number) {
+      if (telemetryHost === undefined) {
+        return;
+      }
+
       startAt = startAt ?? now();
 
       if (data[loggerName] == null) {
@@ -73,7 +78,7 @@ export const knownLoggers = (
     },
 
     async sync(): Promise<SyncResult | undefined> {
-      if (Object.keys(data).length === 0) {
+      if (Object.keys(data).length === 0 || telemetryHost === undefined) {
         return;
       }
 
@@ -109,6 +114,7 @@ export const knownLoggers = (
       }
 
       const result = await apiClient.fetch({
+        source: telemetryHost,
         path: ENDPOINT,
         options: {
           method: "POST",

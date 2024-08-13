@@ -2,6 +2,7 @@ import * as path from "path";
 import Long from "long";
 
 import basicConfig from "./fixtures/basicConfig";
+import { DEFAULT_SOURCES } from "../sources";
 import deletedConfig from "./fixtures/deletedConfig";
 import basicFlag from "./fixtures/basicFlag";
 import rolloutFlag from "./fixtures/rolloutFlag";
@@ -55,6 +56,10 @@ const defaultOptions = {
 };
 
 describe("prefab", () => {
+  beforeEach(() => {
+    process.env["PREFAB_API_URL_OVERRIDE"] = "";
+  });
+
   afterEach(() => {
     jest.useRealTimers();
   });
@@ -78,7 +83,7 @@ describe("prefab", () => {
       jest.spyOn(console, "warn").mockImplementation();
 
       await expect(prefab.init()).rejects.toThrow(
-        "Unauthorized. Check your Prefab SDK API key."
+        "Unauthorized. Check your Prefab SDK API key for https://suspenders.prefab.cloud/api/v1/configs/0"
       );
 
       expect(console.warn).toHaveBeenCalled();
@@ -125,6 +130,42 @@ describe("prefab", () => {
           missingValue
         );
       });
+    });
+
+    it("allows overriding sources with PREFAB_API_URL_OVERRIDE env var", () => {
+      const prefabDefault = new Prefab({
+        apiKey: irrelevant,
+      });
+
+      expect(prefabDefault.sources.configSources).toEqual(DEFAULT_SOURCES);
+
+      process.env["PREFAB_API_URL_OVERRIDE"] = "https://example.com";
+
+      const prefabWithOverride = new Prefab({
+        apiKey: irrelevant,
+      });
+
+      expect(prefabWithOverride.sources.configSources).toEqual([
+        "https://example.com",
+      ]);
+    });
+
+    it("allows specifying sources", () => {
+      const prefabDefault = new Prefab({
+        apiKey: irrelevant,
+      });
+
+      expect(prefabDefault.sources.configSources).toEqual(DEFAULT_SOURCES);
+
+      const prefabWithOverride = new Prefab({
+        apiKey: irrelevant,
+        sources: ["https://example.com", "https://2.example.com"],
+      });
+
+      expect(prefabWithOverride.sources.configSources).toEqual([
+        "https://example.com",
+        "https://2.example.com",
+      ]);
     });
 
     it("allows for polling", async () => {

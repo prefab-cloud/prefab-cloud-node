@@ -33,6 +33,7 @@ export const stub: EvaluationSummariesTelemetry = {
 
 export const evaluationSummaries = (
   apiClient: ApiClient,
+  telemetryHost: string | undefined,
   instanceHash: string,
   collectEvaluationSummaries: boolean,
   maxDataSize: number = 10000
@@ -67,6 +68,10 @@ export const evaluationSummaries = (
     timeout: undefined,
 
     push(evaluation: Evaluation): void {
+      if (telemetryHost === undefined) {
+        return;
+      }
+
       if (evaluation.configId === undefined) {
         return;
       }
@@ -102,7 +107,7 @@ export const evaluationSummaries = (
     },
 
     sync: async (): Promise<SyncResult | undefined> => {
-      if (data.size === 0) {
+      if (data.size === 0 || telemetryHost === undefined) {
         return undefined;
       }
 
@@ -166,6 +171,7 @@ export const evaluationSummaries = (
       const body = encode("TelemetryEvents", apiData);
 
       const result = await apiClient.fetch({
+        source: telemetryHost,
         path: ENDPOINT,
         options: {
           method: "POST",

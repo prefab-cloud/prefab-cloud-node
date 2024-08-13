@@ -43,6 +43,7 @@ export const fieldTypeForValue = (value: unknown): number => {
 
 export const contextShapes = (
   apiClient: ApiClient,
+  telemetryHost: string | undefined,
   contextUploadMode: ContextUploadMode,
   namespace?: string,
   maxDataSize: number = MAX_DATA_SIZE
@@ -61,6 +62,10 @@ export const contextShapes = (
     timeout: undefined,
 
     push(contexts: Contexts) {
+      if (telemetryHost === undefined) {
+        return;
+      }
+
       contexts.forEach((context, name) => {
         context.forEach((value, key) => {
           let shape = data.get(name);
@@ -80,7 +85,7 @@ export const contextShapes = (
     },
 
     async sync(): Promise<SyncResult | undefined> {
-      if (data.size === 0) {
+      if (data.size === 0 || telemetryHost === undefined) {
         return;
       }
 
@@ -106,6 +111,7 @@ export const contextShapes = (
       const body = encode("ContextShapes", apiData);
 
       const result = await apiClient.fetch({
+        source: telemetryHost,
         path: ENDPOINT,
         options: {
           method: "POST",

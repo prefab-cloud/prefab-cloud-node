@@ -29,15 +29,25 @@ const contexts: Contexts = new Map([
   ["team", teamContext],
 ]);
 
+const telemetrySource = "https://telemetry.example.com";
+
 describe("contextShapes", () => {
   it("returns stub if contextUploadMode is not `none`", () => {
-    expect(contextShapes(mockApiClient, "shapeOnly")).not.toBe(stub);
-    expect(contextShapes(mockApiClient, "periodicExample")).not.toBe(stub);
-    expect(contextShapes(mockApiClient, "none")).toBe(stub);
+    expect(contextShapes(mockApiClient, telemetrySource, "shapeOnly")).not.toBe(
+      stub
+    );
+    expect(
+      contextShapes(mockApiClient, telemetrySource, "periodicExample")
+    ).not.toBe(stub);
+    expect(contextShapes(mockApiClient, telemetrySource, "none")).toBe(stub);
   });
 
   it("pushes data", () => {
-    const aggregator = contextShapes(mockApiClient, "shapeOnly");
+    const aggregator = contextShapes(
+      mockApiClient,
+      telemetrySource,
+      "shapeOnly"
+    );
 
     aggregator.push(contexts);
 
@@ -58,7 +68,11 @@ describe("contextShapes", () => {
   });
 
   it("should sync context shapes to the server", async () => {
-    const aggregator = contextShapes(mockApiClient, "shapeOnly");
+    const aggregator = contextShapes(
+      mockApiClient,
+      telemetrySource,
+      "shapeOnly"
+    );
 
     aggregator.push(contexts);
 
@@ -90,7 +104,13 @@ describe("contextShapes", () => {
   });
 
   it("won't add data past the maxDataSize", () => {
-    const aggregator = contextShapes(mockApiClient, "shapeOnly", undefined, 2);
+    const aggregator = contextShapes(
+      mockApiClient,
+      telemetrySource,
+      "shapeOnly",
+      undefined,
+      2
+    );
 
     aggregator.push(contexts);
 

@@ -27,12 +27,24 @@ const getHashByPropertyValue = (
   )?.toString();
 };
 
+const getArrayifiedContextValue = (
+  contexts: any,
+  criterion: { propertyName: string }
+): string[] => {
+  const result = contextLookup(contexts, criterion.propertyName);
+
+  if (Array.isArray(result)) {
+    return result.map((item) => item.toString());
+  } else {
+    return [result?.toString() ?? ""];
+  }
+};
+
 const propIsOneOf = (criterion: Criterion, contexts: Contexts): boolean => {
+  const contextValue: string[] = getArrayifiedContextValue(contexts, criterion);
+
   return (criterion?.valueToMatch?.stringList?.values ?? []).some((value) => {
-    return (
-      contextLookup(contexts, criterion.propertyName)?.toString() ===
-      value.toString()
-    );
+    return contextValue.includes(value.toString());
   });
 };
 
