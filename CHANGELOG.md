@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0 - 2024-08-22
+
+- Use belt and suspenders for reliability (#75)
+
 ## 0.3.0 - 2024-06-24
 
 - Support JSON configs (#74)
