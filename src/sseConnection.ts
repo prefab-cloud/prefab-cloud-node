@@ -24,13 +24,12 @@ class SSEConnection {
       Accept: "text/event-stream",
     });
 
-    // TODO: use sources here
-    const channel = new EventSource(
-      `${this.sources[0] as string}/api/v1/sse/config`,
-      {
-        headers,
-      }
-    );
+    const url = `${(this.sources[0] as string).replace(
+      /(belt|suspenders)\./,
+      "stream."
+    )}/api/v1/sse/config`;
+
+    const channel = new EventSource(url, { headers });
 
     channel.onmessage = (message: any) => {
       const newConfigs = parseConfigs(message.data);
