@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 - 2024-09-19
+
+- Use stream subdomain for SSE (#76)
+
 ## 0.4.0 - 2024-08-22
 
 - Use belt and suspenders for reliability (#75)
