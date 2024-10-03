@@ -21,13 +21,19 @@ class Sources {
       .filter(
         (source) =>
           source.startsWith("https://") &&
-          (source.includes("belt") || source.includes("suspenders"))
+          (source.includes("belt.") ||
+            source.includes("suspenders.") ||
+            source.includes("api."))
       )
-      .map((source) => source.replace(/(belt|suspenders)\./, "telemetry."))[0];
+      .map((source) =>
+        source.replace(/(belt|suspenders|api)\./, "telemetry.")
+      )[0];
 
     if (this.telemetrySource === undefined) {
       console.debug(
-        "No telemetry source found in sources. No telemetry will be reported."
+        `No telemetry source found in sources. No telemetry will be reported. Sources were ${JSON.stringify(
+          this.sources
+        )}`
       );
     }
 
