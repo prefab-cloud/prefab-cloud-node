@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2 - 2024-10-03
+
+- Allow telemetry when using api source directly (#78)
+
 ## 0.4.1 - 2024-09-19
 
 - Use stream subdomain for SSE (#76)
