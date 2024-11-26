@@ -517,7 +517,17 @@
                 "PROP_ENDS_WITH_ONE_OF": 8,
                 "PROP_DOES_NOT_END_WITH_ONE_OF": 9,
                 "HIERARCHICAL_MATCH": 10,
-                "IN_INT_RANGE": 11
+                "IN_INT_RANGE": 11,
+                "PROP_STARTS_WITH_ONE_OF": 12,
+                "PROP_DOES_NOT_START_WITH_ONE_OF": 13,
+                "PROP_CONTAINS_ONE_OF": 14,
+                "PROP_DOES_NOT_CONTAIN_ONE_OF": 15,
+                "PROP_LESS_THAN": 16,
+                "PROP_LESS_THAN_OR_EQUAL": 17,
+                "PROP_GREATER_THAN": 18,
+                "PROP_GREATER_THAN_OR_EQUAL": 19,
+                "PROP_BEFORE": 20,
+                "PROP_AFTER": 21
               }
             }
           }
