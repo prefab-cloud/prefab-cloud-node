@@ -48,15 +48,50 @@ const propIsOneOf = (criterion: Criterion, contexts: Contexts): boolean => {
   });
 };
 
+const propMatchesOneOf = (
+  criterion: Criterion,
+  contexts: Contexts,
+  matcher: (contextValue: string, value: string) => boolean
+): boolean => {
+  return (criterion.valueToMatch?.stringList?.values ?? []).some((value) => {
+    const contextValue = contextLookup(
+      contexts,
+      criterion.propertyName
+    )?.toString();
+    // Explicitly check for non-null and non-empty contextValue
+    return (
+      contextValue != null &&
+      contextValue !== "" &&
+      matcher(contextValue, value.toString())
+    );
+  });
+};
+
 const propEndsWithOneOf = (
   criterion: Criterion,
   contexts: Contexts
 ): boolean => {
-  return (criterion.valueToMatch?.stringList?.values ?? []).some((value) => {
-    return contextLookup(contexts, criterion.propertyName)
-      ?.toString()
-      .endsWith(value.toString());
-  });
+  return propMatchesOneOf(criterion, contexts, (contextValue, value) =>
+    contextValue.endsWith(value)
+  );
+};
+
+const propStartsWithOneOf = (
+  criterion: Criterion,
+  contexts: Contexts
+): boolean => {
+  return propMatchesOneOf(criterion, contexts, (contextValue, value) =>
+    contextValue.startsWith(value)
+  );
+};
+
+const propContainsOneOf = (
+  criterion: Criterion,
+  contexts: Contexts
+): boolean => {
+  return propMatchesOneOf(criterion, contexts, (contextValue, value) =>
+    contextValue.includes(value)
+  );
 };
 
 const inSegment = (
@@ -130,6 +165,14 @@ const allCriteriaMatch = (
         return propEndsWithOneOf(criterion, contexts);
       case Criterion_CriterionOperator.PROP_DOES_NOT_END_WITH_ONE_OF:
         return !propEndsWithOneOf(criterion, contexts);
+      case Criterion_CriterionOperator.PROP_STARTS_WITH_ONE_OF:
+        return propStartsWithOneOf(criterion, contexts);
+      case Criterion_CriterionOperator.PROP_DOES_NOT_START_WITH_ONE_OF:
+        return !propStartsWithOneOf(criterion, contexts);
+      case Criterion_CriterionOperator.PROP_CONTAINS_ONE_OF:
+        return propContainsOneOf(criterion, contexts);
+      case Criterion_CriterionOperator.PROP_DOES_NOT_CONTAIN_ONE_OF:
+        return !propContainsOneOf(criterion, contexts);
       case Criterion_CriterionOperator.IN_SEG:
         return inSegment(criterion, contexts, resolver);
       case Criterion_CriterionOperator.NOT_IN_SEG:
