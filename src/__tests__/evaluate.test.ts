@@ -23,6 +23,10 @@ import type { Config } from "../proto";
 import { LogLevel } from "../proto";
 import { makeConfidential } from "../unwrap";
 import { contextObjToMap } from "../mergeContexts";
+import propStartsWithOneOf from "./fixtures/propStartsWithOneOf";
+import propDoesNotStartWithOneOf from "./fixtures/propDoesNotStartWithOneOf";
+import propContainsOneOf from "./fixtures/propContainsOneOf";
+import propDoesNotContainOneOf from "./fixtures/propDoesNotContainOneOf";
 
 const noNamespace = undefined;
 
@@ -63,6 +67,22 @@ const exampleEmailContexts = new Map([
 ]);
 const hotmailEmailContexts = new Map([
   ["user", new Map([["email", "@hotmail.com"]])],
+]);
+
+const akaStartsWithOneContext = new Map([
+  ["user", new Map([["aka", "one too many"]])],
+]);
+
+const akaStartsWithFourContext = new Map([
+  ["user", new Map([["aka", "four too many"]])],
+]);
+
+const akaContainsOneContext = new Map([
+  ["user", new Map([["aka", "the one to watch"]])],
+]);
+
+const akaContainsFourContext = new Map([
+  ["user", new Map([["aka", "the four to watch"]])],
 ]);
 
 const secretContexts = contextObjToMap({
@@ -402,6 +422,186 @@ describe("evaluate", () => {
       reportableValue: undefined,
       configRowIndex: 0,
       conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+  });
+
+  it("returns an evaluation for a PROP_STARTS_WITH_ONE_OF match", () => {
+    const prop = propStartsWithOneOf;
+
+    const args = (contexts: Contexts): EvaluateArgs => ({
+      config: prop,
+      projectEnvId: projectEnvIdUnderTest,
+      namespace: noNamespace,
+      contexts,
+      resolver: simpleResolver,
+    });
+
+    expect(evaluate(args(emptyContexts))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "default",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaStartsWithOneContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "correct",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaStartsWithFourContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "default",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
+  });
+
+  it("returns an evaluation for a PROP_DOES_NOT_START_WITH_ONE_OF match", () => {
+    const prop = propDoesNotStartWithOneOf;
+
+    const args = (contexts: Contexts): EvaluateArgs => ({
+      config: prop,
+      projectEnvId: projectEnvIdUnderTest,
+      namespace: noNamespace,
+      contexts,
+      resolver: simpleResolver,
+    });
+
+    expect(evaluate(args(emptyContexts))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "correct",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaStartsWithFourContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "correct",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaStartsWithOneContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "default",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
+  });
+
+  it("returns an evaluation for a PROP_CONTAINS_ONE_OF match", () => {
+    const prop = propContainsOneOf;
+
+    const args = (contexts: Contexts): EvaluateArgs => ({
+      config: prop,
+      projectEnvId: projectEnvIdUnderTest,
+      namespace: noNamespace,
+      contexts,
+      resolver: simpleResolver,
+    });
+
+    expect(evaluate(args(emptyContexts))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "default",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaContainsOneContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "correct",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaContainsFourContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "default",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
+  });
+
+  it("returns an evaluation for a PROP_DOES_NOT_CONTAIN_ONE_OF match", () => {
+    const prop = propDoesNotContainOneOf;
+
+    const args = (contexts: Contexts): EvaluateArgs => ({
+      config: prop,
+      projectEnvId: projectEnvIdUnderTest,
+      namespace: noNamespace,
+      contexts,
+      resolver: simpleResolver,
+    });
+
+    expect(evaluate(args(emptyContexts))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "correct",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaContainsFourContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "correct",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+
+    expect(evaluate(args(akaContainsOneContext))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      unwrappedValue: "default",
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
       weightedValueIndex: undefined,
     });
   });
