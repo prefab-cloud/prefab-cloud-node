@@ -62,6 +62,8 @@ export const configValueType = (
       return Config_ValueType.LOG_LEVEL;
     case "intRange":
       return Config_ValueType.INT_RANGE;
+    case "json":
+      return Config_ValueType.JSON;
     default:
       return undefined;
   }
