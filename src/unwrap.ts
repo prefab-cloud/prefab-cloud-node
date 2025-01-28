@@ -1,10 +1,16 @@
-import {createHash} from "crypto";
-import {Config_ValueType, type ConfigValue, type Provided, ProvidedSource, type WeightedValue} from "./proto";
-import type {HashByPropertyValue} from "./types";
-import {isNonNullable} from "./types";
-import type {MinimumConfig, Resolver} from "./resolver";
-import {decrypt} from "./encryption";
-import {durationToMilliseconds} from "./duration";
+import { createHash } from "crypto";
+import {
+  Config_ValueType,
+  type ConfigValue,
+  type Provided,
+  ProvidedSource,
+  type WeightedValue,
+} from "./proto";
+import type { HashByPropertyValue } from "./types";
+import { isNonNullable } from "./types";
+import type { MinimumConfig, Resolver } from "./resolver";
+import { decrypt } from "./encryption";
+import { durationToMilliseconds } from "./duration";
 
 import murmurhash from "murmurhash";
 
@@ -16,7 +22,13 @@ export const makeConfidential = (secret: string): string => {
   return `${CONFIDENTIAL_PREFIX}${md5.slice(-5)}`;
 };
 
-export type GetValue = string | number | boolean | string[] | object | undefined;
+export type GetValue =
+  | string
+  | number
+  | boolean
+  | string[]
+  | object
+  | undefined;
 
 type WeightedValueIndex = number;
 

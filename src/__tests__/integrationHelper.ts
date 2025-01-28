@@ -195,31 +195,27 @@ const contextMaybe = (context: YAMLContext): Contexts | undefined => {
   return context !== undefined ? formatContext(context) : undefined;
 };
 
-const calcExpectedValueForTelemetry = (
-    testCase: RawTelemetryTestCase
-): any => {
+const calcExpectedValueForTelemetry = (testCase: RawTelemetryTestCase): any => {
   if (testCase.expected_data === undefined) {
     return undefined;
   }
 
-  let expectedData =  Array.isArray(testCase.expected_data)
-      ? testCase.expected_data
-      : [testCase.expected_data];
+  let expectedData = Array.isArray(testCase.expected_data)
+    ? testCase.expected_data
+    : [testCase.expected_data];
 
   if (testCase.aggregator === "evaluation_summary") {
     // reshape any string lists
-    expectedData = expectedData.map(item => {
+    expectedData = expectedData.map((item) => {
       if (item.value_type === "string_list") {
         return {
           ...item,
-          value: { values: item.value }
+          value: { values: item.value },
         };
       }
       return item;
     });
-
   }
-
 
   return expectedData;
 };
@@ -496,14 +492,13 @@ export const tests = (): {
           ? testCase.data
           : [testCase.data];
 
-
         Object.keys(testCase.client_overrides ?? {}).forEach((key) => {
           if (!HANDLED_CLIENT_OVERRIDES_FOR_TELEMETRY_TESTS.includes(key)) {
             throw new Error(`Unhandled client override ${key} in ${name}`);
           }
         });
 
-        const expectedData = calcExpectedValueForTelemetry(testCase)
+        const expectedData = calcExpectedValueForTelemetry(testCase);
 
         telemetryTests.push({
           name,

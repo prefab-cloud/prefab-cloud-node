@@ -1,6 +1,11 @@
 import Long from "long";
-import {type Config, Config_ValueType, ConfigType, Criterion_CriterionOperator} from "../../proto";
-import {irrelevantLong, projectEnvIdUnderTest} from "../testHelpers";
+import {
+  type Config,
+  Config_ValueType,
+  ConfigType,
+  Criterion_CriterionOperator,
+} from "../../proto";
+import { irrelevantLong, projectEnvIdUnderTest } from "../testHelpers";
 
 const config: Config = {
   id: new Long(992),
@@ -17,8 +22,8 @@ const config: Config = {
           criteria: [],
           value: {
             json: {
-              json: JSON.stringify({"result": "wrong projectEnvId"}),
-            }
+              json: JSON.stringify({ result: "wrong projectEnvId" }),
+            },
           },
         },
       ],
@@ -41,8 +46,8 @@ const config: Config = {
           ],
           value: {
             json: {
-              json: JSON.stringify({"result": "context-override"}),
-            }
+              json: JSON.stringify({ result: "context-override" }),
+            },
           },
         },
         {
@@ -59,8 +64,8 @@ const config: Config = {
           ],
           value: {
             json: {
-              json: JSON.stringify({"result": "correct"})
-            }
+              json: JSON.stringify({ result: "correct" }),
+            },
           },
         },
         {
@@ -94,16 +99,16 @@ const config: Config = {
           ],
           value: {
             json: {
-              json: JSON.stringify({"result": "encrypted"})
-            }
+              json: JSON.stringify({ result: "encrypted" }),
+            },
           },
         },
         {
           criteria: [],
           value: {
             json: {
-              json: JSON.stringify({"result": "default"})
-            }
+              json: JSON.stringify({ result: "default" }),
+            },
           },
         },
       ],
@@ -112,29 +117,29 @@ const config: Config = {
   allowableValues: [
     {
       json: {
-        json: JSON.stringify({"result": "default"})
-      }
-    },
-    {
-      json: {
-        json: JSON.stringify({"result": "encrypted"})
-      }
-    },
-    {
-      json: {
-        json: JSON.stringify({"result": "correct"})
+        json: JSON.stringify({ result: "default" }),
       },
     },
     {
       json: {
-        json: JSON.stringify({"result": "context-override"}),
-      }
+        json: JSON.stringify({ result: "encrypted" }),
+      },
     },
     {
       json: {
-        json: JSON.stringify({"result": "wrong projectEnvId"}),
-      }
-    }
+        json: JSON.stringify({ result: "correct" }),
+      },
+    },
+    {
+      json: {
+        json: JSON.stringify({ result: "context-override" }),
+      },
+    },
+    {
+      json: {
+        json: JSON.stringify({ result: "wrong projectEnvId" }),
+      },
+    },
   ],
   configType: ConfigType.CONFIG,
   valueType: Config_ValueType.JSON,

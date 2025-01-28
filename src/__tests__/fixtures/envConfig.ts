@@ -1,4 +1,4 @@
-import {type Config, Config_ValueType, ConfigType} from "../../proto";
+import { type Config, Config_ValueType, ConfigType } from "../../proto";
 import { irrelevantLong, projectEnvIdUnderTest } from "../testHelpers";
 
 const config: Config = {

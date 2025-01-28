@@ -12,7 +12,7 @@ import { ConfigType } from "../proto";
 import { encode } from "../parseProto";
 import { now } from "./reporter";
 import { valueType } from "../wrap";
-import { configValueTypeToString} from "../unwrap"
+import { configValueTypeToString } from "../unwrap";
 
 const ENDPOINT = "/api/v1/telemetry";
 
@@ -95,7 +95,9 @@ export const evaluationSummaries = (
         evaluation.configType.toString(),
       ]);
 
-      const valueTypeAsString = configValueTypeToString(evaluation.valueType) ?? valueType(evaluation.unwrappedValue)
+      const valueTypeAsString =
+        configValueTypeToString(evaluation.valueType) ??
+        valueType(evaluation.unwrappedValue);
 
       const counter = JSON.stringify([
         evaluation.configId.toString(),
@@ -122,10 +124,6 @@ export const evaluationSummaries = (
         const counters: ConfigEvaluationCounter[] = [];
 
         rawCounters.forEach((count, counterJSON) => {
-
-
-
-
           const [
             configId,
             conditionalValueIndex,

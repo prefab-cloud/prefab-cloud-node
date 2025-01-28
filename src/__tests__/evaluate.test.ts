@@ -19,7 +19,7 @@ import secretKeyConfig from "./fixtures/secretKeyConfig";
 import decryptionKeyConfig, {
   decryptionKeyForSecret,
 } from "./fixtures/decryptionKeyConfig";
-import {type Config, Config_ValueType, LogLevel} from "../proto";
+import { type Config, Config_ValueType, LogLevel } from "../proto";
 import { makeConfidential } from "../unwrap";
 import { contextObjToMap } from "../mergeContexts";
 import propStartsWithOneOf from "./fixtures/propStartsWithOneOf";

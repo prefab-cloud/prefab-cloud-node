@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.3 - 2025-01-28
+
+- Fixes telemetry handling for json value type (#82)
+- Implement startsWith/contains operators (#80)
+
 ## 0.4.2 - 2024-10-03
 
 - Allow telemetry when using api source directly (#78)
