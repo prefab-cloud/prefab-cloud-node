@@ -12,6 +12,7 @@ import { ConfigType } from "../proto";
 import { encode } from "../parseProto";
 import { now } from "./reporter";
 import { valueType } from "../wrap";
+import { configValueTypeToString} from "../unwrap"
 
 const ENDPOINT = "/api/v1/telemetry";
 
@@ -94,11 +95,13 @@ export const evaluationSummaries = (
         evaluation.configType.toString(),
       ]);
 
+      const valueTypeAsString = configValueTypeToString(evaluation.valueType) ?? valueType(evaluation.unwrappedValue)
+
       const counter = JSON.stringify([
         evaluation.configId.toString(),
         evaluation.conditionalValueIndex,
         evaluation.configRowIndex,
-        valueType(evaluation.unwrappedValue),
+        valueTypeAsString,
         evaluation.reportableValue ?? evaluation.unwrappedValue,
         evaluation.weightedValueIndex,
       ]);
@@ -119,6 +122,10 @@ export const evaluationSummaries = (
         const counters: ConfigEvaluationCounter[] = [];
 
         rawCounters.forEach((count, counterJSON) => {
+
+
+
+
           const [
             configId,
             conditionalValueIndex,
@@ -128,11 +135,21 @@ export const evaluationSummaries = (
             weightedValueIndex,
           ] = JSON.parse(counterJSON);
 
+          let selectedValue;
+
+          if (valueType === "json") {
+            selectedValue = { json: { json: JSON.stringify(unwrappedValue) } };
+          } else if (valueType === "stringList") {
+            selectedValue = { stringList: { values: unwrappedValue } };
+          } else {
+            selectedValue = { [valueType]: unwrappedValue };
+          }
+
           const counter: ConfigEvaluationCounter = {
             configId: Long.fromNumber(configId),
             conditionalValueIndex,
             configRowIndex,
-            selectedValue: { [valueType]: unwrappedValue },
+            selectedValue,
             count: Long.fromNumber(count),
             reason: 0,
           };

@@ -1,6 +1,5 @@
-import type { Config } from "../../proto";
-import { ConfigType } from "../../proto";
-import { irrelevantLong, projectEnvIdUnderTest } from "../testHelpers";
+import {type Config, Config_ValueType, ConfigType} from "../../proto";
+import {irrelevantLong, projectEnvIdUnderTest} from "../testHelpers";
 
 const config: Config = {
   id: irrelevantLong,
@@ -58,7 +57,7 @@ const config: Config = {
     },
   ],
   configType: ConfigType.FEATURE_FLAG,
-  valueType: 5,
+  valueType: Config_ValueType.BOOL,
   sendToClientSdk: false,
 };
 

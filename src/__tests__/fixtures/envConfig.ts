@@ -1,5 +1,4 @@
-import type { Config } from "../../proto";
-import { ConfigType } from "../../proto";
+import {type Config, Config_ValueType, ConfigType} from "../../proto";
 import { irrelevantLong, projectEnvIdUnderTest } from "../testHelpers";
 
 const config: Config = {
@@ -38,7 +37,7 @@ const config: Config = {
   ],
   configType: ConfigType.CONFIG,
   allowableValues: [],
-  valueType: 10,
+  valueType: Config_ValueType.STRING_LIST,
   sendToClientSdk: false,
 };
 

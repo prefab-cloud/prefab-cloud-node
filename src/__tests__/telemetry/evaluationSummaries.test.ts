@@ -10,7 +10,7 @@ import {
   emptyContexts,
   projectEnvIdUnderTest,
   mockApiClient,
-  irrelevant,
+  irrelevant, irrelevantLong,
 } from "../testHelpers";
 
 import { evaluate, type Evaluation } from "../../evaluate";
@@ -19,6 +19,8 @@ import secretKeyConfig from "../fixtures/secretKeyConfig";
 import basicConfig from "../fixtures/basicConfig";
 import basicLogLevel from "../fixtures/basicLogLevel";
 import rolloutFlag from "../fixtures/rolloutFlag";
+import propIsOneOfJsonValue from "../fixtures/propIsOneOfJsonValue";
+import envConfig from "../fixtures/envConfig"
 
 const instanceHash = "instance-hash";
 
@@ -92,19 +94,30 @@ describe("evaluationSummaries", () => {
     aggregator.push(evaluationFor(propIsOneOf, confidentialContexts));
     aggregator.push(evaluationFor(propIsOneOf, emptyContexts));
     aggregator.push(evaluationFor(propIsOneOf, emptyContexts));
+    aggregator.push(evaluationFor(propIsOneOfJsonValue, usContexts));
+    aggregator.push(evaluationFor(propIsOneOfJsonValue, ukContexts));
+    aggregator.push(evaluationFor(propIsOneOfJsonValue, frContexts));
+    aggregator.push(evaluationFor(propIsOneOfJsonValue, secretContexts));
 
     expect(aggregator.data).toEqual(
-      new Map([
-        [
-          '["prop.is.one.of","1"]',
-          new Map([
-            ['["991",1,0,"string","correct",null]', 2],
-            ['["991",4,0,"string","default",null]', 3],
-            ['["991",3,0,"string","*****cda9e",null]', 2],
-            ['["991",2,0,"string","*****b9002",null]', 1],
-          ]),
-        ],
-      ])
+        new Map([
+          [
+            '["prop.is.one.of","1"]',
+            new Map([
+              ['["991",1,0,"string","correct",null]', 2],
+              ['["991",4,0,"string","default",null]', 3],
+              ['["991",3,0,"string","*****cda9e",null]', 2],
+              ['["991",2,0,"string","*****b9002",null]', 1],
+            ]),
+          ],
+          [
+            '["prop.is.one.of.jsonValue","1"]', new Map([
+              ['["992",1,0,"json",{"result":"correct"},null]', 2,],
+              ['["992",4,0,"json",{"result":"default"},null]', 1,],
+              ['["992",3,0,"json",{"result":"encrypted"},null]', 1,],
+            ]),
+          ]
+        ])
     );
 
     aggregator.push(evaluationFor(propIsOneOf, emptyContexts));
@@ -125,6 +138,13 @@ describe("evaluationSummaries", () => {
             ['["991",3,0,"string","*****cda9e",null]', 3],
             ['["991",2,0,"string","*****b9002",null]', 1],
           ]),
+        ],
+        [
+          '["prop.is.one.of.jsonValue","1"]', new Map([
+          ['["992",1,0,"json",{"result":"correct"},null]', 2,],
+          ['["992",4,0,"json",{"result":"default"},null]', 1,],
+          ['["992",3,0,"json",{"result":"encrypted"},null]', 1,],
+        ]),
         ],
         ['["basic.value","1"]', new Map([['["999",0,0,"int",42,null]', 1]])],
       ])
@@ -176,6 +196,8 @@ describe("evaluationSummaries", () => {
     aggregator.push(evaluationFor(basicConfig, usContexts));
     aggregator.push(evaluationFor(basicLogLevel, usContexts));
     aggregator.push(evaluationFor(basicLogLevel, emptyContexts));
+    aggregator.push(evaluationFor(propIsOneOfJsonValue, frContexts));
+    aggregator.push(evaluationFor(envConfig, emptyContexts));
 
     const start = Date.now();
     jest.advanceTimersByTime(1000);
@@ -240,6 +262,44 @@ describe("evaluationSummaries", () => {
                   },
                 ],
               },
+              {
+                key: 'prop.is.one.of.jsonValue',
+                type: '1',
+                counters: [
+                  {
+                    conditionalValueIndex: 4,
+                    configId: Long.fromNumber(992),
+                    configRowIndex: 0,
+                    count: Long.fromNumber(1),
+                    reason: 0,
+                    selectedValue: {
+                      json: {
+                        json: '{"result":"default"}',
+                      },
+                    },
+                  },
+                ],
+
+              },
+              {
+                key: 'basic.env',
+                type: '1',
+                counters: [
+                  {
+                    conditionalValueIndex: 0,
+                    configId: irrelevantLong,
+                    configRowIndex: 0,
+                    count: Long.fromNumber(1),
+                    reason: 0,
+                    selectedValue: {
+                      stringList: {
+                        values: ["a","b","c","d"],
+                      },
+                    },
+                  },
+                ],
+
+              }
             ],
           },
         },

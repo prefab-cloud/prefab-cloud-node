@@ -1,11 +1,10 @@
-import { createHash } from "crypto";
-import type { ConfigValue, Provided, WeightedValue } from "./proto";
-import { Config_ValueType, ProvidedSource } from "./proto";
-import type { HashByPropertyValue } from "./types";
-import { isNonNullable } from "./types";
-import type { MinimumConfig, Resolver } from "./resolver";
-import { decrypt } from "./encryption";
-import { durationToMilliseconds } from "./duration";
+import {createHash} from "crypto";
+import {Config_ValueType, type ConfigValue, type Provided, ProvidedSource, type WeightedValue} from "./proto";
+import type {HashByPropertyValue} from "./types";
+import {isNonNullable} from "./types";
+import type {MinimumConfig, Resolver} from "./resolver";
+import {decrypt} from "./encryption";
+import {durationToMilliseconds} from "./duration";
 
 import murmurhash from "murmurhash";
 
@@ -17,7 +16,7 @@ export const makeConfidential = (secret: string): string => {
   return `${CONFIDENTIAL_PREFIX}${md5.slice(-5)}`;
 };
 
-export type GetValue = string | number | boolean | string[] | undefined;
+export type GetValue = string | number | boolean | string[] | object | undefined;
 
 type WeightedValueIndex = number;
 
@@ -124,7 +123,7 @@ const providedValue = (
 
 export const TRUE_VALUES = new Set(["true", "1", "t", "yes"]);
 
-const configValueTypeToString = (
+export const configValueTypeToString = (
   valueType: Config_ValueType | undefined
 ): keyof ConfigValue | undefined => {
   switch (valueType) {
@@ -144,6 +143,8 @@ const configValueTypeToString = (
       return "intRange";
     case Config_ValueType.DURATION:
       return "duration";
+    case Config_ValueType.JSON:
+      return "json";
     default:
       return undefined;
   }

@@ -232,6 +232,7 @@ export interface Evaluation {
   configId: Long | undefined;
   configKey: string;
   configType: number;
+  valueType: number;
   unwrappedValue: GetValue;
   reportableValue: GetValue;
   conditionalValueIndex: number;
@@ -271,6 +272,7 @@ export const evaluate = ({
     configKey: config.key,
     configId: config.id,
     configType: config.configType,
+    valueType: config.valueType,
     conditionalValueIndex,
     configRowIndex,
     unwrappedValue,
