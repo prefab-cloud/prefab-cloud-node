@@ -1,5 +1,5 @@
 import {createHash} from "crypto";
-import {Config_ValueType, ConfigValue, Provided, ProvidedSource, WeightedValue} from "./proto";
+import {Config_ValueType, type ConfigValue, type Provided, ProvidedSource, type WeightedValue} from "./proto";
 import type {HashByPropertyValue} from "./types";
 import {isNonNullable} from "./types";
 import type {MinimumConfig, Resolver} from "./resolver";

@@ -1,5 +1,5 @@
 import Long from "long";
-import {Config, Config_ValueType, ConfigType, Criterion_CriterionOperator} from "../../proto";
+import {type Config, Config_ValueType, ConfigType, Criterion_CriterionOperator} from "../../proto";
 import {irrelevantLong, projectEnvIdUnderTest} from "../testHelpers";
 
 const config: Config = {
