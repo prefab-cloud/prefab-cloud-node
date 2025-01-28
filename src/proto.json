@@ -527,7 +527,12 @@
                 "PROP_GREATER_THAN": 18,
                 "PROP_GREATER_THAN_OR_EQUAL": 19,
                 "PROP_BEFORE": 20,
-                "PROP_AFTER": 21
+                "PROP_AFTER": 21,
+                "PROP_MATCHES": 22,
+                "PROP_DOES_NOT_MATCH": 23,
+                "PROP_SEMVER_LESS_THAN": 24,
+                "PROP_SEMVER_EQUAL": 25,
+                "PROP_SEMVER_GREATER_THAN": 26
               }
             }
           }
