@@ -1,17 +1,10 @@
-import type Long from "long";
-import type {
-  ConditionalValue,
-  ConfigRow,
-  ConfigValue,
-  Criterion,
-} from "./proto";
-import { Criterion_CriterionOperator } from "./proto";
-import type { Resolver, MinimumConfig } from "./resolver";
-import type { Contexts, HashByPropertyValue, ProjectEnvId } from "./types";
-import type { GetValue } from "./unwrap";
-import { unwrap } from "./unwrap";
-import { contextLookup } from "./contextLookup";
-import { sortRows } from "./sortRows";
+import Long from "long";
+import {type ConditionalValue, type ConfigRow, type ConfigValue, type Criterion, Criterion_CriterionOperator,} from "./proto";
+import type {MinimumConfig, Resolver} from "./resolver";
+import type {Contexts, HashByPropertyValue, ProjectEnvId} from "./types";
+import {type GetValue, unwrap} from "./unwrap";
+import {contextLookup} from "./contextLookup";
+import {sortRows} from "./sortRows";
 
 const getHashByPropertyValue = (
   value: ConfigValue | undefined,
@@ -143,6 +136,49 @@ const inIntRange = (criterion: Criterion, contexts: Contexts): boolean => {
   return start.lte(comparable as number) && end.gte(comparable as number);
 };
 
+const evaluateDateCriterion = (criterion: Criterion, contexts: Contexts): boolean => {
+  // Retrieve the context value (which might be a timestamp in millis or an HTTP date string)
+  const contextValue = contextLookup(contexts, criterion.propertyName);
+  let contextMillis: Long;
+
+  if (Long.isLong(contextValue)) {
+    contextMillis = contextValue;
+  } else if (typeof contextValue === "number") {
+    contextMillis = Long.fromNumber(contextValue); // Already in millis
+  } else if (typeof contextValue === "string") {
+    const parsedDate = Date.parse(contextValue);  // Convert to millis
+    if (isNaN(parsedDate)) {
+      return false;
+    }
+    contextMillis = Long.fromNumber(parsedDate);
+  } else {
+    return false;
+  }
+
+  const valueToMatch = makeLong(unwrap({key: "why", value: criterion.valueToMatch}).value)
+  if (!Long.isLong(valueToMatch)) {
+    return false;
+  }
+
+  switch (criterion.operator) {
+    case Criterion_CriterionOperator.PROP_BEFORE:
+      return contextMillis.lt(valueToMatch);
+    case Criterion_CriterionOperator.PROP_AFTER:
+      return contextMillis.gt(valueToMatch);
+  }
+  return false;
+};
+
+const makeLong = (value: unknown): Long | undefined => {
+  if (Long.isLong(value)) {
+    return value;
+  }
+  if (typeof value === "number" && Number.isSafeInteger(value)) {
+    return Long.fromNumber(value);
+  }
+  return undefined; // Return undefined for non-numeric or non-Long values
+};
+
 const allCriteriaMatch = (
   value: ConditionalValue,
   namespace: string | undefined,
@@ -179,6 +215,10 @@ const allCriteriaMatch = (
         return !inSegment(criterion, contexts, resolver);
       case Criterion_CriterionOperator.IN_INT_RANGE:
         return inIntRange(criterion, contexts);
+      case Criterion_CriterionOperator.PROP_AFTER:
+        // fall through
+      case Criterion_CriterionOperator.PROP_BEFORE:
+        return evaluateDateCriterion(criterion, contexts);
       default:
         throw new Error(
           `Unexpected criteria ${JSON.stringify(criterion.operator)}`
