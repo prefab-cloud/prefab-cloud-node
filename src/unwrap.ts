@@ -13,6 +13,7 @@ import { decrypt } from "./encryption";
 import { durationToMilliseconds } from "./duration";
 
 import murmurhash from "murmurhash";
+import Long from "long";
 
 const CONFIDENTIAL_PREFIX = "*****";
 
@@ -255,8 +256,13 @@ export const unwrapValue = ({
         const val = value.int as unknown as number;
         return { value: val };
       }
-
-      return { value: value.int?.toInt() };
+      if (Long.isLong(value.int)){
+        if (longIsIntSafe(value.int)){
+          return {value: value.int.toInt()};
+        }
+        return {value: value.int};
+      }
+      return { value: undefined }
     case "bool":
       return { value: value.bool };
     case "double":
@@ -338,3 +344,8 @@ export const unwrapPrimitive = (
 ): UnwrappedValue => {
   return unwrap({ key, value, primitivesOnly: true });
 };
+
+
+export const longIsIntSafe = (longValue: Long): boolean => {
+  return longValue.high === 0 || longValue.high === -1;
+}
