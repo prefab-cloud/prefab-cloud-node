@@ -1,4 +1,3 @@
-import Long from "long";
 
 import basicConfig from "./fixtures/basicConfig";
 import basicLogLevel from "./fixtures/basicLogLevel";
@@ -28,8 +27,7 @@ import propStartsWithOneOf from "./fixtures/propStartsWithOneOf";
 import propDoesNotStartWithOneOf from "./fixtures/propDoesNotStartWithOneOf";
 import propContainsOneOf from "./fixtures/propContainsOneOf";
 import propDoesNotContainOneOf from "./fixtures/propDoesNotContainOneOf";
-import propBefore from "./fixtures/propBefore";
-import propAfter from "./fixtures/propAfter";
+import {configBeforeWithInt as propBeforeWithMillis, configBeforeWithString as propBeforeWithString, configAfterWithInt as propAfterWithMillis, configAfterWithString as propAfterWithString, epochMillis as propBeforeAfterEpochMillis} from "./fixtures/propBeforeAfter";
 
 const noNamespace = undefined;
 
@@ -851,9 +849,13 @@ describe("evaluate", () => {
 });
 
 
-it("returns an evaluation for a PROP_BEFORE date match", () => {
-  const prop = propBefore;
-  const millis = Long.fromNumber(1738359581000)
+describe.each([
+  {description: "int value", config: propBeforeWithMillis},
+  {description: "string value", config: propBeforeWithString}
+])("returns an evaluation for a PROP_BEFORE date match ($description)", ({config}) => {
+
+  const prop = config;
+  const millis = propBeforeAfterEpochMillis
 
   const args = (contexts: Contexts): EvaluateArgs => ({
     config: prop,
@@ -863,89 +865,110 @@ it("returns an evaluation for a PROP_BEFORE date match", () => {
     resolver: simpleResolver,
   });
 
-  expect(evaluate(args(emptyContexts))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: false,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 1,
-    weightedValueIndex: undefined,
-  });
 
-  const birthdateNumericBefore = new Map([
-    ["user", new Map([["createdAt", millis.subtract(1000)]])],
-  ]);
+  test("returns false for empty context", () => {
 
-  expect(evaluate(args(birthdateNumericBefore))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: true,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 0,
-    weightedValueIndex: undefined,
-  });
 
-  const birthdateTextBefore = new Map([
-    ["user", new Map([["createdAt", "2025-01-30T21:39:41Z"]])],
-  ]);
-
-  expect(evaluate(args(birthdateTextBefore))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: true,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 0,
-    weightedValueIndex: undefined,
+    expect(evaluate(args(emptyContexts))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
   });
 
 
-  const birthdateNumericAfter = new Map([
-    ["user", new Map([["createdAt", millis.add(1000)]])],
-  ]);
+  test(`returns true for context with date (millis) before`, () => {
 
-  expect(evaluate(args(birthdateNumericAfter))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: false,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 1,
-    weightedValueIndex: undefined,
+    const birthdateNumericBefore = new Map([
+      ["user", new Map([["createdAt", millis.subtract(1000)]])],
+    ]);
+
+    expect(evaluate(args(birthdateNumericBefore))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: true,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
   });
 
-  const birthdateTextAfter = new Map([
-    ["user", new Map([["createdAt", "2025-02-01T21:39:41Z"]])],
-  ]);
 
-  expect(evaluate(args(birthdateTextAfter))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: false,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 1,
-    weightedValueIndex: undefined,
+  test("returns true for context with date (string) before", () => {
+    const birthdateTextBefore = new Map([
+      ["user", new Map([["createdAt", "2025-01-30T21:39:41Z"]])],
+    ]);
+
+    expect(evaluate(args(birthdateTextBefore))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: true,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
   });
+
+
+  test("returns false for context with date (millis) before", () => {
+    const birthdateNumericAfter = new Map([
+      ["user", new Map([["createdAt", millis.add(1000)]])],
+    ]);
+
+    expect(evaluate(args(birthdateNumericAfter))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
+  });
+
+  test("returns false for context with date (string) before", () => {
+    const birthdateTextAfter = new Map([
+      ["user", new Map([["createdAt", "2025-02-01T21:39:41Z"]])],
+    ]);
+
+    expect(evaluate(args(birthdateTextAfter))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
+  });
+
+
 });
 
 
+describe.each([
+  {description: "int value", config: propAfterWithMillis},
+  {description: "string value", config: propAfterWithString}
+])("returns an evaluation for a PROP_AFTER date match ($description)", ({config}) => {
 
-it("returns an evaluation for a PROP_AFTER date match", () => {
-  const prop = propAfter;
-  const millis = Long.fromNumber(1738359581000)
+  const prop = config;
+  const millis = propBeforeAfterEpochMillis;
 
   const args = (contexts: Contexts): EvaluateArgs => ({
     config: prop,
@@ -955,80 +978,93 @@ it("returns an evaluation for a PROP_AFTER date match", () => {
     resolver: simpleResolver,
   });
 
-  expect(evaluate(args(emptyContexts))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: false,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 1,
-    weightedValueIndex: undefined,
-  });
-
-  const birthdateNumericBefore = new Map([
-    ["user", new Map([["createdAt", millis.subtract(1000)]])],
-  ]);
-
-  expect(evaluate(args(birthdateNumericBefore))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: false,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 1,
-    weightedValueIndex: undefined,
-  });
-
-  const birthdateTextBefore = new Map([
-    ["user", new Map([["createdAt", "2025-01-30T21:39:41Z"]])],
-  ]);
-
-  expect(evaluate(args(birthdateTextBefore))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: false,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 1,
-    weightedValueIndex: undefined,
+  test(`returns false for empty context`, () => {
+    expect(evaluate(args(emptyContexts))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
   });
 
 
-  const birthdateNumericAfter = new Map([
-    ["user", new Map([["createdAt", millis.add(1000)]])],
-  ]);
+  test(`returns false for context with date (millis) BEFORE`, () => {
+    const birthdateNumericBefore = new Map([
+      ["user", new Map([["createdAt", millis.subtract(1000)]])],
+    ]);
 
-  expect(evaluate(args(birthdateNumericAfter))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: true,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 0,
-    weightedValueIndex: undefined,
+    expect(evaluate(args(birthdateNumericBefore))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
   });
 
-  const birthdateTextAfter = new Map([
-    ["user", new Map([["createdAt", "2025-02-01T21:39:41Z"]])],
-  ]);
 
-  expect(evaluate(args(birthdateTextAfter))).toStrictEqual({
-    configId: prop.id,
-    configKey: prop.key,
-    configType: prop.configType,
-    valueType: prop.valueType,
-    unwrappedValue: true,
-    reportableValue: undefined,
-    configRowIndex: 0,
-    conditionalValueIndex: 0,
-    weightedValueIndex: undefined,
+  test(`returns false for context with date (string) BEFORE`, () => {
+    const birthdateTextBefore = new Map([
+      ["user", new Map([["createdAt", "2025-01-30T21:39:41Z"]])],
+    ]);
+
+    expect(evaluate(args(birthdateTextBefore))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    });
   });
+
+  test(`returns true for context with date (millis) AFTER`, () => {
+    const birthdateNumericAfter = new Map([
+      ["user", new Map([["createdAt", millis.add(1000)]])],
+    ]);
+
+    expect(evaluate(args(birthdateNumericAfter))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: true,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+  });
+
+  test(`returns true for context with date (string) AFTER`, () => {
+    const birthdateTextAfter = new Map([
+      ["user", new Map([["createdAt", "2025-02-01T21:39:41Z"]])],
+    ]);
+
+    expect(evaluate(args(birthdateTextAfter))).toStrictEqual({
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: true,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    });
+  });
+
+
 });

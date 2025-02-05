@@ -136,47 +136,37 @@ const inIntRange = (criterion: Criterion, contexts: Contexts): boolean => {
   return start.lte(comparable as number) && end.gte(comparable as number);
 };
 
+
+const dateValueToLong= (value: number|Long|string|unknown): Long|undefined => {
+  if (Long.isLong(value)) {
+    return value;
+  } else if (typeof value === "number") {
+    return Long.fromNumber(value); // Already in millis
+  } else if (typeof value === "string") {
+    const parsedDate = Date.parse(value);  // Convert to millis
+    if (isNaN(parsedDate)) {
+      return undefined;
+    }
+    return Long.fromNumber(parsedDate);
+  }
+  return undefined;
+}
+
 const evaluateDateCriterion = (criterion: Criterion, contexts: Contexts): boolean => {
   // Retrieve the context value (which might be a timestamp in millis or an HTTP date string)
-  const contextValue = contextLookup(contexts, criterion.propertyName);
-  let contextMillis: Long;
-
-  if (Long.isLong(contextValue)) {
-    contextMillis = contextValue;
-  } else if (typeof contextValue === "number") {
-    contextMillis = Long.fromNumber(contextValue); // Already in millis
-  } else if (typeof contextValue === "string") {
-    const parsedDate = Date.parse(contextValue);  // Convert to millis
-    if (isNaN(parsedDate)) {
-      return false;
-    }
-    contextMillis = Long.fromNumber(parsedDate);
-  } else {
-    return false;
-  }
-
-  const valueToMatch = makeLong(unwrap({key: "why", value: criterion.valueToMatch}).value)
-  if (!Long.isLong(valueToMatch)) {
+  const contextMillis = dateValueToLong(contextLookup(contexts, criterion.propertyName));
+  const configMills = dateValueToLong(unwrap({key: "why", value: criterion.valueToMatch}).value);
+  if (typeof configMills === "undefined" || typeof contextMillis === "undefined") {
     return false;
   }
 
   switch (criterion.operator) {
     case Criterion_CriterionOperator.PROP_BEFORE:
-      return contextMillis.lt(valueToMatch);
+      return contextMillis.lt(configMills);
     case Criterion_CriterionOperator.PROP_AFTER:
-      return contextMillis.gt(valueToMatch);
+      return contextMillis.gt(configMills);
   }
   return false;
-};
-
-const makeLong = (value: unknown): Long | undefined => {
-  if (Long.isLong(value)) {
-    return value;
-  }
-  if (typeof value === "number" && Number.isSafeInteger(value)) {
-    return Long.fromNumber(value);
-  }
-  return undefined; // Return undefined for non-numeric or non-Long values
 };
 
 const allCriteriaMatch = (
