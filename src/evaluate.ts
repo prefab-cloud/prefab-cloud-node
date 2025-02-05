@@ -1,10 +1,16 @@
 import Long from "long";
-import {type ConditionalValue, type ConfigRow, type ConfigValue, type Criterion, Criterion_CriterionOperator,} from "./proto";
-import type {MinimumConfig, Resolver} from "./resolver";
-import type {Contexts, HashByPropertyValue, ProjectEnvId} from "./types";
-import {type GetValue, unwrap} from "./unwrap";
-import {contextLookup} from "./contextLookup";
-import {sortRows} from "./sortRows";
+import {
+  type ConditionalValue,
+  type ConfigRow,
+  type ConfigValue,
+  type Criterion,
+  Criterion_CriterionOperator,
+} from "./proto";
+import type { MinimumConfig, Resolver } from "./resolver";
+import type { Contexts, HashByPropertyValue, ProjectEnvId } from "./types";
+import { type GetValue, unwrap } from "./unwrap";
+import { contextLookup } from "./contextLookup";
+import { sortRows } from "./sortRows";
 
 const getHashByPropertyValue = (
   value: ConfigValue | undefined,
@@ -136,27 +142,38 @@ const inIntRange = (criterion: Criterion, contexts: Contexts): boolean => {
   return start.lte(comparable as number) && end.gte(comparable as number);
 };
 
-
-const dateValueToLong= (value: number|Long|string|unknown): Long|undefined => {
+const dateValueToLong = (
+  value: number | Long | string | unknown
+): Long | undefined => {
   if (Long.isLong(value)) {
     return value;
   } else if (typeof value === "number") {
     return Long.fromNumber(value); // Already in millis
   } else if (typeof value === "string") {
-    const parsedDate = Date.parse(value);  // Convert to millis
+    const parsedDate = Date.parse(value); // Convert to millis
     if (isNaN(parsedDate)) {
       return undefined;
     }
     return Long.fromNumber(parsedDate);
   }
   return undefined;
-}
+};
 
-const evaluateDateCriterion = (criterion: Criterion, contexts: Contexts): boolean => {
+const evaluateDateCriterion = (
+  criterion: Criterion,
+  contexts: Contexts
+): boolean => {
   // Retrieve the context value (which might be a timestamp in millis or an HTTP date string)
-  const contextMillis = dateValueToLong(contextLookup(contexts, criterion.propertyName));
-  const configMills = dateValueToLong(unwrap({key: "why", value: criterion.valueToMatch}).value);
-  if (typeof configMills === "undefined" || typeof contextMillis === "undefined") {
+  const contextMillis = dateValueToLong(
+    contextLookup(contexts, criterion.propertyName)
+  );
+  const configMills = dateValueToLong(
+    unwrap({ key: "why", value: criterion.valueToMatch }).value
+  );
+  if (
+    typeof configMills === "undefined" ||
+    typeof contextMillis === "undefined"
+  ) {
     return false;
   }
 
@@ -206,7 +223,7 @@ const allCriteriaMatch = (
       case Criterion_CriterionOperator.IN_INT_RANGE:
         return inIntRange(criterion, contexts);
       case Criterion_CriterionOperator.PROP_AFTER:
-        // fall through
+      // fall through
       case Criterion_CriterionOperator.PROP_BEFORE:
         return evaluateDateCriterion(criterion, contexts);
       default:
