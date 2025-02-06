@@ -256,13 +256,13 @@ export const unwrapValue = ({
         const val = value.int as unknown as number;
         return { value: val };
       }
-      if (Long.isLong(value.int)){
-        if (longIsIntSafe(value.int)){
-          return {value: value.int.toInt()};
+      if (Long.isLong(value.int)) {
+        if (longIsIntSafe(value.int)) {
+          return { value: value.int.toInt() };
         }
-        return {value: value.int};
+        return { value: value.int };
       }
-      return { value: undefined }
+      return { value: undefined };
     case "bool":
       return { value: value.bool };
     case "double":
@@ -345,7 +345,6 @@ export const unwrapPrimitive = (
   return unwrap({ key, value, primitivesOnly: true });
 };
 
-
 export const longIsIntSafe = (longValue: Long): boolean => {
   return longValue.high === 0 || longValue.high === -1;
-}
+};
