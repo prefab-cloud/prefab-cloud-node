@@ -161,7 +161,8 @@ const dateValueToLong = (
 
 const evaluateDateCriterion = (
   criterion: Criterion,
-  contexts: Contexts
+  contexts: Contexts,
+  comparator: (a: Long, b: Long) => boolean
 ): boolean => {
   // Retrieve the context value (which might be a timestamp in millis or an HTTP date string)
   const contextMillis = dateValueToLong(
@@ -176,14 +177,7 @@ const evaluateDateCriterion = (
   ) {
     return false;
   }
-
-  switch (criterion.operator) {
-    case Criterion_CriterionOperator.PROP_BEFORE:
-      return contextMillis.lt(configMills);
-    case Criterion_CriterionOperator.PROP_AFTER:
-      return contextMillis.gt(configMills);
-  }
-  return false;
+  return comparator(contextMillis, configMills);
 };
 
 const allCriteriaMatch = (
@@ -222,10 +216,10 @@ const allCriteriaMatch = (
         return !inSegment(criterion, contexts, resolver);
       case Criterion_CriterionOperator.IN_INT_RANGE:
         return inIntRange(criterion, contexts);
-      case Criterion_CriterionOperator.PROP_AFTER:
-      // fall through
       case Criterion_CriterionOperator.PROP_BEFORE:
-        return evaluateDateCriterion(criterion, contexts);
+        return evaluateDateCriterion(criterion, contexts, (a, b) => a.lt(b));
+      case Criterion_CriterionOperator.PROP_AFTER:
+        return evaluateDateCriterion(criterion, contexts, (a, b) => a.gt(b));
       default:
         throw new Error(
           `Unexpected criteria ${JSON.stringify(criterion.operator)}`
