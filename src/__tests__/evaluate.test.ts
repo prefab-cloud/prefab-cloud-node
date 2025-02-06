@@ -34,6 +34,19 @@ import {
   epochMillis as propBeforeAfterEpochMillis,
 } from "./fixtures/propBeforeAfter";
 
+import {
+  configLessThanInt as propLessThanInt,
+  configLessThanDouble as propLessThanDouble,
+  configLessThanEqualInt as propLessThanEqualInt,
+  configLessThanEqualDouble as propLessThanEqualDouble,
+  configGreaterThanInt as propGreaterThanInt,
+  configGreaterThanDouble as propGreaterThanDouble,
+  configGreaterThanEqualInt as propGreaterThanEqualInt,
+  configGreaterThanEqualDouble as propGreaterThanEqualDouble,
+} from "./fixtures/propNumericComparison";
+import Long from "long";
+import { stringify } from "ts-jest";
+
 const noNamespace = undefined;
 
 // the Resolver is only used to back-reference Segments (which we test in the integration tests) and get secret keys so we can use a stand-in here.
@@ -1062,3 +1075,305 @@ describe.each([
     });
   }
 );
+
+describe("Numeric operator tests", () => {
+  const falseValueFunc = (prop: Config): object => {
+    return {
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    };
+  };
+
+  const trueValueFunc = (prop: Config): object => {
+    return {
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: true,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    };
+  };
+
+  const argBuilder = (contexts: Contexts, prop: Config): EvaluateArgs => ({
+    config: prop,
+    projectEnvId: projectEnvIdUnderTest,
+    namespace: noNamespace,
+    contexts,
+    resolver: simpleResolver,
+  });
+
+  // empty context tests
+  describe.each<{ description: string; config: Config }>([
+    {
+      description: "less than is always false for empty context",
+      config: propLessThanInt,
+    },
+    {
+      description: "less than is always false for empty context",
+      config: propLessThanDouble,
+    },
+    {
+      description: "less than equal to is always false for empty context",
+      config: propLessThanEqualInt,
+    },
+    {
+      description: "less than equal to is always false for empty context",
+      config: propLessThanEqualDouble,
+    },
+    {
+      description: "greater than is always false for empty context",
+      config: propGreaterThanInt,
+    },
+    {
+      description: "greater than is always false for empty context",
+      config: propGreaterThanDouble,
+    },
+    {
+      description: "greater than equal to is always false for empty context",
+      config: propGreaterThanEqualInt,
+    },
+    {
+      description: "greater than equal to is always false for empty context",
+      config: propGreaterThanEqualDouble,
+    },
+  ])("$description", ({ description, config }) => {
+    test(`${description} (${config.key})`, () => {
+      const theArgs = argBuilder(emptyContexts, config);
+      const expectedMatchValue = falseValueFunc(config);
+
+      expect(evaluate(theArgs)).toStrictEqual(expectedMatchValue);
+    });
+  });
+
+  // bad type context tests
+  describe.each<{ description: string; config: Config }>([
+    {
+      description: "less than is always false for string context value",
+      config: propLessThanInt,
+    },
+    {
+      description: "less than is always false for string context value",
+      config: propLessThanDouble,
+    },
+    {
+      description:
+        "less than equal to is always false for string context value",
+      config: propLessThanEqualInt,
+    },
+    {
+      description:
+        "less than equal to is always false for string context value",
+      config: propLessThanEqualDouble,
+    },
+    {
+      description: "greater than is always false for string context value",
+      config: propGreaterThanInt,
+    },
+    {
+      description: "greater than is always false for string context value",
+      config: propGreaterThanDouble,
+    },
+    {
+      description:
+        "greater than equal to is always false for string context value",
+      config: propGreaterThanEqualInt,
+    },
+    {
+      description:
+        "greater than equal to is always false for string context value",
+      config: propGreaterThanEqualDouble,
+    },
+  ])("$description", ({ description, config }) => {
+    test(`${description} (${config.key})`, () => {
+      const context = new Map([
+        ["organization", new Map([["memberCount", "not a number!"]])],
+      ]);
+
+      const theArgs = argBuilder(context, config);
+      const expectedMatchValue = falseValueFunc(config);
+
+      expect(evaluate(theArgs)).toStrictEqual(expectedMatchValue);
+    });
+  });
+
+  describe.each<{
+    description: string;
+    configs: Config[];
+    contextValue: number | Long;
+    expectedResult: boolean;
+  }>([
+    {
+      description: "less than produces correct results",
+      configs: [propLessThanInt, propLessThanDouble],
+      contextValue: Long.fromInt(0),
+      expectedResult: true,
+    },
+    {
+      description: "less than produces correct results",
+      configs: [propLessThanInt, propLessThanDouble],
+      contextValue: 0.0,
+      expectedResult: true,
+    },
+    {
+      description: "less than produces correct results",
+      configs: [propLessThanInt, propLessThanDouble],
+      contextValue: Long.fromInt(100),
+      expectedResult: false,
+    },
+    {
+      description: "less than produces correct results",
+      configs: [propLessThanInt, propLessThanDouble],
+      contextValue: 100.0,
+      expectedResult: false,
+    },
+    {
+      description: "less than produces correct results",
+      configs: [propLessThanInt, propLessThanDouble],
+      contextValue: Long.fromInt(200),
+      expectedResult: false,
+    },
+    {
+      description: "less than produces correct results",
+      configs: [propLessThanInt, propLessThanDouble],
+      contextValue: 200.0,
+      expectedResult: false,
+    },
+    {
+      description: "less than or equal produces correct results",
+      configs: [propLessThanEqualInt, propLessThanEqualDouble],
+      contextValue: Long.fromInt(0),
+      expectedResult: true,
+    },
+    {
+      description: "less than or equal produces correct results",
+      configs: [propLessThanEqualInt, propLessThanEqualDouble],
+      contextValue: 0.0,
+      expectedResult: true,
+    },
+    {
+      description: "less than or equal produces correct results",
+      configs: [propLessThanEqualInt, propLessThanEqualDouble],
+      contextValue: Long.fromInt(100),
+      expectedResult: true,
+    },
+    {
+      description: "less than or equal produces correct results",
+      configs: [propLessThanEqualInt, propLessThanEqualDouble],
+      contextValue: 100.0,
+      expectedResult: true,
+    },
+    {
+      description: "less than or equal produces correct results",
+      configs: [propLessThanEqualInt, propLessThanEqualDouble],
+      contextValue: Long.fromInt(200),
+      expectedResult: false,
+    },
+    {
+      description: "less than or equal correct results",
+      configs: [propLessThanEqualInt, propLessThanEqualDouble],
+      contextValue: 200.0,
+      expectedResult: false,
+    },
+    {
+      description: "greater than produces correct results",
+      configs: [propGreaterThanInt, propGreaterThanDouble],
+      contextValue: Long.fromInt(0),
+      expectedResult: false,
+    },
+    {
+      description: "greater than produces correct results",
+      configs: [propGreaterThanInt, propGreaterThanDouble],
+      contextValue: 0.0,
+      expectedResult: false,
+    },
+    {
+      description: "greater than produces correct results",
+      configs: [propGreaterThanInt, propGreaterThanDouble],
+      contextValue: Long.fromInt(100),
+      expectedResult: false,
+    },
+    {
+      description: "greater than produces correct results",
+      configs: [propGreaterThanInt, propGreaterThanDouble],
+      contextValue: 100.0,
+      expectedResult: false,
+    },
+    {
+      description: "greater than produces correct results",
+      configs: [propGreaterThanInt, propGreaterThanDouble],
+      contextValue: Long.fromInt(200),
+      expectedResult: true,
+    },
+    {
+      description: "greater than produces correct results",
+      configs: [propGreaterThanInt, propGreaterThanDouble],
+      contextValue: 200.0,
+      expectedResult: true,
+    },
+    {
+      description: "greater than or equal produces correct results",
+      configs: [propGreaterThanEqualInt, propGreaterThanEqualDouble],
+      contextValue: Long.fromInt(0),
+      expectedResult: false,
+    },
+    {
+      description: "greater than or equal produces correct results",
+      configs: [propGreaterThanEqualInt, propGreaterThanEqualDouble],
+      contextValue: 0.0,
+      expectedResult: false,
+    },
+    {
+      description: "greater than or equal produces correct results",
+      configs: [propGreaterThanEqualInt, propGreaterThanEqualDouble],
+      contextValue: Long.fromInt(100),
+      expectedResult: true,
+    },
+    {
+      description: "greater than or equal produces correct results",
+      configs: [propGreaterThanEqualInt, propGreaterThanEqualDouble],
+      contextValue: 100.0,
+      expectedResult: true,
+    },
+    {
+      description: "greater than or equal produces correct results",
+      configs: [propGreaterThanEqualInt, propGreaterThanEqualDouble],
+      contextValue: Long.fromInt(200),
+      expectedResult: true,
+    },
+    {
+      description: "greater than or equal produces correct results",
+      configs: [propGreaterThanEqualInt, propGreaterThanEqualDouble],
+      contextValue: 200.0,
+      expectedResult: true,
+    },
+  ])(
+    "$description",
+    ({ description, configs, contextValue, expectedResult }) => {
+      for (const config of configs) {
+        test(`${description} (${config.key}) (${stringify(
+          contextValue
+        )})`, () => {
+          const context = new Map([
+            ["organization", new Map([["memberCount", contextValue]])],
+          ]);
+          const theArgs = argBuilder(context, config);
+          const expectedMatchValue = expectedResult
+            ? trueValueFunc(config)
+            : falseValueFunc(config);
+          expect(evaluate(theArgs)).toStrictEqual(expectedMatchValue);
+        });
+      }
+    }
+  );
+});
