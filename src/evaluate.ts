@@ -159,6 +159,60 @@ const dateValueToLong = (
   return undefined;
 };
 
+const evaluateNumericCriterion = (
+  criterion: Criterion,
+  contexts: Contexts,
+  comparisonFn: (compareResult: number) => boolean
+): boolean => {
+  const contextValue = normalizeNumber(
+    contextLookup(contexts, criterion.propertyName)
+  );
+  const configValue = normalizeNumber(
+    unwrap({ key: "ignored", value: criterion.valueToMatch }).value
+  );
+
+  if (configValue == null || contextValue == null) {
+    return false;
+  }
+  const compareToResult = compareTo(contextValue, configValue);
+  return comparisonFn(compareToResult);
+};
+
+function normalizeNumber(value: unknown): Long | number | null {
+  if (Long.isLong(value)) return value;
+  if (typeof value === "number") return value;
+  return null; // Invalid type
+}
+
+function compareTo(left: number | Long, right: number | Long): number {
+  const leftNum = Long.isLong(left) ? left.toNumber() : left;
+  const rightNum = Long.isLong(right) ? right.toNumber() : right;
+
+  // If either value is a float, use direct number comparison
+  if (!Number.isInteger(leftNum) || !Number.isInteger(rightNum)) {
+    if (leftNum < rightNum) {
+      return -1;
+    } else if (leftNum > rightNum) {
+      return 1;
+    } else {
+      return 0;
+    }
+  }
+
+  // Both are integers, safe to compare as Longs
+  if (Long.isLong(left) || Long.isLong(right)) {
+    return Long.fromNumber(leftNum).compare(Long.fromNumber(rightNum));
+  }
+
+  if (leftNum < rightNum) {
+    return -1;
+  } else if (leftNum > rightNum) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 const evaluateDateCriterion = (
   criterion: Criterion,
   contexts: Contexts,
@@ -220,6 +274,30 @@ const allCriteriaMatch = (
         return evaluateDateCriterion(criterion, contexts, (a, b) => a.lt(b));
       case Criterion_CriterionOperator.PROP_AFTER:
         return evaluateDateCriterion(criterion, contexts, (a, b) => a.gt(b));
+      case Criterion_CriterionOperator.PROP_GREATER_THAN:
+        return evaluateNumericCriterion(
+          criterion,
+          contexts,
+          (compareResult) => compareResult > 0
+        );
+      case Criterion_CriterionOperator.PROP_GREATER_THAN_OR_EQUAL:
+        return evaluateNumericCriterion(
+          criterion,
+          contexts,
+          (compareResult) => compareResult >= 0
+        );
+      case Criterion_CriterionOperator.PROP_LESS_THAN:
+        return evaluateNumericCriterion(
+          criterion,
+          contexts,
+          (compareResult) => compareResult < 0
+        );
+      case Criterion_CriterionOperator.PROP_LESS_THAN_OR_EQUAL:
+        return evaluateNumericCriterion(
+          criterion,
+          contexts,
+          (compareResult) => compareResult <= 0
+        );
       default:
         throw new Error(
           `Unexpected criteria ${JSON.stringify(criterion.operator)}`
