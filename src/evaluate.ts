@@ -159,6 +159,25 @@ const dateValueToLong = (
   return undefined;
 };
 
+const evaluateRegexCriterion = (
+  criterion: Criterion,
+  contexts: Contexts,
+  reverseIt: boolean
+): boolean => {
+  const testValue = contextLookup(contexts, criterion.propertyName);
+  const pattern = criterion.valueToMatch?.string;
+
+  if (!(typeof testValue === "string" && typeof pattern === "string")) {
+    return false;
+  }
+  try {
+    const regex = new RegExp(pattern, "");
+    const matches = regex.test(testValue);
+    return reverseIt ? !matches : matches;
+  } catch (error) {}
+  return false;
+};
+
 const evaluateNumericCriterion = (
   criterion: Criterion,
   contexts: Contexts,
@@ -298,6 +317,10 @@ const allCriteriaMatch = (
           contexts,
           (compareResult) => compareResult <= 0
         );
+      case Criterion_CriterionOperator.PROP_MATCHES:
+        return evaluateRegexCriterion(criterion, contexts, false);
+      case Criterion_CriterionOperator.PROP_DOES_NOT_MATCH:
+        return evaluateRegexCriterion(criterion, contexts, true);
       default:
         throw new Error(
           `Unexpected criteria ${JSON.stringify(criterion.operator)}`
