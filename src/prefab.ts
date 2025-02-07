@@ -122,6 +122,7 @@ class Prefab implements PrefabInterface {
   private sseConnection?: SSEConnection;
   readonly telemetry: Telemetry;
   private running = true;
+  private pollTimeout?: NodeJS.Timeout;
 
   constructor({
     apiKey,
@@ -332,7 +333,7 @@ class Prefab implements PrefabInterface {
         })
         .finally(() => {
           if (this.running) {
-            setTimeout(poll, this.pollInterval);
+            this.pollTimeout = setTimeout(poll, this.pollInterval);
           }
         });
     };
@@ -444,6 +445,9 @@ class Prefab implements PrefabInterface {
     if (this.sseConnection !== undefined && this.sseConnection !== null) {
       this.sseConnection.close();
       this.sseConnection = undefined;
+    }
+    if (this.pollTimeout !== undefined && this.pollTimeout !== null) {
+      this.pollTimeout.unref();
     }
     this.running = false;
   }
