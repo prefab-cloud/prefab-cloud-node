@@ -38,6 +38,14 @@ const defaultOptions = {
   ],
 };
 
+let prefab: Prefab;
+
+afterEach(() => {
+  if (prefab !== undefined && prefab !== null) {
+    prefab.close();
+  }
+});
+
 describe("integration tests", () => {
   const { inputOutputTests, telemetryTests } = tests();
 
@@ -63,7 +71,7 @@ describe("integration tests", () => {
         options.onNoDefault = "ignore";
       }
 
-      const prefab = new Prefab({ ...options, collectLoggerCounts: false });
+      prefab = new Prefab({ ...options, collectLoggerCounts: false });
 
       await prefab.init();
 
