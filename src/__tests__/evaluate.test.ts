@@ -10,8 +10,8 @@ import rolloutFlag from "./fixtures/rolloutFlag";
 import mkTimedLogLevel from "./fixtures/timedLogLevel";
 import { Resolver } from "../resolver";
 import type { EvaluateArgs } from "../evaluate";
-import type { Contexts } from "../types";
 import { evaluate } from "../evaluate";
+import type { Contexts } from "../types";
 import { emptyContexts, projectEnvIdUnderTest } from "./testHelpers";
 import { encrypt, generateNewHexKey } from "../../src/encryption";
 import secretConfig from "./fixtures/secretConfig";
@@ -19,7 +19,12 @@ import secretKeyConfig from "./fixtures/secretKeyConfig";
 import decryptionKeyConfig, {
   decryptionKeyForSecret,
 } from "./fixtures/decryptionKeyConfig";
-import { type Config, Config_ValueType, LogLevel } from "../proto";
+import {
+  type Config,
+  Config_ValueType,
+  Criterion_CriterionOperator,
+  LogLevel,
+} from "../proto";
 import { makeConfidential } from "../unwrap";
 import { contextObjToMap } from "../mergeContexts";
 import propStartsWithOneOf from "./fixtures/propStartsWithOneOf";
@@ -27,23 +32,26 @@ import propDoesNotStartWithOneOf from "./fixtures/propDoesNotStartWithOneOf";
 import propContainsOneOf from "./fixtures/propContainsOneOf";
 import propDoesNotContainOneOf from "./fixtures/propDoesNotContainOneOf";
 import {
-  configBeforeWithInt as propBeforeWithMillis,
-  configBeforeWithString as propBeforeWithString,
   configAfterWithInt as propAfterWithMillis,
   configAfterWithString as propAfterWithString,
+  configBeforeWithInt as propBeforeWithMillis,
+  configBeforeWithString as propBeforeWithString,
   epochMillis as propBeforeAfterEpochMillis,
 } from "./fixtures/propBeforeAfter";
 
 import {
-  configLessThanInt as propLessThanInt,
-  configLessThanDouble as propLessThanDouble,
-  configLessThanEqualInt as propLessThanEqualInt,
-  configLessThanEqualDouble as propLessThanEqualDouble,
-  configGreaterThanInt as propGreaterThanInt,
   configGreaterThanDouble as propGreaterThanDouble,
-  configGreaterThanEqualInt as propGreaterThanEqualInt,
   configGreaterThanEqualDouble as propGreaterThanEqualDouble,
+  configGreaterThanEqualInt as propGreaterThanEqualInt,
+  configGreaterThanInt as propGreaterThanInt,
+  configLessThanDouble as propLessThanDouble,
+  configLessThanEqualDouble as propLessThanEqualDouble,
+  configLessThanEqualInt as propLessThanEqualInt,
+  configLessThanInt as propLessThanInt,
 } from "./fixtures/propNumericComparison";
+
+import { createConfig as createRegexConfig } from "./fixtures/propRegexMatches";
+
 import Long from "long";
 import { stringify } from "ts-jest";
 
@@ -1374,6 +1382,142 @@ describe("Numeric operator tests", () => {
           expect(evaluate(theArgs)).toStrictEqual(expectedMatchValue);
         });
       }
+    }
+  );
+});
+
+describe("regex tests", () => {
+  const argBuilder = (contexts: Contexts, prop: Config): EvaluateArgs => ({
+    config: prop,
+    projectEnvId: projectEnvIdUnderTest,
+    namespace: noNamespace,
+    contexts,
+    resolver: simpleResolver,
+  });
+
+  const falseValueFunc = (prop: Config): object => {
+    return {
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    };
+  };
+
+  const trueValueFunc = (prop: Config): object => {
+    return {
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: true,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    };
+  };
+  const propertyName = "user.name";
+  const patternOne = "a+b+";
+  const badPattern = "[a+b+";
+
+  const configMatches = createRegexConfig(
+    "prop.matches",
+    propertyName,
+    patternOne,
+    Criterion_CriterionOperator.PROP_MATCHES
+  );
+  const configMatchesNot = createRegexConfig(
+    "prop.matchesNot",
+    propertyName,
+    patternOne,
+    Criterion_CriterionOperator.PROP_DOES_NOT_MATCH
+  );
+  const configMatchesBadPattern = createRegexConfig(
+    "prop.matchesBadPattern",
+    propertyName,
+    badPattern,
+    Criterion_CriterionOperator.PROP_MATCHES
+  );
+  const configMatchesNotBadPattern = createRegexConfig(
+    "prop.matchesNOtBadPattern",
+    propertyName,
+    badPattern,
+    Criterion_CriterionOperator.PROP_DOES_NOT_MATCH
+  );
+
+  describe.each<{
+    description: string;
+    config: Config;
+    contextValue: any;
+    expectedResult: boolean;
+  }>([
+    {
+      description: "match returns true when pattern matches",
+      config: configMatches,
+      contextValue: "ab",
+      expectedResult: true,
+    },
+    {
+      description: "match returns false when pattern does not match",
+      config: configMatches,
+      contextValue: "a",
+      expectedResult: false,
+    },
+    {
+      description: "does not match returns true when pattern does not match",
+      config: configMatchesNot,
+      contextValue: "a",
+      expectedResult: true,
+    },
+    {
+      description: "does not match returns false when pattern matches",
+      config: configMatchesNot,
+      contextValue: "ab",
+      expectedResult: false,
+    },
+    {
+      description: "match returns false when pattern does not compile",
+      config: configMatchesBadPattern,
+      contextValue: "a",
+      expectedResult: false,
+    },
+    {
+      description: "does not match returns false when pattern does not compile",
+      config: configMatchesNotBadPattern,
+      contextValue: "ab",
+      expectedResult: false,
+    },
+    {
+      description: "match returns false when context value is not a string",
+      config: configMatches,
+      contextValue: 100,
+      expectedResult: false,
+    },
+    {
+      description: "does not match returns false context value is not a string",
+      config: configMatchesNot,
+      contextValue: 100,
+      expectedResult: false,
+    },
+  ])(
+    "$description",
+    ({ description, config, contextValue, expectedResult }) => {
+      test(`${description} (${config.key}) (${stringify(
+        contextValue
+      )})`, () => {
+        const context = new Map([["user", new Map([["name", contextValue]])]]);
+        const theArgs = argBuilder(context, config);
+        const expectedMatchValue = expectedResult
+          ? trueValueFunc(config)
+          : falseValueFunc(config);
+        expect(evaluate(theArgs)).toStrictEqual(expectedMatchValue);
+      });
     }
   );
 });
