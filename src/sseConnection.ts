@@ -12,6 +12,7 @@ interface ConstructorProps {
 class SSEConnection {
   private readonly apiKey: string;
   private readonly sources: string[];
+  private channel?: EventSource; // Store the EventSource instance
 
   constructor({ apiKey, sources }: ConstructorProps) {
     this.apiKey = apiKey;
@@ -29,13 +30,20 @@ class SSEConnection {
       "stream."
     )}/api/v1/sse/config`;
 
-    const channel = new EventSource(url, { headers });
+    this.channel = new EventSource(url, { headers });
 
-    channel.onmessage = (message: any) => {
+    this.channel.onmessage = (message: any) => {
       const newConfigs = parseConfigs(message.data);
 
       resolver.update(newConfigs.configs);
     };
+  }
+
+  close(): void {
+    if (this.channel !== undefined && this.channel != null) {
+      this.channel.close();
+      this.channel = undefined;
+    }
   }
 }
 
