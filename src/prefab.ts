@@ -119,7 +119,10 @@ class Prefab implements PrefabInterface {
   private lastUpdatedAt: number = 0;
   private loading: boolean = false;
   private readonly globalContext?: Contexts;
+  private sseConnection?: SSEConnection;
   readonly telemetry: Telemetry;
+  private running = true;
+  private pollTimeout?: NodeJS.Timeout;
 
   constructor({
     apiKey,
@@ -308,12 +311,12 @@ class Prefab implements PrefabInterface {
   startSSE(startAtId: Long): void {
     requireResolver(this.resolver);
 
-    const connection = new SSEConnection({
+    this.sseConnection = new SSEConnection({
       apiKey: this.apiKey,
       sources: this.sources.sseSources,
     });
 
-    connection.start(this.resolver, startAtId);
+    this.sseConnection.start(this.resolver, startAtId);
   }
 
   startPolling(): void {
@@ -329,7 +332,9 @@ class Prefab implements PrefabInterface {
           console.error(err);
         })
         .finally(() => {
-          setTimeout(poll, this.pollInterval);
+          if (this.running) {
+            this.pollTimeout = setTimeout(poll, this.pollInterval);
+          }
         });
     };
 
@@ -434,6 +439,17 @@ class Prefab implements PrefabInterface {
   private loadingComplete(): void {
     this.lastUpdatedAt = Date.now();
     this.loading = false;
+  }
+
+  close(): void {
+    if (this.sseConnection !== undefined && this.sseConnection !== null) {
+      this.sseConnection.close();
+      this.sseConnection = undefined;
+    }
+    if (this.pollTimeout !== undefined && this.pollTimeout !== null) {
+      this.pollTimeout.unref();
+    }
+    this.running = false;
   }
 }
 
