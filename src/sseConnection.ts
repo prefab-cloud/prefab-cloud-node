@@ -12,7 +12,7 @@ interface ConstructorProps {
 class SSEConnection {
   private readonly apiKey: string;
   private readonly sources: string[];
-  private channel?: EventSource; // Store the EventSource instance
+  private channel?: EventSource;
 
   constructor({ apiKey, sources }: ConstructorProps) {
     this.apiKey = apiKey;
