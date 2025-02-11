@@ -38,7 +38,7 @@ export const apiClient = (apiKey: string, fetchFunc: Fetch): InternalFetch => {
 
 export type ApiClient = ReturnType<typeof apiClient>;
 
-const MAX_CACHE_ENTRIES = 100;
+const MAX_CACHE_ENTRIES = 10;
 const cache = new Map<
   string,
   { data?: ArrayBuffer; etag?: string; expiresAt?: number }
