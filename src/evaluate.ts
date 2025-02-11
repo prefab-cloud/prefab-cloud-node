@@ -11,6 +11,7 @@ import type { Contexts, HashByPropertyValue, ProjectEnvId } from "./types";
 import { type GetValue, unwrap } from "./unwrap";
 import { contextLookup } from "./contextLookup";
 import { sortRows } from "./sortRows";
+import SemanticVersion from "./semanticversion";
 
 const getHashByPropertyValue = (
   value: ConfigValue | undefined,
@@ -178,6 +179,26 @@ const evaluateRegexCriterion = (
   return false;
 };
 
+const evaluateSemverCriterion = (
+  criterion: Criterion,
+  contexts: Contexts,
+  comparisonFn: (compareResult: number) => boolean
+): boolean => {
+  const leftSide = contextLookup(contexts, criterion.propertyName);
+  const rightSide = criterion.valueToMatch?.string;
+
+  if (!(typeof leftSide === "string" && typeof rightSide === "string")) {
+    return false;
+  }
+
+  try {
+    const leftSideSemVer = SemanticVersion.parse(leftSide);
+    const rightSideSemVer = SemanticVersion.parse(rightSide);
+    return comparisonFn(leftSideSemVer.compare(rightSideSemVer));
+  } catch (e) {}
+  return false;
+};
+
 const evaluateNumericCriterion = (
   criterion: Criterion,
   contexts: Contexts,
@@ -317,10 +338,29 @@ const allCriteriaMatch = (
           contexts,
           (compareResult) => compareResult <= 0
         );
+
       case Criterion_CriterionOperator.PROP_MATCHES:
         return evaluateRegexCriterion(criterion, contexts, false);
       case Criterion_CriterionOperator.PROP_DOES_NOT_MATCH:
         return evaluateRegexCriterion(criterion, contexts, true);
+      case Criterion_CriterionOperator.PROP_SEMVER_LESS_THAN:
+        return evaluateSemverCriterion(
+          criterion,
+          contexts,
+          (compareResult) => compareResult < 0
+        );
+      case Criterion_CriterionOperator.PROP_SEMVER_EQUAL:
+        return evaluateSemverCriterion(
+          criterion,
+          contexts,
+          (compareResult) => compareResult === 0
+        );
+      case Criterion_CriterionOperator.PROP_SEMVER_GREATER_THAN:
+        return evaluateSemverCriterion(
+          criterion,
+          contexts,
+          (compareResult) => compareResult > 0
+        );
       default:
         throw new Error(
           `Unexpected criteria ${JSON.stringify(criterion.operator)}`

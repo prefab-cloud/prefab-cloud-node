@@ -51,6 +51,7 @@ import {
 } from "./fixtures/propNumericComparison";
 
 import { createConfig as createRegexConfig } from "./fixtures/propRegexMatches";
+import { createConfig as createSemverConfig } from "./fixtures/propSemverMatches";
 
 import Long from "long";
 import { stringify } from "ts-jest";
@@ -1512,6 +1513,149 @@ describe("regex tests", () => {
         contextValue
       )})`, () => {
         const context = new Map([["user", new Map([["name", contextValue]])]]);
+        const theArgs = argBuilder(context, config);
+        const expectedMatchValue = expectedResult
+          ? trueValueFunc(config)
+          : falseValueFunc(config);
+        expect(evaluate(theArgs)).toStrictEqual(expectedMatchValue);
+      });
+    }
+  );
+});
+
+describe("semantic version tests", () => {
+  const argBuilder = (contexts: Contexts, prop: Config): EvaluateArgs => ({
+    config: prop,
+    projectEnvId: projectEnvIdUnderTest,
+    namespace: noNamespace,
+    contexts,
+    resolver: simpleResolver,
+  });
+
+  const falseValueFunc = (prop: Config): object => {
+    return {
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: false,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 1,
+      weightedValueIndex: undefined,
+    };
+  };
+
+  const trueValueFunc = (prop: Config): object => {
+    return {
+      configId: prop.id,
+      configKey: prop.key,
+      configType: prop.configType,
+      valueType: prop.valueType,
+      unwrappedValue: true,
+      reportableValue: undefined,
+      configRowIndex: 0,
+      conditionalValueIndex: 0,
+      weightedValueIndex: undefined,
+    };
+  };
+  const propertyName = "client.version";
+  const configLessThan = createSemverConfig(
+    "prop.semVerLessThan",
+    propertyName,
+    "2.1.0",
+    Criterion_CriterionOperator.PROP_SEMVER_LESS_THAN
+  );
+  const configEqualTo = createSemverConfig(
+    "prop.semVerEqual",
+    propertyName,
+    "2.1.0",
+    Criterion_CriterionOperator.PROP_SEMVER_EQUAL
+  );
+  const configGreaterThan = createSemverConfig(
+    "prop.semVerGreaterThan",
+    propertyName,
+    "2.1.0",
+    Criterion_CriterionOperator.PROP_SEMVER_GREATER_THAN
+  );
+  const configNotLegitSemver = createSemverConfig(
+    "prop.semVerLessThan",
+    propertyName,
+    "what am i doing here",
+    Criterion_CriterionOperator.PROP_SEMVER_LESS_THAN
+  );
+
+  describe.each<{
+    description: string;
+    config: Config;
+    contextValue: string;
+    expectedResult: boolean;
+  }>([
+    {
+      description:
+        "less than returns true when semver in context is less than config",
+      config: configLessThan,
+      contextValue: "1.2.0",
+      expectedResult: true,
+    },
+    {
+      description:
+        "less than returns false when semver in context is greater than config",
+      config: configLessThan,
+      contextValue: "3.2.0",
+      expectedResult: false,
+    },
+    {
+      description:
+        "equal to returns true when semver in context is equal to config",
+      config: configEqualTo,
+      contextValue: "2.1.0",
+      expectedResult: true,
+    },
+    {
+      description:
+        "equal to returns false when semver in context is not equal to config",
+      config: configEqualTo,
+      contextValue: "2.0.0",
+      expectedResult: false,
+    },
+    {
+      description:
+        "greater than returns true when semver in context is greater than config",
+      config: configGreaterThan,
+      contextValue: "2.2.0",
+      expectedResult: true,
+    },
+    {
+      description:
+        "greater than returns false when semver in context is less than config",
+      config: configGreaterThan,
+      contextValue: "1.2.0",
+      expectedResult: false,
+    },
+    {
+      description:
+        "greater than returns false when semver in config is not a semver",
+      config: configNotLegitSemver,
+      contextValue: "1.2.0",
+      expectedResult: false,
+    },
+    {
+      description:
+        "less than returns false when semver in config is not a semver",
+      config: configLessThan,
+      contextValue: "not a semver",
+      expectedResult: false,
+    },
+  ])(
+    "$description",
+    ({ description, config, contextValue, expectedResult }) => {
+      test(`${description} (${config.key}) (${stringify(
+        contextValue
+      )})`, () => {
+        const context = new Map([
+          ["client", new Map([["version", contextValue]])],
+        ]);
         const theArgs = argBuilder(context, config);
         const expectedMatchValue = expectedResult
           ? trueValueFunc(config)
