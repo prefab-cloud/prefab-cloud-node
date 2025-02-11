@@ -118,7 +118,9 @@ const fetchWithCache = async (
 
   if (cache.size > MAX_CACHE_ENTRIES) {
     const leastUsedKey = cache.keys().next().value;
-    cache.delete(leastUsedKey);
+    if (leastUsedKey !== undefined) {
+      cache.delete(leastUsedKey);
+    }
   }
   return new Response(responseBuffer, {
     status: response.status,
