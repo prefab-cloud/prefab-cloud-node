@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import type Long from "long";
+import Long from "long";
 import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
 import { Resolver, type MinimumConfig } from "./resolver";
@@ -123,6 +123,7 @@ class Prefab implements PrefabInterface {
   readonly telemetry: Telemetry;
   private running = true;
   private pollTimeout?: NodeJS.Timeout;
+  private startAtId = Long.fromInt(0);
 
   constructor({
     apiKey,
@@ -280,11 +281,12 @@ class Prefab implements PrefabInterface {
     return loadConfig({
       sources: this.sources.configSources,
       apiClient: this.apiClient,
-    }).then(({ configs, defaultContext }) => {
+      startAtId: this.startAtId,
+    }).then(({ configs, defaultContext, startAtId }) => {
       if (configs.length > 0) {
         this.resolver?.update(configs, defaultContext);
+        this.startAtId = startAtId;
       }
-
       this.loadingComplete();
     });
   }

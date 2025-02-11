@@ -2,7 +2,7 @@ import * as fs from "fs";
 import type Long from "long";
 import type { Config, Configs } from "./proto";
 import { maxLong } from "./maxLong";
-import type { ApiClient } from "./apiClient";
+import { type ApiClient, fetchWithCache } from "./apiClient";
 
 import { unwrapPrimitive } from "./unwrap";
 import type { Contexts, ProjectEnvId } from "./types";
@@ -83,9 +83,10 @@ const loadConfigFromUrl = async ({
   source: string;
   startAtId?: Long;
   apiClient: ApiClient;
+  etag?: string;
 }): ReturnType<typeof loadConfig> => {
   const path = `/api/v1/configs/${startAtId?.toString() ?? 0}`;
-  const response = await apiClient.fetch({ source, path });
+  const response = await fetchWithCache(apiClient, { source, path });
 
   if (response.status === 401) {
     throw new Error(
@@ -95,7 +96,6 @@ const loadConfigFromUrl = async ({
 
   if (response.status === 200) {
     const buffer = await response.arrayBuffer();
-
     const parsed = parseConfigs(buffer);
     return parse(parsed);
   }
