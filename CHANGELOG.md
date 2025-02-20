@@ -1,41 +1,51 @@
 # Changelog
 
+## 0.4.4 - 2025-02-20
+
+- More efficient config downloads using conditional fetch [#93]
+- Adds a close method for clean shutdowns [#92]
+- Adds semantic version comparison operator support [#91]
+- Adds regex matching operator support [#90]
+- Adds numeric comparison operator support [#88]
+- Adds date comparison operator support [#84] [#86]
+
+
 ## 0.4.3 - 2025-01-28
 
 - Fixes telemetry handling for json value type (#82)
-- Implement startsWith/contains operators (#80)
+- Implement startsWith/contains operators [#80]
 
 ## 0.4.2 - 2024-10-03
 
-- Allow telemetry when using api source directly (#78)
+- Allow telemetry when using api source directly [#78]
 
 ## 0.4.1 - 2024-09-19
 
-- Use stream subdomain for SSE (#76)
+- Use stream subdomain for SSE [#76]
 
 ## 0.4.0 - 2024-08-22
 
-- Use belt and suspenders for reliability (#75)
+- Use belt and suspenders for reliability [#75]
 
 ## 0.3.0 - 2024-06-24
 
-- Support JSON configs (#74)
+- Support JSON configs [#74]
 
 ## 0.2.2 - 2024-06-17
 
-- Update deps for security (#73)
+- Update deps for security [#73]
 
 ## 0.2.1 - 2024-04-16
 
-- Config deletion fix (#70)
+- Config deletion fix [#70]
 
 ## 0.2.0 - 2024-04-10
 
-- Add Duration support (#69)
+- Add Duration support [#69]
 
 ## 0.1.20 - 2024-02-22
 
-- Fix: send context shapes by default (#68)
+- Fix: send context shapes by default [#68]
 
 ## 0.1.19 - 2024-02-07
 
@@ -43,25 +53,25 @@
 
 ## 0.1.18 - 2024-02-07
 
-- Don't include deleted config in `keys()` etc. (#66)
+- Don't include deleted config in `keys()` etc. [#66]
 
 ## 0.1.17 - 2024-01-18
 
-- Don't report empty contexts with empty keys. Throw if required environment variable is absent. Throw if we can't parse an environment variable correctly. (#63)
+- Don't report empty contexts with empty keys. Throw if required environment variable is absent. Throw if we can't parse an environment variable correctly. [#63]
 
 ## 0.1.16 - 2024-01-09
 
-- Support timed loggers (#62)
+- Support timed loggers [#62]
 
 ## 0.1.15 - 2024-01-08
 
-- `updateIfStalerThan(someNumberofMs)` updates if no update has happened in someNumberofMs ms (#60)
-- `logger()` should inherit context (#59)
-- Return the result of `inContext()` (#58)
-- Add `.logger() (#57)
-- Add `.updateNow()` (#56)
-- Fix polling bug (#54)
-- Allow prefab.set (#53)
+- `updateIfStalerThan(someNumberofMs)` updates if no update has happened in someNumberofMs ms [#60]
+- `logger()` should inherit context [#59]
+- Return the result of `inContext()` [#58]
+- Add `.logger() [#57]
+- Add `.updateNow()` [#56]
+- Fix polling bug [#54]
+- Allow prefab.set [#53]
 
 ## 0.1.14 - 2023-12-14
 
