@@ -39,7 +39,8 @@
                 "intRange",
                 "provided",
                 "duration",
-                "json"
+                "json",
+                "schema"
               ]
             },
             "_confidential": {
@@ -105,6 +106,10 @@
             "json": {
               "type": "Json",
               "id": 16
+            },
+            "schema": {
+              "type": "Schema",
+              "id": 17
             },
             "confidential": {
               "type": "bool",
@@ -343,7 +348,8 @@
             "LOG_LEVEL": 3,
             "SEGMENT": 4,
             "LIMIT_DEFINITION": 5,
-            "DELETED": 6
+            "DELETED": 6,
+            "SCHEMA": 7
           }
         },
         "Config": {
@@ -351,6 +357,11 @@
             "_draftId": {
               "oneof": [
                 "draftId"
+              ]
+            },
+            "_schemaKey": {
+              "oneof": [
+                "schemaKey"
               ]
             }
           },
@@ -399,6 +410,13 @@
             "sendToClientSdk": {
               "type": "bool",
               "id": 10
+            },
+            "schemaKey": {
+              "type": "string",
+              "id": 11,
+              "options": {
+                "proto3_optional": true
+              }
             }
           },
           "nested": {
@@ -1518,6 +1536,27 @@
             "droppedEventCount": {
               "type": "uint64",
               "id": 3
+            }
+          }
+        },
+        "Schema": {
+          "fields": {
+            "schema": {
+              "type": "string",
+              "id": 1
+            },
+            "schemaType": {
+              "type": "SchemaType",
+              "id": 2
+            }
+          },
+          "nested": {
+            "SchemaType": {
+              "values": {
+                "UNKNOWN": 0,
+                "ZOD": 1,
+                "JSON_SCHEMA": 2
+              }
             }
           }
         }
