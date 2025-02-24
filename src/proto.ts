@@ -24,6 +24,7 @@ export enum ConfigType {
   SEGMENT = 4,
   LIMIT_DEFINITION = 5,
   DELETED = 6,
+  SCHEMA = 7,
   UNRECOGNIZED = -1,
 }
 
@@ -70,8 +71,9 @@ export interface ConfigValue {
   intRange?: IntRange | undefined;
   provided?: Provided | undefined;
   duration?: IsoDuration | undefined;
-  json?:
-    | Json
+  json?: Json | undefined;
+  schema?:
+    | Schema
     | undefined;
   /** don't log or telemetry this value */
   confidential?:
@@ -151,6 +153,7 @@ export interface Config {
   valueType: Config_ValueType;
   /** default value of a boolean in proto3 is false */
   sendToClientSdk: boolean;
+  schemaKey?: string | undefined;
 }
 
 export enum Config_ValueType {
@@ -541,4 +544,16 @@ export interface ClientStats {
   start: Long;
   end: Long;
   droppedEventCount: Long;
+}
+
+export interface Schema {
+  schema: string;
+  schemaType: Schema_SchemaType;
+}
+
+export enum Schema_SchemaType {
+  UNKNOWN = 0,
+  ZOD = 1,
+  JSON_SCHEMA = 2,
+  UNRECOGNIZED = -1,
 }
