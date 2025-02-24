@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.5 - 2025-02-24
+- Updated protos with schema types [#95]
+
 ## 0.4.4 - 2025-02-20
 
 - More efficient config downloads using conditional fetch [#93]
