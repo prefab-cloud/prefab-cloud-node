@@ -141,7 +141,7 @@ class Prefab implements PrefabInterface {
     collectLoggerCounts = true,
     contextUploadMode = "periodicExample",
     collectEvaluationSummaries = true,
-    onUpdate = () => { },
+    onUpdate = () => {},
   }: ConstructorProps) {
     this.apiKey = apiKey;
 
@@ -476,5 +476,5 @@ export {
   type ValidLogLevel,
   type ValidLogLevelName,
   wordLevelToNumber,
-  type Schema_SchemaType
+  Schema_SchemaType,
 };
