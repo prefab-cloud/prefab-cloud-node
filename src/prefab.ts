@@ -23,6 +23,7 @@ import type {
   ConfigValue,
   ConfigRow,
   Provided,
+  Schema_SchemaType,
 } from "./proto";
 import { wordLevelToNumber, parseLevel } from "./logger";
 import type { ValidLogLevelName, ValidLogLevel, makeLogger } from "./logger";
@@ -475,4 +476,5 @@ export {
   type ValidLogLevel,
   type ValidLogLevelName,
   wordLevelToNumber,
+  Schema_SchemaType,
 };
