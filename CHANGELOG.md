@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.4.6 - In Progress
+- Export schema types
+
 ## 0.4.5 - 2025-02-24
 - Updated protos with schema types [#95]
 

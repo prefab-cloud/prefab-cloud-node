@@ -23,6 +23,7 @@ import type {
   ConfigValue,
   ConfigRow,
   Provided,
+  Schema_SchemaType,
 } from "./proto";
 import { wordLevelToNumber, parseLevel } from "./logger";
 import type { ValidLogLevelName, ValidLogLevel, makeLogger } from "./logger";
@@ -140,7 +141,7 @@ class Prefab implements PrefabInterface {
     collectLoggerCounts = true,
     contextUploadMode = "periodicExample",
     collectEvaluationSummaries = true,
-    onUpdate = () => {},
+    onUpdate = () => { },
   }: ConstructorProps) {
     this.apiKey = apiKey;
 
@@ -475,4 +476,5 @@ export {
   type ValidLogLevel,
   type ValidLogLevelName,
   wordLevelToNumber,
+  type Schema_SchemaType
 };
