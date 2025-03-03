@@ -73,7 +73,9 @@ export const knownLoggers = (
         data[loggerName] = {};
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       (data[loggerName] as Record<string, number>)[severity] =
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
         ((data[loggerName] as Record<string, number>)[severity] ?? 0) + 1;
     },
 
