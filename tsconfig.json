@@ -8,7 +8,7 @@
     "dist"
   ],
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es2018",
     "module": "es2015",
     "declaration": true,
     "outDir": "./dist",

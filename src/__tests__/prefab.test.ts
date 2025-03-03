@@ -669,7 +669,11 @@ describe("prefab", () => {
       const results: Record<string, number> = { true: 0, false: 0 };
 
       nTimes(100, () => {
-        results[prefab.isFeatureEnabled("rollout.flag").toString()]++;
+        const enabled = prefab.isFeatureEnabled("rollout.flag").toString();
+        if (results[enabled] === undefined) {
+          results[enabled] = 0;
+        }
+        results[enabled]++;
       });
 
       // The flag has a 10% chance of being true and a 90% chance of being false
