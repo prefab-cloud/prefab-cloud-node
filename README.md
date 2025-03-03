@@ -8,6 +8,20 @@ Install the client
 
 `npm install @prefab-cloud/prefab-cloud-node` or `yarn add @prefab-cloud/prefab-cloud-node`
 
+## Required Peer Dependencies
+
+This library requires the `long` package to handle 64-bit integers properly:
+
+```bash
+npm install long
+# or
+yarn add long
+```
+
+> **Important:** The `long` package must be directly installed in your project. Some environments (particularly Heroku) require this dependency to be in your project's direct dependencies for proper module resolution. Without it, you may encounter issues with integer values being parsed incorrectly.
+
+## Usage
+
 Set up a Prefab client.
 
 ```js
