@@ -74,6 +74,7 @@ export interface PrefabInterface {
   }) => boolean;
   telemetry?: Telemetry;
   updateIfStalerThan: (durationInMs: number) => Promise<void> | undefined;
+  withContext: (contexts: Contexts | ContextObj) => Resolver;
 }
 
 export interface Telemetry {
@@ -357,6 +358,12 @@ class Prefab implements PrefabInterface {
     return func(this.resolver.cloneWithContext(contexts));
   }
 
+  withContext(contexts: Contexts | ContextObj): Resolver {
+    requireResolver(this.resolver);
+
+    return this.resolver.cloneWithContext(contexts);
+  }
+
   get(
     key: string,
     contexts?: Contexts | ContextObj,
@@ -472,6 +479,7 @@ export {
   type ConfigValue,
   type Contexts,
   type Provided,
+  type Resolver,
   type ValidLogLevel,
   type ValidLogLevelName,
   wordLevelToNumber,

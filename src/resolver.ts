@@ -117,6 +117,10 @@ class Resolver implements PrefabInterface {
     );
   }
 
+  withContext(contexts: Contexts | ContextObj): Resolver {
+    return this.cloneWithContext(contexts);
+  }
+
   update(
     configs: Array<Config | MinimumConfig>,
     defaultContext?: Contexts
