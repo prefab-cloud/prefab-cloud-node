@@ -446,6 +446,22 @@ describe("prefab", () => {
         expect(updateResult).toEqual("updated");
       });
     });
+
+    it("withContext returns a resolver with the provided context", () => {
+      const prefab = new Prefab({ apiKey: irrelevant });
+      prefab.setConfig(configs, projectEnvIdUnderTest, new Map());
+
+      // Create a resolver with US context
+      const usResolver = prefab.withContext({ user: { country: "US" } });
+      expect(usResolver.get("prop.is.one.of")).toEqual("correct");
+
+      // Create a resolver with a different context
+      const otherResolver = prefab.withContext({ user: { country: "FR" } });
+      expect(otherResolver.get("prop.is.one.of")).toEqual("default");
+
+      // Original prefab remains unchanged
+      expect(prefab.get("prop.is.one.of")).toEqual("default");
+    });
   });
 
   // While the evaluation logic is best tested in evaluate.test.ts,
