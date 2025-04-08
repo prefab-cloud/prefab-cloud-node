@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.7 - 2025-04-08
+
+- fix: Telemetry hanging after prefab.close() (#100)
+
 ## 0.4.6 - 2025-04-08
 
 - Add withContext to get a context-bound resolver (#98)
