@@ -458,6 +458,18 @@ class Prefab implements PrefabInterface {
     if (this.pollTimeout !== undefined && this.pollTimeout !== null) {
       this.pollTimeout.unref();
     }
+
+    // Clear all telemetry timeouts
+    Object.values(this.telemetry).forEach((telemetryComponent) => {
+      // First disable the component
+      telemetryComponent.enabled = false;
+      // Then clear its timeout
+      if (telemetryComponent.timeout !== undefined) {
+        clearTimeout(telemetryComponent.timeout);
+        telemetryComponent.timeout = undefined;
+      }
+    });
+
     this.running = false;
   }
 }

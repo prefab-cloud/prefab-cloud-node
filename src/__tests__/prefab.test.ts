@@ -1,5 +1,7 @@
 import * as path from "path";
 import Long from "long";
+import fs from "fs";
+import { spawn } from "child_process";
 
 import basicConfig from "./fixtures/basicConfig";
 import { DEFAULT_SOURCES } from "../sources";
@@ -1156,6 +1158,58 @@ describe("prefab", () => {
         decryptionKey
       );
       expect(prefab.get(secret.key)).toEqual(clearText);
+    });
+  });
+
+  describe("closing behavior", () => {
+    // NOTE: for ease of running the subprocess, we use Bun here.
+    // https://bun.sh/docs/installation
+    it("closes the prefab when the resolver is closed", async () => {
+      const testFile = path.join(__dirname, "temp-test.ts");
+      const testCode = `
+import { Prefab } from "../prefab";
+
+(async () => {
+  const prefab = new Prefab({
+    apiKey: "${validApiKey}",
+  });
+  await prefab.init();
+  const value = prefab.get("abc");
+  console.log(\`ABC is \${value}\`);
+  prefab.close();
+})();
+`;
+      fs.writeFileSync(testFile, testCode);
+
+      const startTime = Date.now();
+      const subprocess = spawn("bun", ["run", testFile]);
+
+      let output = "";
+      let errorOutput = "";
+
+      subprocess.stdout.on("data", (data: Buffer) => {
+        output += data.toString();
+      });
+
+      subprocess.stderr.on("data", (data: Buffer) => {
+        errorOutput += data.toString();
+      });
+
+      await new Promise<void>((resolve) => {
+        subprocess.on("close", () => {
+          resolve();
+        });
+      });
+
+      const duration = Date.now() - startTime;
+      fs.unlinkSync(testFile);
+
+      if (errorOutput.length > 0) {
+        console.error("Subprocess stderr:", errorOutput);
+      }
+
+      expect(output.trim()).toEqual("ABC is true");
+      expect(duration).toBeLessThan(3000);
     });
   });
 });
