@@ -2,3 +2,4 @@ node_modules
 .eslintcache
 dist
 .envrc
+src/__tests__/temp-test.ts

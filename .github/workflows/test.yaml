@@ -25,6 +25,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+      # We use this for a single test that runs Bun for a subprocess
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
       - run: npm ci
       - run: npm run build --if-present
 
