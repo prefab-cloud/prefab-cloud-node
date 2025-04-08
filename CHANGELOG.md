@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.6 - 2025-04-08
+
+- Add withContext to get a context-bound resolver (#98)
+
 ## 0.4.5 - 2025-02-24
 - Updated protos with schema types [#95]
 
