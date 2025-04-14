@@ -123,16 +123,11 @@ const inSegment = (
 };
 
 const inIntRange = (criterion: Criterion, contexts: Contexts): boolean => {
-  const contextsWithCurrentTime = new Map(contexts);
-  const prefabContext = contextsWithCurrentTime.get("prefab") ?? new Map();
-  prefabContext.set("current-time", +new Date());
-  contextsWithCurrentTime.set("prefab", prefabContext);
-
   const start = criterion.valueToMatch?.intRange?.start;
   const end = criterion.valueToMatch?.intRange?.end;
 
   const comparable = contextLookup(
-    contextsWithCurrentTime,
+    contexts,
     criterion.propertyName
   );
 

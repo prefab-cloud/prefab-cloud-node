@@ -8,6 +8,11 @@ export const contextLookup = (
     return undefined;
   }
 
+  // Special case for "prefab.current-time" to always return the current timestamp
+  if (propertyName === "prefab.current-time") {
+    return +new Date();
+  }
+
   let [name, key] = propertyName.split(".");
 
   if (key === undefined) {
