@@ -1,12 +1,17 @@
 # Changelog
 
+## 0.4.8 - 2025-04-15
+
+- Implement virtual context `prefab.current-time` for all operators [#102]
+- fix: Declare Long as a peer dependency [#97]
+
 ## 0.4.7 - 2025-04-08
 
-- fix: Telemetry hanging after prefab.close() (#100)
+- fix: Telemetry hanging after prefab.close() [#100]
 
 ## 0.4.6 - 2025-04-08
 
-- Add withContext to get a context-bound resolver (#98)
+- Add withContext to get a context-bound resolver [#98]
 
 ## 0.4.5 - 2025-02-24
 - Updated protos with schema types [#95]

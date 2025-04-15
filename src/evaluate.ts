@@ -126,10 +126,7 @@ const inIntRange = (criterion: Criterion, contexts: Contexts): boolean => {
   const start = criterion.valueToMatch?.intRange?.start;
   const end = criterion.valueToMatch?.intRange?.end;
 
-  const comparable = contextLookup(
-    contexts,
-    criterion.propertyName
-  );
+  const comparable = contextLookup(contexts, criterion.propertyName);
 
   if (start === undefined || end === undefined || comparable === undefined) {
     return false;

@@ -83,9 +83,9 @@ describe("contextLookup", () => {
   it("should return current timestamp for prefab.current-time", () => {
     const result = contextLookup(contexts, "prefab.current-time");
     const now = +new Date();
-    
+
     // Allow for a small time difference (within 100ms) since the test and the function call
     // might not execute at exactly the same millisecond
-    expect(Math.abs(result as number - now)).toBeLessThan(100);
+    expect(Math.abs((result as number) - now)).toBeLessThan(100);
   });
 });
