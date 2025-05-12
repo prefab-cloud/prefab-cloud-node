@@ -221,7 +221,6 @@ class Prefab implements PrefabInterface {
     projectEnvId: ProjectEnvId,
     defaultContext: Contexts
   ): void {
-    // Create resolver with a temporary no-op onUpdate for its construction phase
     const tempResolver = new Resolver(
       configs,
       projectEnvId,
@@ -237,7 +236,6 @@ class Prefab implements PrefabInterface {
 
     this.configChangeNotifier.init(tempResolver);
 
-    // Define the actual combined onUpdate callback
     const actualCombinedOnUpdate = (
       updatedConfigs: Array<Config | MinimumConfig>
     ): void => {
@@ -246,9 +244,11 @@ class Prefab implements PrefabInterface {
     };
 
     tempResolver.setOnUpdate(actualCombinedOnUpdate);
-
-    // Assign the fully configured resolver to the Prefab instance
     this.resolver = tempResolver;
+
+    if (configs.length > 0) {
+      actualCombinedOnUpdate(configs);
+    }
   }
 
   async init({
