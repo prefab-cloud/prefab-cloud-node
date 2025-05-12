@@ -1,17 +1,21 @@
 import { Prefab } from "../prefab";
 import type { PrefabInterface } from "../prefab";
+import type { ResolverAPI } from "../resolver";
 import type { GetValue } from "../unwrap";
 import { tests } from "./integrationHelper";
 import type { InputOutputTest } from "./integrationHelper";
 
-const func = (prefab: PrefabInterface, test: InputOutputTest): any => {
+const func = (
+  client: PrefabInterface | ResolverAPI,
+  test: InputOutputTest
+): any => {
   switch (test.function) {
     case "get":
-      return prefab.get.bind(prefab);
+      return client.get.bind(client);
     case "get_or_raise":
-      return prefab.get.bind(prefab);
+      return client.get.bind(client);
     case "enabled":
-      return prefab.isFeatureEnabled.bind(prefab);
+      return client.isFeatureEnabled.bind(client);
     default:
       throw new Error(`Unknown function: ${test.function}`);
   }

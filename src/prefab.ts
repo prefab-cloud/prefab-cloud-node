@@ -2,7 +2,7 @@ import crypto from "crypto";
 import Long from "long";
 import { apiClient, type ApiClient } from "./apiClient";
 import { loadConfig } from "./loadConfig";
-import { Resolver, type MinimumConfig } from "./resolver";
+import { Resolver, type MinimumConfig, type ResolverAPI } from "./resolver";
 import { Sources } from "./sources";
 import type {
   ContextObj,
@@ -36,6 +36,10 @@ import { contextShapes } from "./telemetry/contextShapes";
 import { exampleContexts } from "./telemetry/exampleContexts";
 import { evaluationSummaries } from "./telemetry/evaluationSummaries";
 import { encrypt, generateNewHexKey } from "./encryption";
+import {
+  ConfigChangeNotifier,
+  type GlobalListenerCallback,
+} from "./configChangeNotifier";
 
 const DEFAULT_POLL_INTERVAL = 60 * 1000;
 export const PREFAB_DEFAULT_LOG_LEVEL = LogLevel.WARN;
@@ -74,7 +78,8 @@ export interface PrefabInterface {
   }) => boolean;
   telemetry?: Telemetry;
   updateIfStalerThan: (durationInMs: number) => Promise<void> | undefined;
-  withContext: (contexts: Contexts | ContextObj) => Resolver;
+  withContext: (contexts: Contexts | ContextObj) => ResolverAPI;
+  addConfigChangeListener: (callback: GlobalListenerCallback) => () => void;
 }
 
 export interface Telemetry {
@@ -111,11 +116,11 @@ class Prefab implements PrefabInterface {
   private readonly namespace?: string;
   private readonly onNoDefault: "error" | "warn" | "ignore";
   private readonly pollInterval: number;
-  private resolver?: Resolver;
+  private resolver: Resolver | undefined;
   private readonly apiClient: ApiClient;
   private readonly defaultLogLevel: ValidLogLevel;
   private readonly instanceHash: string;
-  private readonly onUpdate: ConstructorProps["onUpdate"];
+  private readonly onUpdate: (configs: Array<Config | MinimumConfig>) => void;
   private initCount: number = 0;
   private lastUpdatedAt: number = 0;
   private loading: boolean = false;
@@ -125,6 +130,7 @@ class Prefab implements PrefabInterface {
   private running = true;
   private pollTimeout?: NodeJS.Timeout;
   private startAtId = Long.fromInt(0);
+  private readonly configChangeNotifier: ConfigChangeNotifier;
 
   constructor({
     apiKey,
@@ -141,7 +147,7 @@ class Prefab implements PrefabInterface {
     collectLoggerCounts = true,
     contextUploadMode = "periodicExample",
     collectEvaluationSummaries = true,
-    onUpdate = () => {},
+    onUpdate,
   }: ConstructorProps) {
     this.apiKey = apiKey;
 
@@ -161,7 +167,7 @@ class Prefab implements PrefabInterface {
     this.onNoDefault = onNoDefault ?? "error";
     this.pollInterval = pollInterval ?? DEFAULT_POLL_INTERVAL;
     this.instanceHash = crypto.randomUUID();
-    this.onUpdate = onUpdate;
+    this.onUpdate = onUpdate ?? (() => {});
     this.globalContext = globalContext;
 
     const parsedDefaultLogLevel = parseLevel(defaultLogLevel);
@@ -206,6 +212,43 @@ class Prefab implements PrefabInterface {
         collectEvaluationSummaries
       ),
     };
+
+    this.configChangeNotifier = new ConfigChangeNotifier();
+  }
+
+  private _createOrReconfigureResolver(
+    configs: Config[],
+    projectEnvId: ProjectEnvId,
+    defaultContext: Contexts
+  ): void {
+    // Create resolver with a temporary no-op onUpdate for its construction phase
+    const tempResolver = new Resolver(
+      configs,
+      projectEnvId,
+      this.namespace,
+      this.onNoDefault,
+      this.updateIfStalerThan.bind(this),
+      this.telemetry,
+      undefined,
+      () => {},
+      defaultContext,
+      this.globalContext
+    );
+
+    this.configChangeNotifier.init(tempResolver);
+
+    // Define the actual combined onUpdate callback
+    const actualCombinedOnUpdate = (
+      updatedConfigs: Array<Config | MinimumConfig>
+    ): void => {
+      this.onUpdate(updatedConfigs);
+      this.configChangeNotifier.handleResolverUpdate();
+    };
+
+    tempResolver.setOnUpdate(actualCombinedOnUpdate);
+
+    // Assign the fully configured resolver to the Prefab instance
+    this.resolver = tempResolver;
   }
 
   async init({
@@ -220,34 +263,44 @@ class Prefab implements PrefabInterface {
       console.warn(MULTIPLE_INIT_WARNING);
     }
 
-    const { configs, projectEnvId, startAtId, defaultContext } =
-      await loadConfig({
-        sources: this.sources.configSources,
-        apiClient: this.apiClient,
-        datafile: this.datafile,
+    if (this.resolver !== undefined) {
+      console.warn("Prefab already initialized.");
+      return;
+    }
+
+    try {
+      const { configs, projectEnvId, startAtId, defaultContext } =
+        await loadConfig({
+          sources: this.sources.configSources,
+          apiClient: this.apiClient,
+          datafile: this.datafile,
+        });
+
+      this._createOrReconfigureResolver(configs, projectEnvId, defaultContext);
+
+      this.loadingComplete();
+
+      runtimeConfig.forEach(([key, value]) => {
+        this.set(key, value);
       });
 
-    this.setConfig(configs, projectEnvId, defaultContext);
+      if (this.enableSSE) {
+        this.startSSE(startAtId);
+      }
 
-    this.loadingComplete();
+      if (this.enablePolling) {
+        setTimeout(() => {
+          this.startPolling();
+        }, this.pollInterval);
+      }
 
-    runtimeConfig.forEach(([key, value]) => {
-      this.set(key, value);
-    });
-
-    if (this.enableSSE) {
-      this.startSSE(startAtId);
-    }
-
-    if (this.enablePolling) {
       setTimeout(() => {
-        this.startPolling();
-      }, this.pollInterval);
+        TelemetryReporter.start(Object.values(this.telemetry));
+      });
+    } catch (error) {
+      console.error("Error during Prefab initialization:", error);
+      throw error;
     }
-
-    setTimeout(() => {
-      TelemetryReporter.start(Object.values(this.telemetry));
-    });
   }
 
   logger(
@@ -297,18 +350,7 @@ class Prefab implements PrefabInterface {
     projectEnvId: ProjectEnvId,
     defaultContext: Contexts
   ): void {
-    this.resolver = new Resolver(
-      config,
-      projectEnvId,
-      this.namespace,
-      this.onNoDefault,
-      this.updateIfStalerThan.bind(this),
-      this.telemetry,
-      undefined,
-      this.onUpdate,
-      defaultContext,
-      this.globalContext
-    );
+    this._createOrReconfigureResolver(config, projectEnvId, defaultContext);
   }
 
   startSSE(startAtId: Long): void {
@@ -358,7 +400,7 @@ class Prefab implements PrefabInterface {
     return func(this.resolver.cloneWithContext(contexts));
   }
 
-  withContext(contexts: Contexts | ContextObj): Resolver {
+  withContext(contexts: Contexts | ContextObj): ResolverAPI {
     requireResolver(this.resolver);
 
     return this.resolver.cloneWithContext(contexts);
@@ -441,7 +483,6 @@ class Prefab implements PrefabInterface {
 
   set(key: string, value: ConfigValue): void {
     requireResolver(this.resolver);
-
     this.resolver.set(key, value);
   }
 
@@ -471,6 +512,10 @@ class Prefab implements PrefabInterface {
     });
 
     this.running = false;
+  }
+
+  addConfigChangeListener(callback: GlobalListenerCallback): () => void {
+    return this.configChangeNotifier.addListener(callback);
   }
 }
 

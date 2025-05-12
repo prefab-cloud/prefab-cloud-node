@@ -9,7 +9,7 @@ import type {
   OnNoDefault,
   ProjectEnvId,
 } from "./types";
-import type { PrefabInterface, Telemetry } from "./prefab";
+import type { Telemetry } from "./prefab";
 import { PREFAB_DEFAULT_LOG_LEVEL } from "./prefab";
 
 import { mergeContexts, contextObjToMap } from "./mergeContexts";
@@ -21,6 +21,48 @@ import { evaluate } from "./evaluate";
 const emptyContexts: Contexts = new Map<string, Context>();
 
 export const NOT_PROVIDED = Symbol("NOT_PROVIDED");
+
+// Interface for Resolver's public API
+export interface ResolverAPI {
+  id: number;
+  contexts?: Contexts;
+  readonly telemetry: Telemetry | undefined;
+  readonly defaultContext?: Contexts;
+  updateIfStalerThan:
+    | ((durationInMs: number) => Promise<void> | undefined)
+    | undefined;
+
+  cloneWithContext: (contexts: Contexts | ContextObj) => ResolverAPI;
+  withContext: (contexts: Contexts | ContextObj) => ResolverAPI;
+  update: (
+    configs: Array<Config | MinimumConfig>,
+    defaultContext?: Contexts
+  ) => void;
+  raw: (key: string) => MinimumConfig | undefined;
+  set: (key: string, value: ConfigValue) => void;
+  get: (
+    key: string,
+    localContexts?: Contexts | ContextObj,
+    defaultValue?: GetValue | symbol,
+    onNoDefault?: OnNoDefault
+  ) => GetValue;
+  isFeatureEnabled: (key: string, contexts?: Contexts | ContextObj) => boolean;
+  keys: () => string[];
+  logger: (
+    loggerName: string,
+    defaultLevel: ValidLogLevelName | ValidLogLevel,
+    contexts?: Contexts | ContextObj
+  ) => ReturnType<typeof makeLogger>;
+  shouldLog: (args: {
+    loggerName: string;
+    desiredLevel: ValidLogLevel | ValidLogLevelName;
+    defaultLevel?: ValidLogLevel | ValidLogLevelName;
+    contexts?: Contexts | ContextObj;
+  }) => boolean;
+  setOnUpdate: (
+    onUpdate: (configs: Array<Config | MinimumConfig>) => void
+  ) => void;
+}
 
 type OptionalKeys = "id" | "projectId" | "changedBy" | "allowableValues";
 
@@ -56,14 +98,15 @@ const mergeDefaultContexts = (
 
 let id = 0;
 
-class Resolver implements PrefabInterface {
+class Resolver implements ResolverAPI {
+  // Implement the new interface
   private readonly config = new Map<string, MinimumConfig>();
   private readonly projectEnvId: ProjectEnvId;
   private readonly namespace: string | undefined;
   private readonly onNoDefault: OnNoDefault;
   public contexts?: Contexts;
   readonly telemetry: Telemetry | undefined;
-  private readonly onUpdate: (configs: Array<Config | MinimumConfig>) => void;
+  private onUpdate: (configs: Array<Config | MinimumConfig>) => void;
   private readonly globalContext?: Contexts;
   public id: number;
   public readonly defaultContext?: Contexts;
@@ -79,7 +122,7 @@ class Resolver implements PrefabInterface {
     updateIfStalerThan: (durationInMs: number) => Promise<void> | undefined,
     telemetry?: Telemetry,
     contexts?: Contexts | ContextObj,
-    onUpdate?: (configs: Array<Config | MinimumConfig>) => void,
+    onInitialUpdate?: (configs: Array<Config | MinimumConfig>) => void,
     defaultContext?: Contexts,
     globalContext?: Contexts
   ) {
@@ -88,7 +131,7 @@ class Resolver implements PrefabInterface {
     this.projectEnvId = projectEnvId;
     this.namespace = namespace;
     this.onNoDefault = onNoDefault;
-    this.onUpdate = onUpdate ?? (() => {});
+    this.onUpdate = onInitialUpdate ?? (() => {});
     this.defaultContext = defaultContext ?? new Map();
     this.globalContext = globalContext ?? new Map();
     this.contexts = mergeDefaultContexts(
@@ -293,6 +336,12 @@ class Resolver implements PrefabInterface {
       defaultLevel: parseLevel(defaultLevel) ?? PREFAB_DEFAULT_LOG_LEVEL,
       resolver: this,
     });
+  }
+
+  public setOnUpdate(
+    onUpdate: (configs: Array<Config | MinimumConfig>) => void
+  ): void {
+    this.onUpdate = onUpdate;
   }
 }
 

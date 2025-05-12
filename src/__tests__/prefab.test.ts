@@ -12,9 +12,15 @@ import envConfig from "./fixtures/envConfig";
 import propIsOneOf from "./fixtures/propIsOneOf";
 import propIsOneOfAndEndsWith from "./fixtures/propIsOneOfAndEndsWith";
 import { Prefab, MULTIPLE_INIT_WARNING } from "../prefab";
-import type { Contexts } from "../types";
-import { LogLevel, Criterion_CriterionOperator, ConfigType } from "../proto";
-import type { Config } from "../proto";
+import type { Contexts, ProjectEnvId } from "../types";
+import type { GetValue } from "../unwrap";
+import {
+  LogLevel,
+  Criterion_CriterionOperator,
+  ConfigType,
+  Config_ValueType,
+} from "../proto";
+import type { Config, ConfigValue } from "../proto";
 import { encrypt, generateNewHexKey } from "../../src/encryption";
 import secretConfig from "./fixtures/secretConfig";
 import decryptionKeyConfig from "./fixtures/decryptionKeyConfig";
@@ -82,13 +88,17 @@ describe("prefab", () => {
     it("throws a 401 if you have an invalid API key", async () => {
       const prefab = new Prefab({ apiKey: invalidApiKey });
 
-      jest.spyOn(console, "warn").mockImplementation();
+      const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
+      const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
       await expect(prefab.init()).rejects.toThrow(
         "Unauthorized. Check your Prefab SDK API key for https://suspenders.prefab.cloud/api/v1/configs/0"
       );
 
-      expect(console.warn).toHaveBeenCalled();
+      expect(consoleWarnSpy).toHaveBeenCalled();
+
+      consoleErrorSpy.mockRestore();
+      consoleWarnSpy.mockRestore();
     });
 
     [mostlyDeletedConfig, deletedConfig].forEach((deletionConfig) => {
@@ -213,8 +223,12 @@ describe("prefab", () => {
       expect(mock).not.toHaveBeenCalled();
 
       await prefab.init();
-      expect(mock).toHaveBeenCalled();
-      expect(mock.mock.calls).toStrictEqual([[MULTIPLE_INIT_WARNING]]);
+      expect(mock).toHaveBeenCalledTimes(2);
+      expect(mock.mock.calls).toStrictEqual([
+        [MULTIPLE_INIT_WARNING],
+        ["Prefab already initialized."],
+      ]);
+      mock.mockRestore();
     });
 
     it("warns when called multiple times if enableSSE is set", async () => {
@@ -230,8 +244,12 @@ describe("prefab", () => {
       expect(mock).not.toHaveBeenCalled();
 
       await prefab.init();
-      expect(mock).toHaveBeenCalled();
-      expect(mock.mock.calls).toStrictEqual([[MULTIPLE_INIT_WARNING]]);
+      expect(mock).toHaveBeenCalledTimes(2);
+      expect(mock.mock.calls).toStrictEqual([
+        [MULTIPLE_INIT_WARNING],
+        ["Prefab already initialized."],
+      ]);
+      mock.mockRestore();
     });
 
     it("does not warn when init is called multiple times if enableSSE and enablePolling are false", async () => {
@@ -247,7 +265,9 @@ describe("prefab", () => {
       expect(mock).not.toHaveBeenCalled();
 
       await prefab.init();
-      expect(mock).not.toHaveBeenCalled();
+      expect(mock).toHaveBeenCalledTimes(1);
+      expect(mock.mock.calls).toStrictEqual([["Prefab already initialized."]]);
+      mock.mockRestore();
     });
 
     it("loads remote config so Prefab can provided value", async () => {
@@ -1214,6 +1234,192 @@ import { Prefab } from "../prefab";
 
       expect(output.trim()).toEqual("ABC is true");
       expect(duration).toBeLessThan(3000);
+    });
+  });
+
+  describe("ConfigChangeNotifier integration", () => {
+    let prefab: Prefab;
+    beforeEach(() => {
+      // No longer async
+      const apiKeyForTests =
+        process.env["PREFAB_INTEGRATION_TEST_API_KEY"] ??
+        "fallback-api-key-if-not-set";
+      prefab = new Prefab({
+        ...defaultOptions,
+        apiKey: apiKeyForTests,
+        enablePolling: false,
+        enableSSE: false,
+      });
+
+      const configData = {
+        id: new Long(1),
+        key: "initial.key.for.notifier.test",
+        projectId: irrelevantLong,
+        configType: ConfigType.CONFIG,
+        rows: [
+          {
+            properties: {},
+            values: [{ criteria: [], value: { string: "initial_value" } }],
+          },
+        ],
+        valueType: Config_ValueType.STRING,
+        sendToClientSdk: false,
+        allowableValues: [] as ConfigValue[],
+        changedBy: undefined,
+      };
+      const minimalConfigForInit: Config = configData;
+
+      const projectEnvIdForTest: ProjectEnvId = irrelevantLong; // projectEnvId is now a Long
+
+      prefab.setConfig([minimalConfigForInit], projectEnvIdForTest, new Map());
+    });
+
+    it("should call a listener when total config ID changes", () => {
+      const listenerCallback = jest.fn();
+      prefab.addConfigChangeListener(listenerCallback);
+
+      const initialResolver = (prefab as any).resolver;
+      expect(initialResolver).toBeDefined();
+
+      const newConfig: Config = {
+        id: new Long(1001),
+        key: "new.config.key",
+        projectId: irrelevantLong,
+        configType: ConfigType.CONFIG,
+        rows: [
+          {
+            properties: {},
+            values: [{ criteria: [], value: { string: "new_value" } }],
+          },
+        ],
+        valueType: Config_ValueType.STRING,
+        sendToClientSdk: true,
+        allowableValues: [],
+        changedBy: undefined,
+      };
+
+      initialResolver.update([newConfig]);
+
+      expect(listenerCallback).toHaveBeenCalledTimes(1);
+    });
+
+    it("should NOT call a listener if total config ID does not change", () => {
+      const listenerCallback = jest.fn();
+      const existingConfig: Config = { ...basicConfig, id: new Long(500) };
+      (prefab as any)._createOrReconfigureResolver(
+        [existingConfig],
+        projectEnvIdUnderTest,
+        new Map()
+      );
+      prefab.addConfigChangeListener(listenerCallback);
+      const resolver = (prefab as any).resolver;
+
+      const nonChangingConfig: Config = {
+        ...basicConfig,
+        id: new Long(100),
+        key: "another.key",
+        rows: basicConfig.rows.map((r) => ({
+          ...r,
+          properties: r.properties ?? {},
+          values: r.values.map((v) => ({ ...v, criteria: v.criteria ?? [] })),
+        })),
+        valueType: basicConfig.valueType,
+      };
+      resolver.update([nonChangingConfig]);
+      expect(listenerCallback).not.toHaveBeenCalled();
+
+      const nonLongIdConfig: Config = {
+        ...basicConfig,
+        id: "not-a-long" as any,
+        key: "yet.another.key",
+        rows: basicConfig.rows.map((r) => ({
+          ...r,
+          properties: r.properties ?? {},
+          values: r.values.map((v) => ({ ...v, criteria: v.criteria ?? [] })),
+        })),
+        valueType: basicConfig.valueType,
+      };
+      resolver.update([nonLongIdConfig]);
+      expect(listenerCallback).not.toHaveBeenCalled();
+    });
+
+    it("unsubscribe should prevent listener from being called", () => {
+      const listenerCallback = jest.fn();
+      const unsubscribe = prefab.addConfigChangeListener(listenerCallback);
+
+      unsubscribe();
+
+      const resolver = (prefab as any).resolver;
+      const newConfig: Config = { ...basicConfig, id: new Long(2000) };
+      resolver.update([newConfig]);
+
+      expect(listenerCallback).not.toHaveBeenCalled();
+    });
+
+    it("should notify multiple listeners", () => {
+      const listener1 = jest.fn();
+      const listener2 = jest.fn();
+
+      prefab.addConfigChangeListener(listener1);
+      prefab.addConfigChangeListener(listener2);
+
+      const resolver = (prefab as any).resolver;
+      const newConfig: Config = { ...basicConfig, id: new Long(3000) };
+      resolver.update([newConfig]);
+
+      expect(listener1).toHaveBeenCalledTimes(1);
+      expect(listener2).toHaveBeenCalledTimes(1);
+    });
+
+    it("listener can safely get updated value from Prefab", () => {
+      const targetKey = basicConfig.key;
+      const initialValue = "initial_test_value";
+      const updatedValueString = "updated_test_value";
+
+      const initialConfig: Config = {
+        ...basicConfig,
+        id: new Long(100),
+        rows: [
+          {
+            properties: {},
+            values: [{ criteria: [], value: { string: initialValue } }],
+          },
+        ],
+        valueType: Config_ValueType.STRING,
+      };
+      (prefab as any)._createOrReconfigureResolver(
+        [initialConfig],
+        projectEnvIdUnderTest,
+        new Map()
+      );
+
+      expect(prefab.get(targetKey)).toBe(initialValue);
+
+      let valueInListener: GetValue | undefined;
+
+      const listenerCallback = jest.fn(() => {
+        valueInListener = prefab.get(targetKey);
+      });
+
+      prefab.addConfigChangeListener(listenerCallback);
+
+      const updatedConfig: Config = {
+        ...basicConfig,
+        id: new Long(200),
+        rows: [
+          {
+            properties: {},
+            values: [{ criteria: [], value: { string: updatedValueString } }],
+          },
+        ],
+        valueType: Config_ValueType.STRING,
+      };
+
+      const resolver = (prefab as any).resolver;
+      resolver.update([updatedConfig]);
+
+      expect(listenerCallback).toHaveBeenCalledTimes(1);
+      expect(valueInListener).toBe(updatedValueString);
     });
   });
 });
