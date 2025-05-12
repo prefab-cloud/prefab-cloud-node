@@ -1,14 +1,9 @@
 import Long from "long";
-import type { Config } from "./proto"; // Adjust path if necessary
-import type { MinimumConfig } from "./resolver"; // Corrected import for MinimumConfig
-import { maxLong } from "./maxLong"; // Adjust path if necessary
+import type { MinimumConfig } from "./resolver";
+import { maxLong } from "./maxLong";
 
-// Define an interface for the parts of Resolver that ConfigChangeNotifier will use.
-// This helps in decoupling and testing.
 export interface ResolverInterface {
   keys: () => string[];
-  // Assuming MinimumConfig has an optional `id` of type `Long`.
-  // If MinimumConfig is not directly usable, this could be: raw: (key: string) => { id?: Long } | undefined;
   raw: (key: string) => Pick<MinimumConfig, "id"> | undefined;
 }
 
@@ -45,13 +40,8 @@ export class ConfigChangeNotifier {
    * as the notifier will query the resolver for the complete current state
    * to ensure accuracy.
    */
-  public handleResolverUpdate = (
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _updatedConfigs: Array<Config | MinimumConfig>
-  ): void => {
+  public handleResolverUpdate = (): void => {
     if (this.resolver == null) {
-      // This might happen if Resolver calls onUpdate before init is called,
-      // though ideally init is called right after Resolver construction.
       console.warn(
         "ConfigChangeNotifier.handleResolverUpdate called before init. Skipping."
       );
@@ -68,7 +58,6 @@ export class ConfigChangeNotifier {
 
   private readonly calculateCurrentTotalId = (): Long => {
     if (this.resolver == null) {
-      // Should not happen if init is called properly.
       return Long.ZERO;
     }
 
@@ -77,18 +66,15 @@ export class ConfigChangeNotifier {
 
     for (const key of keys) {
       const config = this.resolver.raw(key);
-      // Ensure config exists, config.id exists, and config.id is a Long.
-      // `MinimumConfig` might have `id` as optional or `Long | undefined`.
       if (config?.id != null && Long.isLong(config.id)) {
         ids.push(config.id);
       }
     }
 
-    return maxLong(ids); // maxLong correctly returns Long.ZERO for an empty array.
+    return maxLong(ids);
   };
 
   private readonly notifyGlobalListeners = (): void => {
-    // Iterate over a copy in case listeners modify the array during iteration
     [...this.listeners].forEach((callback) => {
       try {
         callback();

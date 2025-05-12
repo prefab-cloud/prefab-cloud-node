@@ -229,25 +229,22 @@ class Prefab implements PrefabInterface {
       this.onNoDefault,
       this.updateIfStalerThan.bind(this),
       this.telemetry,
-      undefined, // context object for resolver itself
-      () => {}, // Temporary onInitialUpdate, so Resolver's constructor update doesn't trigger full handler yet
+      undefined,
+      () => {},
       defaultContext,
       this.globalContext
     );
 
-    // Now that tempResolver is constructed and has processed its initial configs,
-    // initialize the configChangeNotifier with it. This sets the baseline.
     this.configChangeNotifier.init(tempResolver);
 
     // Define the actual combined onUpdate callback
     const actualCombinedOnUpdate = (
       updatedConfigs: Array<Config | MinimumConfig>
     ): void => {
-      this.onUpdate(updatedConfigs); // User's onUpdate callback (from Prefab constructor)
-      this.configChangeNotifier.handleResolverUpdate(updatedConfigs); // Notifier's handler
+      this.onUpdate(updatedConfigs);
+      this.configChangeNotifier.handleResolverUpdate();
     };
 
-    // Set the actual onUpdate callback on the resolver
     tempResolver.setOnUpdate(actualCombinedOnUpdate);
 
     // Assign the fully configured resolver to the Prefab instance

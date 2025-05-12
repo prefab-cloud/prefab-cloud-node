@@ -1239,8 +1239,6 @@ import { Prefab } from "../prefab";
 
   describe("ConfigChangeNotifier integration", () => {
     let prefab: Prefab;
-    // const apiKey = process.env["PREFAB_TEST_API_KEY"] ?? "fallback-api-key-if-not-set"; // apiKey might not be needed if init is fully mocked
-
     beforeEach(() => {
       // No longer async
       const apiKeyForTests =
@@ -1423,9 +1421,5 @@ import { Prefab } from "../prefab";
       expect(listenerCallback).toHaveBeenCalledTimes(1);
       expect(valueInListener).toBe(updatedValueString);
     });
-  });
-
-  describe("init with datafile", () => {
-    // ... existing code ...
   });
 });

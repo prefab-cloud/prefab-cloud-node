@@ -83,7 +83,7 @@ describe("ConfigChangeNotifier", () => {
       // Trigger with new totalId = 1
       mockResolver.keys.mockReturnValueOnce(["key1"]); // Override for this specific call inside handleResolverUpdate
       mockResolver.raw.mockReturnValueOnce({ id: Long.fromInt(1) });
-      notifier.handleResolverUpdate([]);
+      notifier.handleResolverUpdate();
       expect(listenerCallback).toHaveBeenCalledTimes(1);
 
       unsubscribe();
@@ -91,7 +91,7 @@ describe("ConfigChangeNotifier", () => {
       // If we want to test it changes again and listener is NOT called:
       mockResolver.keys.mockReturnValueOnce(["key2"]); // Setup for next call
       mockResolver.raw.mockReturnValueOnce({ id: Long.fromInt(2) }); // Change ID again
-      notifier.handleResolverUpdate([]);
+      notifier.handleResolverUpdate();
       expect(listenerCallback).toHaveBeenCalledTimes(1); // Still 1, as it was unsubscribed
     });
 
@@ -102,7 +102,7 @@ describe("ConfigChangeNotifier", () => {
       mockResolver.keys.mockReturnValueOnce([]).mockReturnValueOnce(["key1"]);
       mockResolver.raw.mockReturnValueOnce({ id: Long.fromInt(1) });
       notifier.init(mockResolver);
-      notifier.handleResolverUpdate([]);
+      notifier.handleResolverUpdate();
 
       expect(listenerCallback).not.toHaveBeenCalled();
     });
@@ -120,7 +120,7 @@ describe("ConfigChangeNotifier", () => {
       mockResolver.keys.mockReturnValue(["key1"]);
       mockResolver.raw.mockReturnValue({ id: Long.fromInt(5) }); // New totalId = 5
 
-      notifier.handleResolverUpdate([]);
+      notifier.handleResolverUpdate();
 
       expect(listenerCallback).toHaveBeenCalledTimes(1);
       expect(notifier.getLastTotalId().toNumber()).toBe(5);
@@ -130,7 +130,7 @@ describe("ConfigChangeNotifier", () => {
       mockResolver.keys.mockReturnValue(["key1"]);
       mockResolver.raw.mockReturnValue({ id: Long.fromInt(0) }); // Same as initial Long.ZERO
 
-      notifier.handleResolverUpdate([]);
+      notifier.handleResolverUpdate();
 
       expect(listenerCallback).not.toHaveBeenCalled();
       expect(notifier.getLastTotalId().equals(Long.ZERO)).toBe(true);
@@ -143,7 +143,7 @@ describe("ConfigChangeNotifier", () => {
       mockResolver.keys.mockReturnValue(["key1"]);
       mockResolver.raw.mockReturnValue({ id: Long.fromInt(10) });
 
-      notifier.handleResolverUpdate([]);
+      notifier.handleResolverUpdate();
 
       expect(listenerCallback).toHaveBeenCalledTimes(1);
       expect(listener2).toHaveBeenCalledTimes(1);
@@ -153,7 +153,7 @@ describe("ConfigChangeNotifier", () => {
       const freshNotifier = new ConfigChangeNotifier(); // Not initialized
       const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
 
-      freshNotifier.handleResolverUpdate([]);
+      freshNotifier.handleResolverUpdate();
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
         "ConfigChangeNotifier.handleResolverUpdate called before init. Skipping."
