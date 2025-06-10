@@ -8,8 +8,8 @@
     "dist"
   ],
   "compilerOptions": {
-    "target": "es2018",
-    "module": "es2015",
+    "target": "es2020",
+    "module": "es2022",
     "declaration": true,
     "outDir": "./dist",
     "noEmit": false,

@@ -1,3 +1,4 @@
+import './verifyPeerDependencies';
 import crypto from "crypto";
 import Long from "long";
 import { apiClient, type ApiClient } from "./apiClient";
