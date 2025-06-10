@@ -1,12 +1,12 @@
 import * as fs from "fs";
 import Long from "long";
-import type { Config, Configs } from "./proto";
-import { maxLong } from "./maxLong";
 import { type ApiClient, fetchWithCache } from "./apiClient";
+import { maxLong } from "./maxLong";
+import type { Config, Configs } from "./proto";
 
-import { unwrapPrimitive } from "./unwrap";
-import type { Contexts, ProjectEnvId } from "./types";
 import { parseConfigs, parseConfigsFromJSON } from "./parseProto";
+import type { Contexts, ProjectEnvId } from "./types";
+import { unwrapPrimitive } from "./unwrap";
 
 interface Result {
   configs: Config[];
@@ -101,7 +101,7 @@ const loadConfigFromUrl = async ({
   }
 
   throw new Error(
-    `Something went wrong talking to ${source}/${path} | ${response.status}`
+    `Something went wrong talking to ${source}${path} | ${response.status}`
   );
 };
 
