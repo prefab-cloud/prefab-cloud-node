@@ -2,13 +2,12 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -46,4 +45,4 @@ jobs:
         run: node dist/prefab.cjs
 
       - name: Validate esm version
-        run: node dist/prefab.mjs
+        run: PREFAB_SKIP_PEER_DEPENDENCY_CHECK=true node dist/prefab.mjs

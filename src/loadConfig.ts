@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import Long from "long";
+import type Long from "long";
 import type { Config, Configs } from "./proto";
 import { maxLong } from "./maxLong";
 import { type ApiClient, fetchWithCache } from "./apiClient";
@@ -111,20 +111,6 @@ const parse = (parsed: Configs): Result => {
   }
 
   const configs = parsed.configs ?? [];
-
-  // Check if configs has at least one item and verify if its id is a Long
-  if (configs.length > 0) {
-    const firstConfig = configs[0];
-    if (
-      firstConfig !== undefined &&
-      firstConfig !== null &&
-      !Long.isLong(firstConfig.id)
-    ) {
-      throw new Error(
-        'Prefab requires the "long" package to be in your project. See https://www.npmjs.com/package/long'
-      );
-    }
-  }
 
   const defaultContext = extractDefaultContext(parsed.defaultContext);
 
