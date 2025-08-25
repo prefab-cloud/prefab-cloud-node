@@ -144,7 +144,7 @@ export const evaluationSummaries = (
           }
 
           const counter: ConfigEvaluationCounter = {
-            configId: Long.fromNumber(configId),
+            configId: Long.fromString(configId),
             conditionalValueIndex,
             configRowIndex,
             selectedValue,

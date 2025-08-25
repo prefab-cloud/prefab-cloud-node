@@ -356,4 +356,31 @@ describe("evaluationSummaries", () => {
       );
     });
   });
+
+  it("preserves large config IDs without precision loss", async () => {
+    const largeConfigId = Long.fromString("17537369033474523");
+    const largeConfig: Config = {
+      ...basicConfig,
+      id: largeConfigId,
+    };
+
+    const aggregator = evaluationSummaries(
+      mockApiClient,
+      telemetrySource,
+      instanceHash,
+      true
+    );
+
+    aggregator.push(evaluationFor(largeConfig, usContexts));
+
+    const syncResult = await aggregator.sync();
+
+    if (syncResult === undefined) {
+      throw new Error("syncResult is undefined");
+    }
+
+    const counter = syncResult.dataSent.events[0].summaries?.summaries[0].counters[0];
+    expect(counter?.configId?.toString()).toBe("17537369033474523");
+    expect(counter?.configId?.equals(largeConfigId)).toBe(true);
+  });
 });
