@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 0.4.9 - 2025-08-26
+
+- Fix numeric precision issue handling telemetry data [#108]
+- Adds hook to register for notification of config data load and update [#104] [#105]
+
 ## 0.4.8 - 2025-04-15
 
 - Implement virtual context `prefab.current-time` for all operators [#102]
@@ -25,10 +31,9 @@
 - Adds numeric comparison operator support [#88]
 - Adds date comparison operator support [#84] [#86]
 
-
 ## 0.4.3 - 2025-01-28
 
-- Fixes telemetry handling for json value type (#82)
+- Fixes telemetry handling for json value type [#82]
 - Implement startsWith/contains operators [#80]
 
 ## 0.4.2 - 2024-10-03
@@ -84,7 +89,7 @@
 - `updateIfStalerThan(someNumberofMs)` updates if no update has happened in someNumberofMs ms [#60]
 - `logger()` should inherit context [#59]
 - Return the result of `inContext()` [#58]
-- Add `.logger() [#57]
+- Add `.logger()` [#57]
 - Add `.updateNow()` [#56]
 - Fix polling bug [#54]
 - Allow prefab.set [#53]
@@ -143,3 +148,41 @@
 ## 0.1.2 - 2023-08-21
 
 - Initial non-alpha release
+
+
+<!-- Link references -->
+[#108]: https://github.com/prefab-cloud/prefab-cloud-node/pull/108
+[#105]: https://github.com/prefab-cloud/prefab-cloud-node/pull/105
+[#104]: https://github.com/prefab-cloud/prefab-cloud-node/pull/104
+[#102]: https://github.com/prefab-cloud/prefab-cloud-node/pull/102
+[#100]: https://github.com/prefab-cloud/prefab-cloud-node/pull/100
+[#98]: https://github.com/prefab-cloud/prefab-cloud-node/pull/98
+[#97]: https://github.com/prefab-cloud/prefab-cloud-node/pull/97
+[#95]: https://github.com/prefab-cloud/prefab-cloud-node/pull/95
+[#93]: https://github.com/prefab-cloud/prefab-cloud-node/pull/93
+[#92]: https://github.com/prefab-cloud/prefab-cloud-node/pull/92
+[#91]: https://github.com/prefab-cloud/prefab-cloud-node/pull/91
+[#90]: https://github.com/prefab-cloud/prefab-cloud-node/pull/90
+[#88]: https://github.com/prefab-cloud/prefab-cloud-node/pull/88
+[#86]: https://github.com/prefab-cloud/prefab-cloud-node/pull/86
+[#84]: https://github.com/prefab-cloud/prefab-cloud-node/pull/84
+[#82]: https://github.com/prefab-cloud/prefab-cloud-node/pull/82
+[#80]: https://github.com/prefab-cloud/prefab-cloud-node/pull/80
+[#78]: https://github.com/prefab-cloud/prefab-cloud-node/pull/78
+[#76]: https://github.com/prefab-cloud/prefab-cloud-node/pull/76
+[#75]: https://github.com/prefab-cloud/prefab-cloud-node/pull/75
+[#74]: https://github.com/prefab-cloud/prefab-cloud-node/pull/74
+[#73]: https://github.com/prefab-cloud/prefab-cloud-node/pull/73
+[#70]: https://github.com/prefab-cloud/prefab-cloud-node/pull/70
+[#69]: https://github.com/prefab-cloud/prefab-cloud-node/pull/69
+[#68]: https://github.com/prefab-cloud/prefab-cloud-node/pull/68
+[#66]: https://github.com/prefab-cloud/prefab-cloud-node/pull/66
+[#63]: https://github.com/prefab-cloud/prefab-cloud-node/pull/63
+[#62]: https://github.com/prefab-cloud/prefab-cloud-node/pull/62
+[#60]: https://github.com/prefab-cloud/prefab-cloud-node/pull/60
+[#59]: https://github.com/prefab-cloud/prefab-cloud-node/pull/59
+[#58]: https://github.com/prefab-cloud/prefab-cloud-node/pull/58
+[#57]: https://github.com/prefab-cloud/prefab-cloud-node/pull/57
+[#56]: https://github.com/prefab-cloud/prefab-cloud-node/pull/56
+[#54]: https://github.com/prefab-cloud/prefab-cloud-node/pull/54
+[#53]: https://github.com/prefab-cloud/prefab-cloud-node/pull/53
