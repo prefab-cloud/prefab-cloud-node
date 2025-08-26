@@ -379,7 +379,8 @@ describe("evaluationSummaries", () => {
       throw new Error("syncResult is undefined");
     }
 
-    const counter = syncResult.dataSent.events[0].summaries?.summaries[0].counters[0];
+    const counter =
+      syncResult.dataSent.events[0].summaries?.summaries[0].counters[0];
     expect(counter?.configId?.toString()).toBe("17537369033474523");
     expect(counter?.configId?.equals(largeConfigId)).toBe(true);
   });
